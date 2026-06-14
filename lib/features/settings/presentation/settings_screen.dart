@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../core/di/providers.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../packages/application/package_providers.dart';
+import '../../packages/domain/content_package.dart';
 import '../application/settings_providers.dart';
 import '../domain/settings.dart';
 
@@ -16,8 +17,7 @@ class SettingsScreen extends ConsumerWidget {
     final c = context.bt;
     final s = ref.watch(settingsProvider);
     final ctrl = ref.read(settingsControllerProvider);
-    final db = ref.watch(contentDatabaseProvider);
-    final patristics = db?.meta('patristics_count');
+    final packages = ref.watch(installablePackagesProvider);
     final available = ref.watch(availableTranslationsProvider);
     final resolvedId = ref.watch(resolvedTranslationIdProvider);
     final translationTitle = available
@@ -95,24 +95,9 @@ class SettingsScreen extends ConsumerWidget {
             value: s.notificationsEnabled,
             onChanged: ctrl.setNotifications,
           ),
-          _section(c, 'Recursos baixados'),
-          ListTile(
-            leading: const Icon(Icons.auto_stories),
-            title: const Text('Comentário Patrístico'),
-            subtitle: Text(patristics == null
-                ? 'não instalado'
-                : '$patristics comentários instalados'),
-            trailing: Icon(
-                patristics == null ? Icons.download : Icons.check_circle,
-                color:
-                    patristics == null ? c.textFaint : LiturgicalPalette.green),
-          ),
-          ListTile(
-            leading: const Icon(Icons.menu_book),
-            title: const Text('Traduções da Bíblia'),
-            subtitle: const Text('Gerir pacotes offline'),
-            onTap: () {},
-          ),
+          _section(c, 'Recursos offline'),
+          for (final entry in packages)
+            _PackageTile(pkg: entry.pkg, installed: entry.installed),
           _section(c, 'Contato / Feedback'),
           ListTile(
             leading: const Icon(Icons.chat_bubble_outline,
@@ -218,4 +203,98 @@ class SettingsScreen extends ConsumerWidget {
                 letterSpacing: 1,
                 fontWeight: FontWeight.w600)),
       );
+}
+
+String _mb(int bytes) => '${(bytes / 1048576).toStringAsFixed(0)} MB';
+
+class _PackageTile extends ConsumerStatefulWidget {
+  final ContentPackage pkg;
+  final bool installed;
+  const _PackageTile({required this.pkg, required this.installed});
+  @override
+  ConsumerState<_PackageTile> createState() => _PackageTileState();
+}
+
+class _PackageTileState extends ConsumerState<_PackageTile> {
+  bool _busy = false;
+  double _progress = 0;
+
+  IconData get _icon => switch (widget.pkg.type) {
+        PackageType.patristics => Icons.auto_stories,
+        PackageType.bibleTranslation => Icons.menu_book,
+        PackageType.liturgy => Icons.calendar_month,
+        PackageType.catechism => Icons.school_outlined,
+        _ => Icons.inventory_2_outlined,
+      };
+
+  Future<void> _install() async {
+    setState(() {
+      _busy = true;
+      _progress = 0;
+    });
+    try {
+      await ref.read(packageControllerProvider).install(widget.pkg,
+          onProgress: (p) {
+        if (mounted) setState(() => _progress = p);
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Falha ao instalar: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _remove() async {
+    await ref.read(packageControllerProvider).remove(widget.pkg);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.bt;
+    final pkg = widget.pkg;
+    final subtitle = widget.installed
+        ? 'Instalado · ${_mb(pkg.sizeBytes)}'
+        : pkg.required
+            ? 'Necessário'
+            : 'Download ${_mb(pkg.compressedBytes)} · ${_mb(pkg.sizeBytes)} instalado';
+
+    return Column(
+      children: [
+        ListTile(
+          leading: Icon(_icon, color: c.accent),
+          title: Text(pkg.title),
+          subtitle: Text(subtitle),
+          trailing: _busy
+              ? SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      value: _progress == 0 ? null : _progress,
+                      color: c.accent))
+              : widget.installed
+                  ? (pkg.required
+                      ? Icon(Icons.check_circle, color: LiturgicalPalette.green)
+                      : IconButton(
+                          icon: Icon(Icons.delete_outline,
+                              color: c.textSecondary),
+                          onPressed: _remove))
+                  : IconButton(
+                      icon: Icon(Icons.download, color: c.accent),
+                      onPressed: _install),
+        ),
+        if (_busy)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: LinearProgressIndicator(
+                value: _progress == 0 ? null : _progress,
+                backgroundColor: c.surfaceHigh,
+                color: c.accent),
+          ),
+      ],
+    );
+  }
 }

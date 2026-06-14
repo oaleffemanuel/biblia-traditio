@@ -53,5 +53,9 @@ tool/importer/data/reports/
 
 # Bundled content DB is a build artifact (large; may contain non-PD dev text).
 # Regenerate with tool/build_content_db.sh — never commit it.
-assets/content/*.sqlite
-assets/content/*.sqlite-*
+
+# Content packages are build artifacts (large; may contain dev/copyrighted text).
+# Regenerate with tool/build_content_db.sh — never commit them.
+assets/packages/*.sqlite.gz
+assets/packages/manifest.json
+tool/importer/data/*.xml
