@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:biblia_traditio_importer/builders/sqlite_builder.dart';
+import 'package:biblia_traditio_importer/parsers/bible_json_parser.dart';
 import 'package:biblia_traditio_importer/parsers/patristics_parser.dart';
 import 'package:biblia_traditio_importer/parsers/scripture_parser.dart';
 import 'package:biblia_traditio_importer/validators/verse_validator.dart';
@@ -26,6 +27,9 @@ Future<void> main(List<String> argv) async {
       break;
     case 'scripture':
       await _scripture(rest);
+      break;
+    case 'biblejson':
+      await _bibleJson(rest);
       break;
     case 'stats':
       await _stats(rest);
@@ -128,6 +132,64 @@ Future<void> _scripture(List<String> argv) async {
   builder.insertScripture(translation, book, chapters);
   builder.finish();
   stdout.writeln('✓ Scripture written to ${a['out']}');
+}
+
+Future<void> _bibleJson(List<String> argv) async {
+  final a = (ArgParser()
+        ..addOption('src', help: 'Structured Bible JSON (antigo/novoTestamento)')
+        ..addOption('translation', defaultsTo: 'pt_cat')
+        ..addOption('lang', defaultsTo: 'pt')
+        ..addOption('title', defaultsTo: 'Bíblia Católica (PT)')
+        ..addOption('license', defaultsTo: '')
+        ..addOption('out', defaultsTo: 'biblia_traditio.sqlite')
+        ..addOption('report-dir', defaultsTo: 'data/reports')
+        ..addFlag('strict', defaultsTo: false))
+      .parse(argv);
+  final src = a['src'] as String?;
+  if (src == null) _fail('biblejson: --src <file.json> required');
+
+  stdout.writeln('▶ Parsing structured Bible JSON: $src');
+  final parser = BibleJsonParser();
+  await parser.parseFile(src!);
+  for (final w in parser.warnings) {
+    stdout.writeln('  ⚠ $w');
+  }
+  stdout.writeln('  books: ${parser.books.length} · verses: ${parser.verseCount}');
+
+  // Validate every book; collect errors.
+  Directory(a['report-dir'] as String).createSync(recursive: true);
+  var totalErrors = 0, totalWarnings = 0;
+  final validator = VerseValidator();
+  for (final entry in parser.books.entries) {
+    final report = validator.validate(entry.key, entry.value);
+    totalErrors += report.errorCount;
+    totalWarnings += report.warningCount;
+    if (report.hasErrors) {
+      for (final f in report.findings.where((f) => f.severity == Severity.error).take(5)) {
+        stdout.writeln('  ✗ ${entry.key} ${f.chapter}:${f.verse} [${f.code}] ${f.message}');
+      }
+    }
+  }
+  stdout.writeln('  validation: $totalErrors errors, $totalWarnings warnings');
+  if (totalErrors > 0 && (a['strict'] as bool)) {
+    _fail('Refusing to build: $totalErrors validation error(s).');
+  }
+
+  final builder = ContentDbBuilder.open(a['out'] as String);
+  builder.upsertTranslation(
+    a['translation'] as String,
+    a['lang'] as String,
+    a['title'] as String,
+    license: (a['license'] as String).isEmpty ? null : a['license'] as String,
+    versification: 'vulgate',
+  );
+  for (final entry in parser.books.entries) {
+    builder.insertScripture(a['translation'] as String, entry.key, entry.value);
+  }
+  builder.setMeta('scripture_verses', '${parser.verseCount}');
+  builder.finish();
+  stdout.writeln('✓ Scripture written to ${a['out']} '
+      '(translation=${a['translation']})');
 }
 
 Future<void> _stats(List<String> argv) async {

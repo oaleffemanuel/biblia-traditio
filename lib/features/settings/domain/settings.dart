@@ -25,7 +25,7 @@ class TranslationOption {
   const TranslationOption(this.id, this.title, this.langCode);
 
   static const catalogue = [
-    TranslationOption('matos1932', 'Matos Soares (1932)', 'pt'),
+    TranslationOption('pt_cat', 'Bíblia Católica (PT)', 'pt'),
     TranslationOption('vulgata', 'Vulgata Clementina', 'la'),
     TranslationOption('drb', 'Douay–Rheims (Challoner)', 'en'),
   ];
@@ -45,7 +45,7 @@ class Settings {
     this.onboardingCompleted = false,
     this.displayName = '',
     this.language = AppLanguage.pt,
-    this.primaryTranslationId = 'matos1932',
+    this.primaryTranslationId = 'pt_cat',
     this.themeMode = ThemeMode.dark,
     this.notificationsEnabled = false,
     this.wantsReadingPlan = false,
@@ -55,7 +55,7 @@ class Settings {
         onboardingCompleted: m['onboardingCompleted'] == 'true',
         displayName: m['displayName'] ?? '',
         language: AppLanguage.fromCode(m['language']),
-        primaryTranslationId: m['primaryTranslationId'] ?? 'matos1932',
+        primaryTranslationId: m['primaryTranslationId'] ?? 'pt_cat',
         themeMode: switch (m['themeMode']) {
           'light' => ThemeMode.light,
           'system' => ThemeMode.system,

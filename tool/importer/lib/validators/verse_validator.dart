@@ -125,7 +125,17 @@ class VerseValidator {
               'Verse looks like a heading (mostly uppercase).',
               chapter: ch.chapter, verse: v.verse, sample: text));
         }
-        if (_suspiciousTitles.hasMatch(text)) {
+        // Only a heading if it BOTH starts with a title word AND actually
+        // looks like a heading (mostly uppercase, or a short label with no
+        // sentence punctuation) — sentence-case verses that merely begin with
+        // "Provérbios"/"Segunda" are real Scripture, not headings.
+        final headingLike = ratio >= 0.6 ||
+            (words <= 4 &&
+                !text.contains(',') &&
+                !text.endsWith('.') &&
+                !text.endsWith(';') &&
+                !text.endsWith(':'));
+        if (_suspiciousTitles.hasMatch(text) && headingLike) {
           f.add(Finding(Severity.error, 'heading_as_verse',
               'Verse text matches an editorial-title pattern.',
               chapter: ch.chapter, verse: v.verse, sample: text));

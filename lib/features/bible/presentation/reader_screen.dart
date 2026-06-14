@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../annotations/application/annotation_providers.dart';
-import '../../settings/application/settings_providers.dart';
 import '../../annotations/domain/entities.dart';
+import '../../annotations/presentation/note_editor.dart';
+import '../../settings/application/settings_providers.dart';
 import '../application/bible_providers.dart';
 import '../domain/entities.dart';
-import '../../annotations/presentation/note_editor.dart';
 import 'widgets/book_emblem.dart';
+import 'widgets/navigation_pickers.dart';
+import 'widgets/share_verse.dart';
 import 'patristic_sheet.dart';
 
 class ReaderScreen extends ConsumerStatefulWidget {
@@ -22,15 +26,39 @@ class ReaderScreen extends ConsumerStatefulWidget {
 }
 
 class _ReaderScreenState extends ConsumerState<ReaderScreen> {
+  final _scrollController = ItemScrollController();
+
   @override
   void initState() {
     super.initState();
-    // Record "Continue Reading" position once the DB is ready.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final translation = ref.read(settingsProvider).primaryTranslationId;
       ref.read(annotationControllerProvider).recordProgress(
           translation, VerseRef(widget.bookId, widget.chapter, 1));
     });
+  }
+
+  void _goTo(String bookId, int chapter) =>
+      context.go('/bible/$bookId/$chapter');
+
+  Future<void> _pickBook() async {
+    final id = await showBookPicker(context, ref, widget.bookId);
+    if (id != null && mounted) _goTo(id, 1);
+  }
+
+  Future<void> _pickChapter(BibleBook book) async {
+    final n = await showChapterPicker(
+        context, book.name, book.chapterCount, widget.chapter);
+    if (n != null && mounted) _goTo(book.id, n);
+  }
+
+  Future<void> _pickVerse(int verseCount) async {
+    final n = await showVersePicker(context, verseCount, 1);
+    if (n != null && _scrollController.isAttached) {
+      _scrollController.scrollTo(
+          index: n, duration: const Duration(milliseconds: 350),
+          curve: Curves.easeInOut);
+    }
   }
 
   @override
@@ -49,70 +77,70 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final headingByVerse = <int, SectionHeading>{
       for (final h in content?.headings ?? const []) h.beforeVerse: h,
     };
+    final verses = content?.verses ?? const <Verse>[];
 
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 0,
         title: Row(children: [
-          _pill(c, book?.testament == Testament.nt ? 'NT' : 'AT'),
-          const SizedBox(width: 8),
-          _pill(c, book?.name ?? bookId),
+          _pill(c, book?.testament == Testament.nt ? 'NT' : 'AT',
+              onTap: _pickBook),
+          const SizedBox(width: 6),
+          Flexible(
+              child: _pill(c, book?.name ?? bookId, onTap: _pickBook)),
         ]),
         actions: [
-          _pill(c, '$chapter'),
+          if (book != null)
+            _pill(c, '$chapter', onTap: () => _pickChapter(book)),
           IconButton(
-            icon: Icon(Icons.more_horiz, color: c.textSecondary),
-            onPressed: () => _showTypeSheet(context),
+            icon: Icon(Icons.format_list_numbered,
+                color: c.textSecondary, size: 20),
+            tooltip: 'Ir para versículo',
+            onPressed: verses.isEmpty ? null : () => _pickVerse(verses.length),
           ),
         ],
       ),
       body: SafeArea(
         child: (content == null)
             ? _NoText(c)
-            : ListView(
+            : ScrollablePositionedList.builder(
+                itemScrollController: _scrollController,
                 padding: const EdgeInsets.fromLTRB(24, 8, 24, 80),
-                children: [
-                  const SizedBox(height: 12),
-                  Center(
-                      child: BookEmblem(
-                          bookId: bookId,
-                          abbrev: book?.abbrev ?? '',
-                          size: 96)),
-                  const SizedBox(height: 16),
-                  Center(
-                      child: Text(book?.name ?? bookId,
-                          style: Theme.of(context).textTheme.headlineMedium)),
-                  Center(
-                      child: Text('Capítulo $chapter',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleLarge
-                              ?.copyWith(color: c.textSecondary))),
-                  const SizedBox(height: 28),
-                  if (content.isEmpty)
-                    _NoText(c)
-                  else
-                    for (final v in content.verses) ...[
+                itemCount: verses.length + 2, // header + verses + footer
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return _Header(bookId: bookId, book: book, chapter: chapter);
+                  }
+                  if (index == verses.length + 1) {
+                    return _ChapterNav(
+                      book: book,
+                      chapter: chapter,
+                      onGo: _goTo,
+                    );
+                  }
+                  final v = verses[index - 1];
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       if (headingByVerse[v.number] != null)
                         Padding(
                           padding: const EdgeInsets.only(top: 18, bottom: 10),
-                          child: Text(
-                            _titleCase(headingByVerse[v.number]!.text),
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
-                                ?.copyWith(fontWeight: FontWeight.w700),
-                          ),
+                          child: Text(_titleCase(headingByVerse[v.number]!.text),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.w700)),
                         ),
                       _VerseTile(
                         verse: v,
                         hasCommentary: markers.contains(v.number),
                         highlight: highlights[v.number],
-                        onTap: () => _showVerseActions(
-                            context, book?.name ?? bookId, v),
+                        onTap: () =>
+                            _showVerseActions(context, book?.name ?? bookId, v),
                       ),
                     ],
-                ],
+                  );
+                },
               ),
       ),
     );
@@ -123,6 +151,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final vref = VerseRef(widget.bookId, widget.chapter, v.number);
     final count = ref.read(commentariesProvider(vref)).length;
     final ctrl = ref.read(annotationControllerProvider);
+    final fullRef = '$bookName ${widget.chapter},${v.number}';
     showModalBottomSheet(
       context: context,
       backgroundColor: c.surface,
@@ -132,129 +161,136 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         final bookmarked = r.watch(isBookmarkedProvider(vref));
         final favorite = r.watch(isFavoriteProvider(vref));
         final notes = r.watch(notesForVerseProvider(vref));
-        final highlighted =
-            r.watch(highlightsForChapterProvider((bookId: vref.bookId, chapter: vref.chapter)))
-                .containsKey(v.number);
+        final highlighted = r
+            .watch(highlightsForChapterProvider(
+                (bookId: vref.bookId, chapter: vref.chapter)))
+            .containsKey(v.number);
         return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                      color: c.divider, borderRadius: BorderRadius.circular(2))),
-              const SizedBox(height: 12),
-              _HighlightRow(
-                active: highlighted,
-                onPick: (color) {
-                  ctrl.setHighlight(vref, color);
-                  Navigator.pop(sheetCtx);
-                },
-                onClear: () {
-                  ctrl.removeHighlight(vref);
-                  Navigator.pop(sheetCtx);
-                },
-              ),
-              Divider(height: 1, color: c.divider),
-              ListTile(
-                leading: Icon(Icons.copy, color: c.textPrimary),
-                title: const Text('Copiar versículo'),
-                onTap: () {
-                  Clipboard.setData(ClipboardData(
-                      text: '$bookName ${widget.chapter},${v.number} — ${v.text}'));
-                  Navigator.pop(sheetCtx);
-                },
-              ),
-              ListTile(
-                leading: Icon(
-                    favorite ? Icons.favorite : Icons.favorite_border,
-                    color: favorite ? c.accent : c.textPrimary),
-                title: Text(favorite ? 'Remover dos favoritos' : 'Favoritar'),
-                onTap: () {
-                  ctrl.toggleFavorite(vref,
-                      '$bookName ${widget.chapter},${v.number} — ${v.text}');
-                  Navigator.pop(sheetCtx);
-                },
-              ),
-              ListTile(
-                leading: Icon(
-                    bookmarked ? Icons.bookmark : Icons.bookmark_border,
-                    color: bookmarked ? c.accent : c.textPrimary),
-                title: Text(bookmarked ? 'Remover marcador' : 'Marcar'),
-                onTap: () {
-                  ctrl.toggleBookmark(vref);
-                  Navigator.pop(sheetCtx);
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.note_add_outlined, color: c.textPrimary),
-                title: Text(notes.isEmpty ? 'Nota' : 'Notas (${notes.length})'),
-                onTap: () {
-                  Navigator.pop(sheetCtx);
-                  showNoteEditor(context, ref, vref,
-                      existing: notes.isEmpty ? null : notes.first);
-                },
-              ),
-              ListTile(
-                enabled: count > 0,
-                leading: Icon(Icons.auto_stories,
-                    color: count > 0 ? c.accent : c.textFaint),
-                title: Text('Padres da Igreja',
-                    style: TextStyle(
-                        color: count > 0 ? c.textPrimary : c.textFaint)),
-                trailing: count > 0
-                    ? Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                            color: c.accentSoft,
-                            borderRadius: BorderRadius.circular(10)),
-                        child: Text('$count',
-                            style: TextStyle(
-                                color: c.accent, fontWeight: FontWeight.w600)))
-                    : null,
-                onTap: count == 0
-                    ? null
-                    : () {
-                        Navigator.pop(sheetCtx);
-                        showPatristicSheet(context, vref, bookName);
-                      },
-              ),
-              const SizedBox(height: 8),
-            ],
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                        color: c.divider,
+                        borderRadius: BorderRadius.circular(2))),
+                const SizedBox(height: 12),
+                _HighlightRow(
+                  active: highlighted,
+                  onPick: (color) {
+                    ctrl.setHighlight(vref, color);
+                    Navigator.pop(sheetCtx);
+                  },
+                  onClear: () {
+                    ctrl.removeHighlight(vref);
+                    Navigator.pop(sheetCtx);
+                  },
+                ),
+                Divider(height: 1, color: c.divider),
+                ListTile(
+                  leading: Icon(Icons.ios_share, color: c.textPrimary),
+                  title: const Text('Partilhar'),
+                  onTap: () {
+                    Navigator.pop(sheetCtx);
+                    showShareVerse(context, reference: fullRef, text: v.text);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.copy, color: c.textPrimary),
+                  title: const Text('Copiar versículo'),
+                  onTap: () {
+                    Clipboard.setData(
+                        ClipboardData(text: '“${v.text}”\n— $fullRef'));
+                    Navigator.pop(sheetCtx);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(
+                      favorite ? Icons.favorite : Icons.favorite_border,
+                      color: favorite ? c.accent : c.textPrimary),
+                  title: Text(favorite ? 'Remover dos favoritos' : 'Favoritar'),
+                  onTap: () {
+                    ctrl.toggleFavorite(vref, '“${v.text}”  ($fullRef)');
+                    Navigator.pop(sheetCtx);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(
+                      bookmarked ? Icons.bookmark : Icons.bookmark_border,
+                      color: bookmarked ? c.accent : c.textPrimary),
+                  title: Text(bookmarked ? 'Remover marcador' : 'Marcar'),
+                  onTap: () {
+                    ctrl.toggleBookmark(vref);
+                    Navigator.pop(sheetCtx);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.note_add_outlined, color: c.textPrimary),
+                  title: Text(notes.isEmpty ? 'Nota' : 'Notas (${notes.length})'),
+                  onTap: () {
+                    Navigator.pop(sheetCtx);
+                    showNoteEditor(context, ref, vref,
+                        existing: notes.isEmpty ? null : notes.first);
+                  },
+                ),
+                ListTile(
+                  enabled: count > 0,
+                  leading: Icon(Icons.auto_stories,
+                      color: count > 0 ? c.accent : c.textFaint),
+                  title: Text('Padres da Igreja',
+                      style: TextStyle(
+                          color: count > 0 ? c.textPrimary : c.textFaint)),
+                  trailing: count > 0
+                      ? Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                              color: c.accentSoft,
+                              borderRadius: BorderRadius.circular(10)),
+                          child: Text('$count',
+                              style: TextStyle(
+                                  color: c.accent,
+                                  fontWeight: FontWeight.w600)))
+                      : null,
+                  onTap: count == 0
+                      ? null
+                      : () {
+                          Navigator.pop(sheetCtx);
+                          showPatristicSheet(context, vref, bookName);
+                        },
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
         );
       }),
     );
   }
 
-  void _showTypeSheet(BuildContext context) {
-    final c = context.bt;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: c.surface,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text('Modo de cor', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 16),
-          Text('Tamanho da fonte (em breve)',
-              style: TextStyle(color: c.textSecondary)),
-        ]),
-      ),
-    );
-  }
-
-  static Widget _pill(BtColors c, String text) => Container(
-        margin: const EdgeInsets.symmetric(horizontal: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-            color: c.surface, borderRadius: BorderRadius.circular(16)),
-        child: Text(text, style: TextStyle(color: c.textSecondary, fontSize: 13)),
+  static Widget _pill(BtColors c, String text, {VoidCallback? onTap}) =>
+      GestureDetector(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+              color: c.surface, borderRadius: BorderRadius.circular(16)),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Flexible(
+                child: Text(text,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: c.textSecondary, fontSize: 13))),
+            if (onTap != null)
+              Padding(
+                padding: const EdgeInsets.only(left: 2),
+                child: Icon(Icons.expand_more, size: 14, color: c.textFaint),
+              ),
+          ]),
+        ),
       );
 
   static String _titleCase(String s) {
@@ -264,6 +300,69 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         .split(' ')
         .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
         .join(' ');
+  }
+}
+
+class _Header extends StatelessWidget {
+  final String bookId;
+  final BibleBook? book;
+  final int chapter;
+  const _Header({required this.bookId, required this.book, required this.chapter});
+  @override
+  Widget build(BuildContext context) {
+    final c = context.bt;
+    return Column(children: [
+      const SizedBox(height: 12),
+      BookEmblem(bookId: bookId, abbrev: book?.abbrev ?? '', size: 96),
+      const SizedBox(height: 16),
+      Text(book?.name ?? bookId,
+          style: Theme.of(context).textTheme.headlineMedium),
+      Text('Capítulo $chapter',
+          style: Theme.of(context)
+              .textTheme
+              .titleLarge
+              ?.copyWith(color: c.textSecondary)),
+      const SizedBox(height: 28),
+    ]);
+  }
+}
+
+class _ChapterNav extends StatelessWidget {
+  final BibleBook? book;
+  final int chapter;
+  final void Function(String, int) onGo;
+  const _ChapterNav(
+      {required this.book, required this.chapter, required this.onGo});
+  @override
+  Widget build(BuildContext context) {
+    final c = context.bt;
+    if (book == null) return const SizedBox.shrink();
+    final hasPrev = chapter > 1;
+    final hasNext = chapter < book!.chapterCount;
+    return Padding(
+      padding: const EdgeInsets.only(top: 28),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          TextButton.icon(
+            onPressed: hasPrev ? () => onGo(book!.id, chapter - 1) : null,
+            icon: const Icon(Icons.chevron_left),
+            label: const Text('Anterior'),
+            style: TextButton.styleFrom(
+                foregroundColor: hasPrev ? c.accent : c.textFaint),
+          ),
+          Text('${book!.name} $chapter',
+              style: TextStyle(color: c.textFaint, fontSize: 12)),
+          TextButton.icon(
+            onPressed: hasNext ? () => onGo(book!.id, chapter + 1) : null,
+            icon: const Icon(Icons.chevron_right),
+            label: const Text('Próximo'),
+            style: TextButton.styleFrom(
+                foregroundColor: hasNext ? c.accent : c.textFaint),
+          ),
+        ],
+      ),
+    );
   }
 }
 

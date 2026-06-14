@@ -22,7 +22,7 @@ void main() {
     final s = Settings.fromMap(db.allSettings());
     expect(s.onboardingCompleted, isFalse);
     expect(s.language, AppLanguage.pt);
-    expect(s.primaryTranslationId, 'matos1932');
+    expect(s.primaryTranslationId, 'pt_cat');
     expect(s.themeMode, ThemeMode.dark);
   });
 

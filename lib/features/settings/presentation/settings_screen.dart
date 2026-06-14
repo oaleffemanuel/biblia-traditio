@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/di/providers.dart';
 import '../../../core/theme/app_theme.dart';
@@ -104,6 +105,14 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: const Text('Gerir pacotes offline'),
             onTap: () {},
           ),
+          _section(c, 'Contato / Feedback'),
+          ListTile(
+            leading: const Icon(Icons.chat_bubble_outline,
+                color: Color(0xFF25D366)),
+            title: const Text('Fale conosco no WhatsApp'),
+            subtitle: const Text('Envie sugestões e relate problemas'),
+            onTap: _openWhatsApp,
+          ),
           const SizedBox(height: 24),
           Center(
             child: TextButton(
@@ -114,6 +123,20 @@ class SettingsScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _openWhatsApp() async {
+    const phone = '5531975965032'; // +55 31 97596-5032
+    const msg = 'Olá! Escrevo sobre o app Biblia Traditio.';
+    final encoded = Uri.encodeComponent(msg);
+    // Prefer the WhatsApp app; fall back to the browser (wa.me).
+    final appUri = Uri.parse('whatsapp://send?phone=$phone&text=$encoded');
+    final webUri = Uri.parse('https://wa.me/$phone?text=$encoded');
+    if (await canLaunchUrl(appUri)) {
+      await launchUrl(appUri);
+    } else {
+      await launchUrl(webUri, mode: LaunchMode.externalApplication);
+    }
   }
 
   void _editName(

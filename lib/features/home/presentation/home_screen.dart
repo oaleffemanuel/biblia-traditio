@@ -48,14 +48,12 @@ class HomeScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              height: 96,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  _QuickCard(
+            Row(
+              children: [
+                Expanded(
+                  child: _QuickCard(
                       icon: Icons.menu_book,
-                      label: 'Continuar\nleitura',
+                      label: 'Continuar',
                       onTap: () {
                         final pos = ref.read(latestProgressProvider);
                         if (pos != null) {
@@ -64,29 +62,45 @@ class HomeScreen extends ConsumerWidget {
                           context.go('/bible');
                         }
                       }),
-                  _QuickCard(
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickCard(
                       icon: Icons.wb_sunny_outlined,
-                      label: 'Leituras\nde hoje',
+                      label: 'Hoje',
                       onTap: () => context.go('/liturgy')),
-                  _QuickCard(
-                      icon: Icons.calendar_month_outlined,
-                      label: 'Plano de\nleitura',
-                      onTap: () {}),
-                  _QuickCard(
-                      icon: Icons.note_outlined,
-                      label: 'Notas',
-                      badge: counts.notes,
-                      onTap: () => context.push('/notes')),
-                  _QuickCard(
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickCard(
                       icon: Icons.favorite_border,
                       label: 'Favoritos',
                       badge: counts.favorites,
                       onTap: () => context.push('/favorites')),
-                ],
-              ),
+                ),
+              ],
             ),
             const SizedBox(height: 24),
             _LiturgyPreview(onTap: () => context.go('/liturgy')),
+            const SizedBox(height: 24),
+            _SectionLabel('Continue a sua jornada', c),
+            const SizedBox(height: 12),
+            _SecondaryCard(
+              icon: Icons.calendar_month_outlined,
+              title: 'Plano de leitura',
+              subtitle: 'Em breve',
+              onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Plano de leitura em breve'))),
+            ),
+            const SizedBox(height: 12),
+            _SecondaryCard(
+              icon: Icons.edit_note,
+              title: 'Notas',
+              subtitle: counts.notes == 0
+                  ? 'As suas reflexões pessoais'
+                  : '${counts.notes} ${counts.notes == 1 ? 'nota' : 'notas'}',
+              onTap: () => context.push('/notes'),
+            ),
           ],
         ),
       ),
@@ -118,8 +132,7 @@ class _QuickCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 104,
-        margin: const EdgeInsets.only(right: 12),
+        height: 92,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
             color: c.surface, borderRadius: BorderRadius.circular(18)),
@@ -140,11 +153,77 @@ class _QuickCard extends StatelessWidget {
               ],
             ),
             Text(label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                     color: c.textPrimary,
                     fontSize: 13,
-                    height: 1.2,
                     fontWeight: FontWeight.w500)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  final BtColors c;
+  const _SectionLabel(this.text, this.c);
+  @override
+  Widget build(BuildContext context) => Text(text.toUpperCase(),
+      style: TextStyle(
+          color: c.textFaint,
+          fontSize: 12,
+          letterSpacing: 1,
+          fontWeight: FontWeight.w600));
+}
+
+class _SecondaryCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  const _SecondaryCard(
+      {required this.icon,
+      required this.title,
+      required this.subtitle,
+      required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    final c = context.bt;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+            color: c.surface, borderRadius: BorderRadius.circular(18)),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                  color: c.accentSoft, borderRadius: BorderRadius.circular(12)),
+              child: Icon(icon, color: c.accent, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      style: TextStyle(color: c.textSecondary, fontSize: 13)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: c.textFaint),
           ],
         ),
       ),
