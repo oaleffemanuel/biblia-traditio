@@ -1,0 +1,20 @@
+name: biblia_traditio_importer
+description: >-
+  Offline build pipeline for Biblia Traditio. Parses scripture sources and the
+  patristic corpus, validates them (anti-drift verse numbering), and builds the
+  bundled read-only SQLite (+FTS5) content database. NOT shipped with the app.
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  sqlite3: ^2.4.0
+  path: ^1.9.0
+  args: ^2.5.0
+  collection: ^1.18.0
+
+dev_dependencies:
+  test: ^1.25.0
+  lints: ^4.0.0
