@@ -18,9 +18,13 @@ class SettingsScreen extends ConsumerWidget {
     final ctrl = ref.read(settingsControllerProvider);
     final db = ref.watch(contentDatabaseProvider);
     final patristics = db?.meta('patristics_count');
-    final translation = TranslationOption.catalogue
-        .firstWhere((t) => t.id == s.primaryTranslationId,
-            orElse: () => TranslationOption.catalogue.first);
+    final available = ref.watch(availableTranslationsProvider);
+    final resolvedId = ref.watch(resolvedTranslationIdProvider);
+    final translationTitle = available
+        .where((t) => t.id == resolvedId)
+        .map((t) => t.title)
+        .firstOrNull ??
+        'Nenhuma instalada';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Ajustes')),
@@ -37,15 +41,19 @@ class SettingsScreen extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.translate),
             title: const Text('Tradução'),
-            subtitle: Text(translation.title),
-            onTap: () => _pick<TranslationOption>(
-              context,
-              'Tradução',
-              TranslationOption.catalogue,
-              (t) => t.title,
-              translation,
-              (t) => ctrl.setTranslation(t.id),
-            ),
+            subtitle: Text(translationTitle),
+            enabled: available.isNotEmpty,
+            onTap: available.isEmpty
+                ? null
+                : () => _pick<({String id, String lang, String title})>(
+                      context,
+                      'Tradução',
+                      available,
+                      (t) => t.title,
+                      available.firstWhere((t) => t.id == resolvedId,
+                          orElse: () => available.first),
+                      (t) => ctrl.setTranslation(t.id),
+                    ),
           ),
           ListTile(
             leading: const Icon(Icons.language),

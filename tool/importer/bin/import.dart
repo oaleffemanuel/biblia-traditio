@@ -3,8 +3,10 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:biblia_traditio_importer/builders/sqlite_builder.dart';
+import 'package:biblia_traditio_importer/models/blocks.dart';
 import 'package:biblia_traditio_importer/parsers/bible_json_parser.dart';
 import 'package:biblia_traditio_importer/parsers/patristics_parser.dart';
+import 'package:biblia_traditio_importer/parsers/usfx_parser.dart';
 import 'package:biblia_traditio_importer/parsers/scripture_parser.dart';
 import 'package:biblia_traditio_importer/validators/verse_validator.dart';
 import 'package:path/path.dart' as p;
@@ -30,6 +32,9 @@ Future<void> main(List<String> argv) async {
       break;
     case 'biblejson':
       await _bibleJson(rest);
+      break;
+    case 'usfx':
+      await _usfx(rest);
       break;
     case 'stats':
       await _stats(rest);
@@ -190,6 +195,83 @@ Future<void> _bibleJson(List<String> argv) async {
   builder.finish();
   stdout.writeln('✓ Scripture written to ${a['out']} '
       '(translation=${a['translation']})');
+}
+
+Future<void> _usfx(List<String> argv) async {
+  final a = (ArgParser()
+        ..addOption('src', help: 'USFX XML (e.g. Clementine Vulgate)')
+        ..addOption('translation', defaultsTo: 'vulgata')
+        ..addOption('lang', defaultsTo: 'la')
+        ..addOption('title', defaultsTo: 'Vulgata Clementina')
+        ..addOption('license', defaultsTo: 'Domínio público')
+        ..addOption('out', defaultsTo: 'biblia_traditio.sqlite')
+        ..addOption('report-dir', defaultsTo: 'data/reports')
+        ..addFlag('strict', defaultsTo: false))
+      .parse(argv);
+  final src = a['src'] as String?;
+  if (src == null) _fail('usfx: --src <file.xml> required');
+
+  stdout.writeln('▶ Parsing USFX: $src');
+  final parser = UsfxParser();
+  await parser.parseFile(src!);
+  for (final w in parser.warnings) {
+    stdout.writeln('  ⚠ $w');
+  }
+  stdout.writeln('  books: ${parser.books.length} · verses: ${parser.verseCount}');
+
+  _validateAndInsertBible(
+    books: parser.books,
+    translation: a['translation'] as String,
+    lang: a['lang'] as String,
+    title: a['title'] as String,
+    license: a['license'] as String,
+    out: a['out'] as String,
+    reportDir: a['report-dir'] as String,
+    strict: a['strict'] as bool,
+  );
+}
+
+/// Shared: validate every book, write reports, refuse on errors under --strict,
+/// then insert the translation and record a validation flag in `meta`.
+void _validateAndInsertBible({
+  required Map<String, List<ParsedChapter>> books,
+  required String translation,
+  required String lang,
+  required String title,
+  required String license,
+  required String out,
+  required String reportDir,
+  required bool strict,
+}) {
+  Directory(reportDir).createSync(recursive: true);
+  var totalErrors = 0, totalWarnings = 0;
+  final validator = VerseValidator();
+  for (final entry in books.entries) {
+    final report = validator.validate(entry.key, entry.value);
+    totalErrors += report.errorCount;
+    totalWarnings += report.warningCount;
+    if (report.hasErrors) {
+      for (final f
+          in report.findings.where((f) => f.severity == Severity.error).take(5)) {
+        stdout.writeln('  ✗ ${entry.key} ${f.chapter}:${f.verse} '
+            '[${f.code}] ${f.message}');
+      }
+    }
+  }
+  stdout.writeln('  validation: $totalErrors errors, $totalWarnings warnings');
+  if (totalErrors > 0 && strict) {
+    _fail('Refusing to build: $totalErrors validation error(s).');
+  }
+
+  final builder = ContentDbBuilder.open(out);
+  builder.upsertTranslation(translation, lang, title,
+      license: license.isEmpty ? null : license, versification: 'vulgate');
+  for (final entry in books.entries) {
+    builder.insertScripture(translation, entry.key, entry.value);
+  }
+  builder.setMeta('bible_validation_errors', '$totalErrors');
+  builder.finish();
+  stdout.writeln('✓ Scripture written to $out (translation=$translation)');
 }
 
 Future<void> _stats(List<String> argv) async {

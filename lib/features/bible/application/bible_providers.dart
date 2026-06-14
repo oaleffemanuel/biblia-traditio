@@ -25,7 +25,7 @@ final chapterProvider =
     Provider.family<ChapterContent?, ({String bookId, int chapter})>((ref, key) {
   final db = ref.watch(contentDatabaseProvider);
   if (db == null) return null;
-  final translation = ref.watch(settingsProvider).primaryTranslationId;
+  final translation = ref.watch(resolvedTranslationIdProvider);
   return db.getChapter(translation, key.bookId, key.chapter);
 });
 

@@ -32,7 +32,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final translation = ref.read(settingsProvider).primaryTranslationId;
+      final translation = ref.read(resolvedTranslationIdProvider);
       ref.read(annotationControllerProvider).recordProgress(
           translation, VerseRef(widget.bookId, widget.chapter, 1));
     });

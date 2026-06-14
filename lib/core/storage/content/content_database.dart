@@ -170,6 +170,18 @@ class ContentDatabase {
     return rows.isEmpty ? null : rows.first['value'] as String?;
   }
 
+  /// Translations actually present in the bundled DB.
+  List<({String id, String lang, String title})> listTranslations() {
+    return _db
+        .select('SELECT id, lang, title FROM translation ORDER BY id')
+        .map((r) => (
+              id: r['id'] as String,
+              lang: r['lang'] as String,
+              title: r['title'] as String,
+            ))
+        .toList();
+  }
+
   Commentary _toCommentary(Row r) => Commentary(
         id: r['id'] as int,
         ref: VerseRef(

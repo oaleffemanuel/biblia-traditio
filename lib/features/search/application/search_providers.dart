@@ -29,7 +29,7 @@ final searchResultsProvider = Provider<SearchResults>((ref) {
   final user = ref.watch(userDbProvider);
   ref.watch(userDataRevisionProvider); // refresh notes after edits
 
-  final translation = ref.watch(settingsProvider).primaryTranslationId;
+  final translation = ref.watch(resolvedTranslationIdProvider);
   final verses = content?.searchVerseHits(translation, q, limit: 60) ?? const [];
   final commentaries = content?.searchCommentaryHits(q, limit: 60) ?? const [];
   final notes = user?.allNotes(query: q) ?? const <Note>[];

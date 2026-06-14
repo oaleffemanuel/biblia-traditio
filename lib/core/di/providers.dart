@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart'; // StateProvider (Riverpod 3)
 import 'package:path/path.dart' as p;
@@ -8,25 +9,35 @@ import 'package:path_provider/path_provider.dart';
 import '../storage/content/content_database.dart';
 import '../storage/user/user_database.dart';
 
-/// Dev-only fallback: the importer's output on this machine. In production the
-/// DB is shipped as a downloadable/bundled resource pack into [appContentDir].
-const String _devContentDbSource =
-    '/Users/aleffemanuel/workspace/biblia-traditio/tool/importer/data/biblia_traditio.sqlite';
+/// The content DB is shipped as a bundled asset and copied to the app's private
+/// support directory on first launch (sqlite can't open a read-only asset in
+/// place). Bump this when the bundled DB changes to trigger a re-copy.
+const String _contentAsset = 'assets/content/biblia_traditio.sqlite';
+const int _contentAssetVersion = 1;
 
-/// Resolves the on-device content DB path, copying the dev build in on first
-/// run if present. Returns null if no content DB is available yet.
+/// Resolves the on-device content DB path, copying the bundled asset in on
+/// first launch (cross-platform; no machine-specific paths). Returns null only
+/// if the asset is absent from the build (app then shows an "install" state).
 final contentDbPathProvider = FutureProvider<String?>((ref) async {
   final dir = await getApplicationSupportDirectory();
   final contentDir = Directory(p.join(dir.path, 'content'));
   await contentDir.create(recursive: true);
   final dest = p.join(contentDir.path, 'biblia_traditio.sqlite');
+  final stamp = File(p.join(contentDir.path, '.version'));
 
-  if (!File(dest).existsSync()) {
-    final devSrc = File(_devContentDbSource);
-    if (devSrc.existsSync()) {
-      await devSrc.copy(dest);
-    } else {
-      return null; // pack not installed yet
+  final installed = File(dest).existsSync() &&
+      stamp.existsSync() &&
+      stamp.readAsStringSync().trim() == '$_contentAssetVersion';
+
+  if (!installed) {
+    try {
+      final bytes = await rootBundle.load(_contentAsset);
+      await File(dest).writeAsBytes(
+          bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes),
+          flush: true);
+      await stamp.writeAsString('$_contentAssetVersion');
+    } on Exception {
+      return null; // asset not bundled in this build
     }
   }
   return dest;

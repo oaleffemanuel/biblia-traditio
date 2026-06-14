@@ -33,3 +33,20 @@ class SettingsController {
 
 final settingsControllerProvider =
     Provider((ref) => SettingsController(ref));
+
+/// Translations actually available in the bundled content DB.
+final availableTranslationsProvider =
+    Provider<List<({String id, String lang, String title})>>((ref) {
+  return ref.watch(contentDatabaseProvider)?.listTranslations() ?? const [];
+});
+
+/// The translation to actually query: the user's preference if it exists in the
+/// DB, otherwise the first available one (e.g. falls back to `vulgata` in a
+/// release build that doesn't bundle the dev Portuguese text). Guarantees the
+/// reader never queries a translation that isn't present.
+final resolvedTranslationIdProvider = Provider<String>((ref) {
+  final pref = ref.watch(settingsProvider).primaryTranslationId;
+  final available = ref.watch(availableTranslationsProvider);
+  if (available.any((t) => t.id == pref)) return pref;
+  return available.isNotEmpty ? available.first.id : pref;
+});

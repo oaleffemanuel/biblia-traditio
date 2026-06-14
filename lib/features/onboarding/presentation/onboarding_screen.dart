@@ -18,7 +18,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   // collected choices
   final _nameController = TextEditingController();
   AppLanguage _language = AppLanguage.pt;
-  String _translationId = 'pt_cat';
+  String _translationId = 'vulgata';
   bool _notifications = false;
   bool _readingPlan = false;
 
