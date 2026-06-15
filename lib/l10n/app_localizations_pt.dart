@@ -234,6 +234,49 @@ class AppL10nPt extends AppL10n {
   String get churchFathers => 'Padres da Igreja';
 
   @override
+  String get myNotes => 'Minhas Notas';
+
+  @override
+  String get noCommentaryForVerse =>
+      'Ainda não há comentário para este versículo.';
+
+  @override
+  String get patristicsNotInstalled =>
+      'Instale o Comentário dos Padres em Ajustes para ler este versículo com a Igreja.';
+
+  @override
+  String get noNotesForVerse => 'Ainda não há notas para este versículo.';
+
+  @override
+  String get writeReflection => 'Escrever uma reflexão';
+
+  @override
+  String commentaryCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count comentários',
+      one: '1 comentário',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filterAll => 'Todos';
+
+  @override
+  String get filterFathers => 'Padres';
+
+  @override
+  String get filterMedieval => 'Medieval';
+
+  @override
+  String get filterAugustine => 'Santo Agostinho';
+
+  @override
+  String get filterAquinas => 'S. Tomás de Aquino';
+
+  @override
   String get colorMode => 'Modo de cor';
 
   @override

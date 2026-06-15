@@ -178,13 +178,19 @@ void main() {
     await launchToHome(tester);
     await openGenesis1(tester);
 
-    // favorite + note
+    // Open the commentary panel (Fathers tab is primary). Favorite + share are
+    // action-bar icons; notes are the secondary tab.
     await tap(tester, find.textContaining('In principio'));
-    expect(await until(tester, find.text('Favoritar')), isTrue);
-    await tap(tester, find.text('Favoritar'));
-    await tap(tester, find.textContaining('In principio'));
-    await until(tester, find.text('Nota'));
-    await tap(tester, find.text('Nota'));
+    expect(await until(tester, find.text('Padres da Igreja')), isTrue,
+        reason: 'commentary panel did not open (Fathers tab)');
+    debugPrint('RESULT panel_fathers_first=ok');
+
+    // favorite via the slim action bar
+    await tap(tester, find.byIcon(Icons.favorite_border));
+
+    // notes via the secondary tab
+    await tap(tester, find.text('Minhas Notas'));
+    await tap(tester, find.text('Escrever uma reflexão'));
     if (await until(tester, find.byType(TextField))) {
       await tester.enterText(find.byType(TextField).first, 'Reflexão de teste');
       await tester.pump(const Duration(milliseconds: 300));
@@ -192,10 +198,8 @@ void main() {
     }
     debugPrint('RESULT user_data_added=ok');
 
-    // sharing card
-    await tap(tester, find.textContaining('In principio'));
-    await until(tester, find.text('Partilhar'));
-    await tap(tester, find.text('Partilhar'));
+    // sharing card via the action bar
+    await tap(tester, find.byIcon(Icons.ios_share));
     expect(await until(tester, find.text('Biblia Traditio')), isTrue,
         reason: 'share card did not render');
     debugPrint('RESULT share_card=ok');

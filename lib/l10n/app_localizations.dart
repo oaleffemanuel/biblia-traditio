@@ -505,6 +505,72 @@ abstract class AppL10n {
   /// **'Church Fathers'**
   String get churchFathers;
 
+  /// No description provided for @myNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'My Notes'**
+  String get myNotes;
+
+  /// No description provided for @noCommentaryForVerse.
+  ///
+  /// In en, this message translates to:
+  /// **'No commentary available for this verse yet.'**
+  String get noCommentaryForVerse;
+
+  /// No description provided for @patristicsNotInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Install the Church Fathers commentary in Settings to read this verse with the Church.'**
+  String get patristicsNotInstalled;
+
+  /// No description provided for @noNotesForVerse.
+  ///
+  /// In en, this message translates to:
+  /// **'No notes for this verse yet.'**
+  String get noNotesForVerse;
+
+  /// No description provided for @writeReflection.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a reflection'**
+  String get writeReflection;
+
+  /// No description provided for @commentaryCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 commentary} other{{count} commentaries}}'**
+  String commentaryCount(int count);
+
+  /// No description provided for @filterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get filterAll;
+
+  /// No description provided for @filterFathers.
+  ///
+  /// In en, this message translates to:
+  /// **'Fathers'**
+  String get filterFathers;
+
+  /// No description provided for @filterMedieval.
+  ///
+  /// In en, this message translates to:
+  /// **'Medieval'**
+  String get filterMedieval;
+
+  /// No description provided for @filterAugustine.
+  ///
+  /// In en, this message translates to:
+  /// **'St Augustine'**
+  String get filterAugustine;
+
+  /// No description provided for @filterAquinas.
+  ///
+  /// In en, this message translates to:
+  /// **'St Thomas Aquinas'**
+  String get filterAquinas;
+
   /// No description provided for @colorMode.
   ///
   /// In en, this message translates to:

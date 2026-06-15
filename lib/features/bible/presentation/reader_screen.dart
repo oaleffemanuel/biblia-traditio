@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -8,14 +7,15 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../annotations/application/annotation_providers.dart';
 import '../../annotations/domain/entities.dart';
-import '../../annotations/presentation/note_editor.dart';
 import '../../settings/application/settings_providers.dart';
 import '../application/bible_providers.dart';
 import '../domain/entities.dart';
+import 'commentary_panel.dart';
 import 'widgets/book_emblem.dart';
 import 'widgets/navigation_pickers.dart';
-import 'widgets/share_verse.dart';
-import 'patristic_sheet.dart';
+
+/// Muted gold marking verses that carry Church Fathers commentary.
+const Color _kGold = Color(0xFFCBA45A);
 
 class ReaderScreen extends ConsumerStatefulWidget {
   final String bookId;
@@ -155,143 +155,19 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                         verse: v,
                         hasCommentary: markers.contains(v.number),
                         highlight: highlights[v.number],
-                        onTap: () =>
-                            _showVerseActions(context, book?.name ?? bookId, v),
+                        onTap: () => showCommentaryPanel(
+                          context,
+                          ref,
+                          VerseRef(bookId, chapter, v.number),
+                          bookName: book?.name ?? bookId,
+                          verseText: v.text,
+                        ),
                       ),
                     ],
                   );
                 },
               ),
       ),
-    );
-  }
-
-  void _showVerseActions(BuildContext context, String bookName, Verse v) {
-    final c = context.bt;
-    final vref = VerseRef(widget.bookId, widget.chapter, v.number);
-    final ctrl = ref.read(annotationControllerProvider);
-    final fullRef = '$bookName ${widget.chapter},${v.number}';
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: c.surface,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (sheetCtx) => Consumer(builder: (ctx, r, _) {
-        // Reactive: if a patristics pack is installed while this sheet is open,
-        // the "Padres da Igreja" entry enables itself without a reopen.
-        final count = r.watch(commentariesProvider(vref)).length;
-        final bookmarked = r.watch(isBookmarkedProvider(vref));
-        final favorite = r.watch(isFavoriteProvider(vref));
-        final notes = r.watch(notesForVerseProvider(vref));
-        final highlighted = r
-            .watch(highlightsForChapterProvider(
-                (bookId: vref.bookId, chapter: vref.chapter)))
-            .containsKey(v.number);
-        return SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 12),
-                Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                        color: c.divider,
-                        borderRadius: BorderRadius.circular(2))),
-                const SizedBox(height: 12),
-                _HighlightRow(
-                  active: highlighted,
-                  onPick: (color) {
-                    ctrl.setHighlight(vref, color);
-                    Navigator.pop(sheetCtx);
-                  },
-                  onClear: () {
-                    ctrl.removeHighlight(vref);
-                    Navigator.pop(sheetCtx);
-                  },
-                ),
-                Divider(height: 1, color: c.divider),
-                ListTile(
-                  leading: Icon(Icons.ios_share, color: c.textPrimary),
-                  title: Text(ctx.l10n.share),
-                  onTap: () {
-                    Navigator.pop(sheetCtx);
-                    showShareVerse(context, reference: fullRef, text: v.text);
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.copy, color: c.textPrimary),
-                  title: Text(ctx.l10n.copyVerse),
-                  onTap: () {
-                    Clipboard.setData(
-                        ClipboardData(text: '“${v.text}”\n— $fullRef'));
-                    Navigator.pop(sheetCtx);
-                  },
-                ),
-                ListTile(
-                  leading: Icon(
-                      favorite ? Icons.favorite : Icons.favorite_border,
-                      color: favorite ? c.accent : c.textPrimary),
-                  title: Text(favorite ? ctx.l10n.unfavorite : ctx.l10n.favorite),
-                  onTap: () {
-                    ctrl.toggleFavorite(vref, '“${v.text}”  ($fullRef)');
-                    Navigator.pop(sheetCtx);
-                  },
-                ),
-                ListTile(
-                  leading: Icon(
-                      bookmarked ? Icons.bookmark : Icons.bookmark_border,
-                      color: bookmarked ? c.accent : c.textPrimary),
-                  title: Text(bookmarked ? ctx.l10n.unbookmark : ctx.l10n.bookmark),
-                  onTap: () {
-                    ctrl.toggleBookmark(vref);
-                    Navigator.pop(sheetCtx);
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.note_add_outlined, color: c.textPrimary),
-                  title: Text(notes.isEmpty
-                      ? ctx.l10n.note
-                      : ctx.l10n.notesWithCount(notes.length)),
-                  onTap: () {
-                    Navigator.pop(sheetCtx);
-                    showNoteEditor(context, ref, vref,
-                        existing: notes.isEmpty ? null : notes.first);
-                  },
-                ),
-                ListTile(
-                  enabled: count > 0,
-                  leading: Icon(Icons.auto_stories,
-                      color: count > 0 ? c.accent : c.textFaint),
-                  title: Text(ctx.l10n.churchFathers,
-                      style: TextStyle(
-                          color: count > 0 ? c.textPrimary : c.textFaint)),
-                  trailing: count > 0
-                      ? Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                              color: c.accentSoft,
-                              borderRadius: BorderRadius.circular(10)),
-                          child: Text('$count',
-                              style: TextStyle(
-                                  color: c.accent,
-                                  fontWeight: FontWeight.w600)))
-                      : null,
-                  onTap: count == 0
-                      ? null
-                      : () {
-                          Navigator.pop(sheetCtx);
-                          showPatristicSheet(context, vref, bookName);
-                        },
-                ),
-                const SizedBox(height: 8),
-              ],
-            ),
-          ),
-        );
-      }),
     );
   }
 
@@ -390,48 +266,6 @@ class _ChapterNav extends StatelessWidget {
   }
 }
 
-class _HighlightRow extends StatelessWidget {
-  final bool active;
-  final ValueChanged<HighlightColor> onPick;
-  final VoidCallback onClear;
-  const _HighlightRow(
-      {required this.active, required this.onPick, required this.onClear});
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.bt;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: Row(
-        children: [
-          for (final color in HighlightColor.values)
-            Padding(
-              padding: const EdgeInsets.only(right: 14),
-              child: GestureDetector(
-                onTap: () => onPick(color),
-                child: Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: color.color,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: c.divider),
-                  ),
-                ),
-              ),
-            ),
-          const Spacer(),
-          if (active)
-            IconButton(
-              onPressed: onClear,
-              icon: Icon(Icons.format_color_reset, color: c.textSecondary),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
 class _VerseTile extends StatelessWidget {
   final Verse verse;
   final bool hasCommentary;
@@ -459,29 +293,33 @@ class _VerseTile extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 2),
         child: Text.rich(
           TextSpan(children: [
+            // Gold dot marks verses the Church Fathers have commented on.
             WidgetSpan(
               alignment: PlaceholderAlignment.top,
               child: Padding(
                 padding: const EdgeInsets.only(right: 8, top: 2),
-                child: Text('${verse.number}',
-                    style: TextStyle(
-                        color: c.accent,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600)),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  if (hasCommentary) ...[
+                    Container(
+                      width: 5,
+                      height: 5,
+                      margin: const EdgeInsets.only(top: 3),
+                      decoration: const BoxDecoration(
+                          color: _kGold, shape: BoxShape.circle),
+                    ),
+                    const SizedBox(width: 4),
+                  ],
+                  Text('${verse.number}',
+                      style: TextStyle(
+                          color: c.accent,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600)),
+                ]),
               ),
             ),
             TextSpan(
                 text: verse.text,
                 style: Theme.of(context).textTheme.bodyLarge),
-            if (hasCommentary)
-              WidgetSpan(
-                alignment: PlaceholderAlignment.middle,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 6),
-                  child: Icon(Icons.auto_stories,
-                      size: 14, color: c.accent.withValues(alpha: 0.7)),
-                ),
-              ),
           ]),
         ),
       ),
