@@ -10,10 +10,10 @@ import '../storage/user/user_database.dart';
 /// The opened content database, built from the installed Scripture (required)
 /// and patristics (optional) package DBs. Null until the Bible is installed.
 final contentDatabaseProvider = Provider<ContentDatabase?>((ref) {
-  final paths = ref.watch(contentReadyProvider).value;
-  if (paths?.bible == null) return null;
+  final paths = ref.watch(contentPathsProvider);
+  if (paths.bible == null) return null;
   final db = ContentDatabase.open(
-      biblePath: paths!.bible!, patristicsPath: paths.patristics);
+      biblePath: paths.bible!, patristicsPath: paths.patristics);
   ref.onDispose(db.dispose);
   return db;
 });

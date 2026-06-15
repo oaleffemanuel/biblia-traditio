@@ -18,13 +18,25 @@ class ContentPaths {
   const ContentPaths({this.bible, this.patristics});
 }
 
-/// Ensures required packages (the core Bible) are installed on first launch,
-/// then resolves the installed Scripture + patristics DB paths.
-final contentReadyProvider = FutureProvider<ContentPaths>((ref) async {
-  ref.watch(installRevisionProvider);
+/// First-launch only: installs the required packages (the core Bible). Runs
+/// once; does NOT depend on the install revision (so installing optional packs
+/// later never re-triggers this async future during a widget build).
+final contentReadyProvider = FutureProvider<bool>((ref) async {
   final mgr = ref.watch(packageManagerProvider);
   final pkgs = await ref.watch(manifestProvider.future);
   await mgr.ensureRequiredInstalled(pkgs);
+  return true;
+});
+
+/// Synchronous resolved paths for the installed Scripture + patristics DBs.
+/// Recomputes when a package is installed/removed (revision) — synchronously,
+/// between frames, so it never invalidates an async provider mid-build.
+final contentPathsProvider = Provider<ContentPaths>((ref) {
+  ref.watch(installRevisionProvider);
+  final ready = ref.watch(contentReadyProvider).value ?? false;
+  if (!ready) return const ContentPaths();
+  final mgr = ref.watch(packageManagerProvider);
+  final pkgs = ref.watch(manifestProvider).value ?? const [];
 
   ContentPackage? pick(PackageType t) {
     for (final p in pkgs) {

@@ -38,6 +38,21 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     });
   }
 
+  @override
+  void didUpdateWidget(ReaderScreen old) {
+    super.didUpdateWidget(old);
+    // GoRouter reuses this State across chapters; reset to the top and record
+    // the new position when the book/chapter changes.
+    if (old.bookId != widget.bookId || old.chapter != widget.chapter) {
+      if (_scrollController.isAttached) _scrollController.jumpTo(index: 0);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final t = ref.read(resolvedTranslationIdProvider);
+        ref.read(annotationControllerProvider).recordProgress(
+            t, VerseRef(widget.bookId, widget.chapter, 1));
+      });
+    }
+  }
+
   void _goTo(String bookId, int chapter) =>
       context.go('/bible/$bookId/$chapter');
 
@@ -149,7 +164,6 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   void _showVerseActions(BuildContext context, String bookName, Verse v) {
     final c = context.bt;
     final vref = VerseRef(widget.bookId, widget.chapter, v.number);
-    final count = ref.read(commentariesProvider(vref)).length;
     final ctrl = ref.read(annotationControllerProvider);
     final fullRef = '$bookName ${widget.chapter},${v.number}';
     showModalBottomSheet(
@@ -158,6 +172,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (sheetCtx) => Consumer(builder: (ctx, r, _) {
+        // Reactive: if a patristics pack is installed while this sheet is open,
+        // the "Padres da Igreja" entry enables itself without a reopen.
+        final count = r.watch(commentariesProvider(vref)).length;
         final bookmarked = r.watch(isBookmarkedProvider(vref));
         final favorite = r.watch(isFavoriteProvider(vref));
         final notes = r.watch(notesForVerseProvider(vref));
