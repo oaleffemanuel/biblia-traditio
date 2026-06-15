@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../packages/application/package_providers.dart';
 import '../../packages/domain/content_package.dart';
@@ -20,34 +21,41 @@ class SettingsScreen extends ConsumerWidget {
     final packages = ref.watch(installablePackagesProvider);
     final available = ref.watch(availableTranslationsProvider);
     final resolvedId = ref.watch(resolvedTranslationIdProvider);
+    final l10n = context.l10n;
     final translationTitle = available
         .where((t) => t.id == resolvedId)
         .map((t) => t.title)
         .firstOrNull ??
-        'Nenhuma instalada';
+        l10n.noTranslationInstalled;
+    String themeLabel(ThemeMode m) => switch (m) {
+          ThemeMode.light => l10n.themeLight,
+          ThemeMode.system => l10n.themeSystem,
+          ThemeMode.dark => l10n.themeDark,
+        };
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Ajustes')),
+      appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: ListView(
         children: [
-          _section(c, 'Conta'),
+          _section(c, l10n.settingsAccount),
           ListTile(
             leading: const Icon(Icons.person_outline),
-            title: const Text('Nome'),
+            title: Text(l10n.settingsName),
             subtitle: Text(s.displayName.isEmpty ? '—' : s.displayName),
-            onTap: () => _editName(context, s.displayName, ctrl.setDisplayName),
+            onTap: () => _editName(context, s.displayName, ctrl.setDisplayName,
+                l10n.settingsName),
           ),
-          _section(c, 'Leitura'),
+          _section(c, l10n.settingsReading),
           ListTile(
             leading: const Icon(Icons.translate),
-            title: const Text('Tradução'),
+            title: Text(l10n.settingsTranslation),
             subtitle: Text(translationTitle),
             enabled: available.isNotEmpty,
             onTap: available.isEmpty
                 ? null
                 : () => _pick<({String id, String lang, String title})>(
                       context,
-                      'Tradução',
+                      l10n.settingsTranslation,
                       available,
                       (t) => t.title,
                       available.firstWhere((t) => t.id == resolvedId,
@@ -57,11 +65,11 @@ class SettingsScreen extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.language),
-            title: const Text('Idioma do app'),
+            title: Text(l10n.settingsAppLanguage),
             subtitle: Text(s.language.label),
             onTap: () => _pick<AppLanguage>(
               context,
-              'Idioma',
+              l10n.settingsAppLanguage,
               AppLanguage.values,
               (l) => l.label,
               s.language,
@@ -70,47 +78,40 @@ class SettingsScreen extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.dark_mode_outlined),
-            title: const Text('Tema'),
-            subtitle: Text(switch (s.themeMode) {
-              ThemeMode.light => 'Claro',
-              ThemeMode.system => 'Sistema',
-              ThemeMode.dark => 'Escuro',
-            }),
+            title: Text(l10n.settingsTheme),
+            subtitle: Text(themeLabel(s.themeMode)),
             onTap: () => _pick<ThemeMode>(
               context,
-              'Tema',
+              l10n.settingsTheme,
               ThemeMode.values,
-              (m) => switch (m) {
-                ThemeMode.light => 'Claro',
-                ThemeMode.system => 'Sistema',
-                ThemeMode.dark => 'Escuro',
-              },
+              themeLabel,
               s.themeMode,
               ctrl.setThemeMode,
             ),
           ),
           SwitchListTile(
             secondary: const Icon(Icons.notifications_none),
-            title: const Text('Lembretes diários'),
+            title: Text(l10n.settingsReminders),
             value: s.notificationsEnabled,
             onChanged: ctrl.setNotifications,
           ),
-          _section(c, 'Recursos offline'),
+          _section(c, l10n.settingsOfflineResources),
           for (final entry in packages)
             _PackageTile(pkg: entry.pkg, installed: entry.installed),
-          _section(c, 'Contato / Feedback'),
+          _section(c, l10n.settingsContact),
           ListTile(
             leading: const Icon(Icons.chat_bubble_outline,
                 color: Color(0xFF25D366)),
-            title: const Text('Fale conosco no WhatsApp'),
-            subtitle: const Text('Envie sugestões e relate problemas'),
+            title: Text(l10n.whatsappTitle),
+            subtitle: Text(l10n.whatsappSubtitle),
             onTap: _openWhatsApp,
           ),
           const SizedBox(height: 24),
           Center(
             child: TextButton(
               onPressed: () => context.go('/home'),
-              child: Text('Fechar', style: TextStyle(color: c.textSecondary)),
+              child:
+                  Text(l10n.actionClose, style: TextStyle(color: c.textSecondary)),
             ),
           ),
         ],
@@ -132,29 +133,30 @@ class SettingsScreen extends ConsumerWidget {
     }
   }
 
-  void _editName(
-      BuildContext context, String current, ValueChanged<String> onSave) {
+  void _editName(BuildContext context, String current,
+      ValueChanged<String> onSave, String title) {
     final controller = TextEditingController(text: current);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Nome'),
+        title: Text(title),
         content: TextField(
           controller: controller,
           autofocus: true,
           textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(hintText: 'O seu nome'),
+          decoration:
+              InputDecoration(hintText: ctx.l10n.namePlaceholder),
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancelar')),
+              child: Text(ctx.l10n.actionCancel)),
           FilledButton(
             onPressed: () {
               onSave(controller.text.trim());
               Navigator.pop(ctx);
             },
-            child: const Text('Guardar'),
+            child: Text(ctx.l10n.actionSave),
           ),
         ],
       ),
@@ -240,7 +242,7 @@ class _PackageTileState extends ConsumerState<_PackageTile> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Falha ao instalar: $e')));
+            SnackBar(content: Text(context.l10n.installFailed('$e'))));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -255,11 +257,12 @@ class _PackageTileState extends ConsumerState<_PackageTile> {
   Widget build(BuildContext context) {
     final c = context.bt;
     final pkg = widget.pkg;
+    final l10n = context.l10n;
     final subtitle = widget.installed
-        ? 'Instalado · ${_mb(pkg.sizeBytes)}'
+        ? l10n.packageInstalled(_mb(pkg.sizeBytes))
         : pkg.required
-            ? 'Necessário'
-            : 'Download ${_mb(pkg.compressedBytes)} · ${_mb(pkg.sizeBytes)} instalado';
+            ? l10n.packageRequired
+            : l10n.packageDownload(_mb(pkg.compressedBytes), _mb(pkg.sizeBytes));
 
     return Column(
       children: [

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/l10n_ext.dart';
 import '../core/theme/app_theme.dart';
 import '../features/annotations/presentation/annotation_screens.dart';
 import '../features/bible/presentation/bible_library_screen.dart';
@@ -80,19 +81,19 @@ class _Scaffold extends StatelessWidget {
           currentIndex: navShell.currentIndex,
           onTap: (i) => navShell.goBranch(i,
               initialLocation: i == navShell.currentIndex),
-          items: const [
+          items: [
             BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined),
-                activeIcon: Icon(Icons.home),
-                label: 'Início'),
+                icon: const Icon(Icons.home_outlined),
+                activeIcon: const Icon(Icons.home),
+                label: context.l10n.navHome),
             BottomNavigationBarItem(
-                icon: Icon(Icons.calendar_month_outlined),
-                activeIcon: Icon(Icons.calendar_month),
-                label: 'Liturgia'),
+                icon: const Icon(Icons.calendar_month_outlined),
+                activeIcon: const Icon(Icons.calendar_month),
+                label: context.l10n.navLiturgy),
             BottomNavigationBarItem(
-                icon: Icon(Icons.menu_book_outlined),
-                activeIcon: Icon(Icons.menu_book),
-                label: 'Bíblia'),
+                icon: const Icon(Icons.menu_book_outlined),
+                activeIcon: const Icon(Icons.menu_book),
+                label: context.l10n.navBible),
           ],
         ),
       ),

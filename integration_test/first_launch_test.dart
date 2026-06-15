@@ -104,7 +104,7 @@ void main() {
 
     // book picker (app-bar pill, disambiguated from the header title)
     await tap(tester, appBarText('Gênesis'));
-    expect(await until(tester, find.text('Antigo Testamento')), isTrue,
+    expect(await until(tester, find.text('Antigo testamento')), isTrue,
         reason: 'book picker did not open');
     await tap(tester, find.text('Êxodo')); // pick another book
     expect(await until(tester, appBarText('Êxodo')), isTrue,

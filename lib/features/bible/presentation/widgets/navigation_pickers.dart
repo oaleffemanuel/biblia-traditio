@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../application/bible_providers.dart';
 import '../../domain/entities.dart';
@@ -121,8 +122,8 @@ class _Segmented extends StatelessWidget {
           color: c.surfaceHigh.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(28)),
       child: Row(children: [
-        seg('Antigo Testamento', Testament.ot),
-        seg('Novo Testamento', Testament.nt),
+        seg(context.l10n.oldTestament, Testament.ot),
+        seg(context.l10n.newTestament, Testament.nt),
       ]),
     );
   }
@@ -152,7 +153,7 @@ Future<int?> showChapterPicker(
                   color: c.divider, borderRadius: BorderRadius.circular(2))),
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Text('$bookName — capítulo',
+            child: Text(context.l10n.chapterPickerTitle(bookName),
                 style: Theme.of(context).textTheme.titleMedium),
           ),
           Expanded(
@@ -214,7 +215,7 @@ Future<int?> showVersePicker(
                   color: c.divider, borderRadius: BorderRadius.circular(2))),
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Text('Ir para versículo',
+            child: Text(context.l10n.goToVerse,
                 style: Theme.of(context).textTheme.titleMedium),
           ),
           Expanded(

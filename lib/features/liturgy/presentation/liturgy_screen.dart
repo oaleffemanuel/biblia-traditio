@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../application/liturgy_providers.dart';
 import '../domain/lectionary.dart';
@@ -16,6 +17,22 @@ DateTime _today() {
   final n = DateTime.now();
   return DateTime(n.year, n.month, n.day);
 }
+
+String seasonLabel(AppL10n l, LiturgicalSeason s) => switch (s) {
+      LiturgicalSeason.advent => l.seasonAdvent,
+      LiturgicalSeason.christmas => l.seasonChristmas,
+      LiturgicalSeason.ordinary => l.seasonOrdinary,
+      LiturgicalSeason.lent => l.seasonLent,
+      LiturgicalSeason.triduum => l.seasonTriduum,
+      LiturgicalSeason.easter => l.seasonEaster,
+    };
+
+String slotLabel(AppL10n l, ReadingSlot s) => switch (s) {
+      ReadingSlot.first => l.readingFirst,
+      ReadingSlot.psalm => l.readingPsalm,
+      ReadingSlot.second => l.readingSecond,
+      ReadingSlot.gospel => l.readingGospel,
+    };
 
 class LiturgyScreen extends ConsumerStatefulWidget {
   const LiturgyScreen({super.key});
@@ -44,7 +61,7 @@ class _LiturgyScreenState extends ConsumerState<LiturgyScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Liturgia',
+                  Text(context.l10n.liturgyTitle,
                       style: Theme.of(context).textTheme.displaySmall),
                   IconButton(
                     icon: Icon(Icons.calendar_today_outlined,
@@ -143,10 +160,11 @@ class _CelebrationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.bt;
+    final l10n = context.l10n;
     final rank = switch (day.rank) {
-      LiturgicalRank.solemnity => 'Solenidade',
-      LiturgicalRank.feast => 'Festa',
-      LiturgicalRank.memorial => 'Memória',
+      LiturgicalRank.solemnity => l10n.rankSolemnity,
+      LiturgicalRank.feast => l10n.rankFeast,
+      LiturgicalRank.memorial => l10n.rankMemorial,
       LiturgicalRank.weekday => '',
     };
     return Container(
@@ -171,8 +189,8 @@ class _CelebrationCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             [
-              day.season.labelPt,
-              'Ano ${day.sundayCycle}',
+              seasonLabel(l10n, day.season),
+              l10n.liturgicalYear(day.sundayCycle),
               if (rank.isNotEmpty) rank,
             ].join('  ·  '),
             style: TextStyle(color: c.textSecondary),
@@ -199,7 +217,7 @@ class _ReadingChips extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: ActionChip(
-                label: Text(slot.labelPt),
+                label: Text(slotLabel(context.l10n, slot)),
                 backgroundColor: c.surfaceHigh,
                 side: BorderSide.none,
                 labelStyle: TextStyle(color: c.textPrimary),
@@ -225,8 +243,7 @@ class _LectionaryNotice extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'O calendário litúrgico está disponível offline. As leituras '
-              'da Missa requerem o pacote do Lecionário (em breve).',
+              context.l10n.lectionaryNotice,
               style: TextStyle(color: c.textSecondary, height: 1.4),
             ),
           ),
@@ -341,7 +358,7 @@ class _CalendarModalState extends ConsumerState<_CalendarModal> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(28))),
                 onPressed: () => Navigator.pop(context, _picked),
-                child: const Text('Confirmar',
+                child: Text(context.l10n.actionConfirm,
                     style: TextStyle(fontWeight: FontWeight.w600)),
               ),
             ),

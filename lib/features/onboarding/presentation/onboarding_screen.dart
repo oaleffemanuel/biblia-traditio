@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../settings/application/settings_providers.dart';
 import '../../settings/domain/settings.dart';
@@ -95,14 +96,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ),
               ),
               _PrimaryButton(
-                label: _step == _steps - 1 ? 'Entrar' : 'Continuar',
+                label: _step == _steps - 1
+                    ? context.l10n.onbEnter
+                    : context.l10n.onbContinue,
                 enabled: _step != 1 || _nameController.text.trim().isNotEmpty,
                 onTap: _next,
               ),
               if (_step > 0 && _step < _steps - 1)
                 TextButton(
                   onPressed: _next,
-                  child: Text('Saltar',
+                  child: Text(context.l10n.onbSkip,
                       style: TextStyle(color: c.textFaint)),
                 )
               else
@@ -115,46 +118,48 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
-  Widget _buildStep(BtColors c) => switch (_step) {
-        0 => _Welcome(c),
-        1 => _NameStep(c, _nameController, () => setState(() {})),
-        2 => _ChoiceStep<AppLanguage>(
-            c,
-            title: 'Idioma',
-            subtitle: 'Em que língua prefere a interface?',
-            options: AppLanguage.values,
-            labelOf: (l) => l.label,
-            selected: _language,
-            onSelect: (l) => setState(() => _language = l),
-          ),
-        3 => _ChoiceStep<TranslationOption>(
-            c,
-            title: 'Tradução',
-            subtitle: 'Escolha a sua tradução principal das Escrituras.',
-            options: TranslationOption.catalogue,
-            labelOf: (t) => t.title,
-            selected: TranslationOption.catalogue
-                .firstWhere((t) => t.id == _translationId),
-            onSelect: (t) => setState(() => _translationId = t.id),
-          ),
-        4 => _ToggleStep(
-            c,
-            icon: Icons.notifications_none,
-            title: 'Lembretes diários',
-            subtitle:
-                'Receba um convite suave para a leitura e a liturgia do dia.',
-            value: _notifications,
-            onChanged: (v) => setState(() => _notifications = v),
-          ),
-        _ => _ToggleStep(
-            c,
-            icon: Icons.calendar_month_outlined,
-            title: 'Plano de leitura',
-            subtitle: 'Deseja seguir um plano para ler as Escrituras?',
-            value: _readingPlan,
-            onChanged: (v) => setState(() => _readingPlan = v),
-          ),
-      };
+  Widget _buildStep(BtColors c) {
+    final l10n = context.l10n;
+    return switch (_step) {
+      0 => _Welcome(c),
+      1 => _NameStep(c, _nameController, () => setState(() {})),
+      2 => _ChoiceStep<AppLanguage>(
+          c,
+          title: l10n.onbLanguageTitle,
+          subtitle: l10n.onbLanguageSubtitle,
+          options: AppLanguage.values,
+          labelOf: (l) => l.label,
+          selected: _language,
+          onSelect: (l) => setState(() => _language = l),
+        ),
+      3 => _ChoiceStep<TranslationOption>(
+          c,
+          title: l10n.onbTranslationTitle,
+          subtitle: l10n.onbTranslationSubtitle,
+          options: TranslationOption.catalogue,
+          labelOf: (t) => t.title,
+          selected: TranslationOption.catalogue
+              .firstWhere((t) => t.id == _translationId),
+          onSelect: (t) => setState(() => _translationId = t.id),
+        ),
+      4 => _ToggleStep(
+          c,
+          icon: Icons.notifications_none,
+          title: l10n.onbNotificationsTitle,
+          subtitle: l10n.onbNotificationsSubtitle,
+          value: _notifications,
+          onChanged: (v) => setState(() => _notifications = v),
+        ),
+      _ => _ToggleStep(
+          c,
+          icon: Icons.calendar_month_outlined,
+          title: l10n.onbPlanTitle,
+          subtitle: l10n.onbPlanSubtitle,
+          value: _readingPlan,
+          onChanged: (v) => setState(() => _readingPlan = v),
+        ),
+    };
+  }
 }
 
 class _Welcome extends StatelessWidget {
@@ -174,11 +179,11 @@ class _Welcome extends StatelessWidget {
             child: Icon(Icons.menu_book, color: c.accent, size: 44),
           ),
           const SizedBox(height: 32),
-          Text('Biblia Traditio',
+          Text(context.l10n.appName,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.displaySmall),
           const SizedBox(height: 12),
-          Text('A Escritura à luz da Tradição.',
+          Text(context.l10n.tagline,
               textAlign: TextAlign.center,
               style: TextStyle(color: c.textSecondary, fontSize: 16)),
         ],
@@ -195,10 +200,10 @@ class _NameStep extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Como devemos chamá-lo?',
+          Text(context.l10n.onbNameTitle,
               style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 8),
-          Text('Usaremos o seu nome para o saudar.',
+          Text(context.l10n.onbNameSubtitle,
               style: TextStyle(color: c.textSecondary)),
           const SizedBox(height: 24),
           TextField(
@@ -208,7 +213,7 @@ class _NameStep extends StatelessWidget {
             onChanged: (_) => onChanged(),
             style: TextStyle(color: c.textPrimary, fontSize: 18),
             decoration: InputDecoration(
-              hintText: 'O seu nome',
+              hintText: context.l10n.namePlaceholder,
               hintStyle: TextStyle(color: c.textFaint),
               filled: true,
               fillColor: c.surface,
@@ -332,9 +337,9 @@ class _ToggleStep extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _OptionChip(c, 'Agora não', !value, () => onChanged(false)),
+              _OptionChip(c, context.l10n.notNow, !value, () => onChanged(false)),
               const SizedBox(width: 12),
-              _OptionChip(c, 'Ativar', value, () => onChanged(true)),
+              _OptionChip(c, context.l10n.enable, value, () => onChanged(true)),
             ],
           ),
         ],

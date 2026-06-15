@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
+import '../../../core/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../annotations/application/annotation_providers.dart';
 import '../../annotations/domain/entities.dart';
@@ -98,7 +99,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       appBar: AppBar(
         titleSpacing: 0,
         title: Row(children: [
-          _pill(c, book?.testament == Testament.nt ? 'NT' : 'AT',
+          _pill(
+              c,
+              book?.testament == Testament.nt
+                  ? context.l10n.newTestamentShort
+                  : context.l10n.oldTestamentShort,
               onTap: _pickBook),
           const SizedBox(width: 6),
           Flexible(
@@ -110,7 +115,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           IconButton(
             icon: Icon(Icons.format_list_numbered,
                 color: c.textSecondary, size: 20),
-            tooltip: 'Ir para versículo',
+            tooltip: context.l10n.goToVerse,
             onPressed: verses.isEmpty ? null : () => _pickVerse(verses.length),
           ),
         ],
@@ -209,7 +214,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 Divider(height: 1, color: c.divider),
                 ListTile(
                   leading: Icon(Icons.ios_share, color: c.textPrimary),
-                  title: const Text('Partilhar'),
+                  title: Text(ctx.l10n.share),
                   onTap: () {
                     Navigator.pop(sheetCtx);
                     showShareVerse(context, reference: fullRef, text: v.text);
@@ -217,7 +222,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 ),
                 ListTile(
                   leading: Icon(Icons.copy, color: c.textPrimary),
-                  title: const Text('Copiar versículo'),
+                  title: Text(ctx.l10n.copyVerse),
                   onTap: () {
                     Clipboard.setData(
                         ClipboardData(text: '“${v.text}”\n— $fullRef'));
@@ -228,7 +233,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   leading: Icon(
                       favorite ? Icons.favorite : Icons.favorite_border,
                       color: favorite ? c.accent : c.textPrimary),
-                  title: Text(favorite ? 'Remover dos favoritos' : 'Favoritar'),
+                  title: Text(favorite ? ctx.l10n.unfavorite : ctx.l10n.favorite),
                   onTap: () {
                     ctrl.toggleFavorite(vref, '“${v.text}”  ($fullRef)');
                     Navigator.pop(sheetCtx);
@@ -238,7 +243,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   leading: Icon(
                       bookmarked ? Icons.bookmark : Icons.bookmark_border,
                       color: bookmarked ? c.accent : c.textPrimary),
-                  title: Text(bookmarked ? 'Remover marcador' : 'Marcar'),
+                  title: Text(bookmarked ? ctx.l10n.unbookmark : ctx.l10n.bookmark),
                   onTap: () {
                     ctrl.toggleBookmark(vref);
                     Navigator.pop(sheetCtx);
@@ -246,7 +251,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 ),
                 ListTile(
                   leading: Icon(Icons.note_add_outlined, color: c.textPrimary),
-                  title: Text(notes.isEmpty ? 'Nota' : 'Notas (${notes.length})'),
+                  title: Text(notes.isEmpty
+                      ? ctx.l10n.note
+                      : ctx.l10n.notesWithCount(notes.length)),
                   onTap: () {
                     Navigator.pop(sheetCtx);
                     showNoteEditor(context, ref, vref,
@@ -257,7 +264,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   enabled: count > 0,
                   leading: Icon(Icons.auto_stories,
                       color: count > 0 ? c.accent : c.textFaint),
-                  title: Text('Padres da Igreja',
+                  title: Text(ctx.l10n.churchFathers,
                       style: TextStyle(
                           color: count > 0 ? c.textPrimary : c.textFaint)),
                   trailing: count > 0
@@ -334,7 +341,7 @@ class _Header extends StatelessWidget {
       const SizedBox(height: 16),
       Text(book?.name ?? bookId,
           style: Theme.of(context).textTheme.headlineMedium),
-      Text('Capítulo $chapter',
+      Text(context.l10n.chapterTitle(chapter),
           style: Theme.of(context)
               .textTheme
               .titleLarge
@@ -364,7 +371,7 @@ class _ChapterNav extends StatelessWidget {
           TextButton.icon(
             onPressed: hasPrev ? () => onGo(book!.id, chapter - 1) : null,
             icon: const Icon(Icons.chevron_left),
-            label: const Text('Anterior'),
+            label: Text(context.l10n.previous),
             style: TextButton.styleFrom(
                 foregroundColor: hasPrev ? c.accent : c.textFaint),
           ),
@@ -373,7 +380,7 @@ class _ChapterNav extends StatelessWidget {
           TextButton.icon(
             onPressed: hasNext ? () => onGo(book!.id, chapter + 1) : null,
             icon: const Icon(Icons.chevron_right),
-            label: const Text('Próximo'),
+            label: Text(context.l10n.next),
             style: TextButton.styleFrom(
                 foregroundColor: hasNext ? c.accent : c.textFaint),
           ),
@@ -490,9 +497,7 @@ class _NoText extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Text(
-            'Texto bíblico ainda não instalado.\n'
-            'O comentário patrístico já está disponível ao tocar num versículo, '
-            'quando a tradução for instalada.',
+            context.l10n.scriptureNotInstalled,
             textAlign: TextAlign.center,
             style: TextStyle(color: c.textSecondary, height: 1.5),
           ),

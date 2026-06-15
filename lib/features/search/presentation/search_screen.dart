@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../annotations/domain/entities.dart';
 import '../../bible/application/bible_providers.dart';
@@ -55,7 +56,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           onChanged: _onChanged,
           style: TextStyle(color: c.textPrimary),
           decoration: InputDecoration(
-            hintText: 'Pesquisar Escritura, Padres, notas…',
+            hintText: context.l10n.searchHint,
             hintStyle: TextStyle(color: c.textFaint),
             border: InputBorder.none,
           ),
@@ -98,13 +99,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ),
           Expanded(
             child: q.length < 2
-                ? _hint(c, 'Escreva ao menos 2 letras para pesquisar.')
+                ? _hint(c, context.l10n.searchTypeMore)
                 : results.isEmpty
-                    ? _hint(c, 'Nenhum resultado para “$q”.')
+                    ? _hint(c, context.l10n.searchNoResults(q))
                     : ListView(
                         children: [
                           if (showVerses && results.verses.isNotEmpty) ...[
-                            _SectionHeader('Escritura', results.verses.length, c),
+                            _SectionHeader(context.l10n.sectionScripture, results.verses.length, c),
                             for (final v in results.verses)
                               _ResultTile(
                                 refLabel: _label(v.ref),
@@ -116,7 +117,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           ],
                           if (showFathers && results.commentaries.isNotEmpty) ...[
                             _SectionHeader(
-                                'Padres da Igreja', results.commentaries.length, c),
+                                context.l10n.churchFathers, results.commentaries.length, c),
                             for (final m in results.commentaries)
                               _ResultTile(
                                 refLabel:
@@ -129,7 +130,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                               ),
                           ],
                           if (showNotes && results.notes.isNotEmpty) ...[
-                            _SectionHeader('Notas', results.notes.length, c),
+                            _SectionHeader(context.l10n.searchScopeNotes, results.notes.length, c),
                             for (final n in results.notes)
                               _ResultTile(
                                 refLabel: _label(n.ref),
@@ -154,10 +155,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   String _scopeLabel(SearchScope s, SearchResults r) => switch (s) {
-        SearchScope.all => 'Tudo (${r.total})',
-        SearchScope.verses => 'Escritura (${r.verses.length})',
-        SearchScope.fathers => 'Padres (${r.commentaries.length})',
-        SearchScope.notes => 'Notas (${r.notes.length})',
+        SearchScope.all => '${context.l10n.searchScopeAll} (${r.total})',
+        SearchScope.verses =>
+          '${context.l10n.searchScopeScripture} (${r.verses.length})',
+        SearchScope.fathers =>
+          '${context.l10n.searchScopeFathers} (${r.commentaries.length})',
+        SearchScope.notes =>
+          '${context.l10n.searchScopeNotes} (${r.notes.length})',
       };
 
   Widget _hint(BtColors c, String msg) => Center(

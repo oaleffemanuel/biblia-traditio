@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../annotations/application/annotation_providers.dart';
 import '../../settings/application/settings_providers.dart';
@@ -12,6 +13,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.bt;
+    final l10n = context.l10n;
     final name = ref.watch(settingsProvider).displayName;
     final counts = ref.watch(userCountsProvider);
     return Scaffold(
@@ -27,10 +29,10 @@ class HomeScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(_greeting(),
+                      Text(_greeting(l10n),
                           style: TextStyle(color: c.textSecondary, fontSize: 15)),
                       const SizedBox(height: 4),
-                      Text(name.isEmpty ? 'Paz e bem' : name,
+                      Text(name.isEmpty ? l10n.greetingFallback : name,
                           style: Theme.of(context).textTheme.displaySmall),
                     ],
                   ),
@@ -53,7 +55,7 @@ class HomeScreen extends ConsumerWidget {
                 Expanded(
                   child: _QuickCard(
                       icon: Icons.menu_book,
-                      label: 'Continuar',
+                      label: l10n.quickContinue,
                       onTap: () {
                         final pos = ref.read(latestProgressProvider);
                         if (pos != null) {
@@ -67,14 +69,14 @@ class HomeScreen extends ConsumerWidget {
                 Expanded(
                   child: _QuickCard(
                       icon: Icons.wb_sunny_outlined,
-                      label: 'Hoje',
+                      label: l10n.quickToday,
                       onTap: () => context.go('/liturgy')),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: _QuickCard(
                       icon: Icons.favorite_border,
-                      label: 'Favoritos',
+                      label: l10n.quickFavorites,
                       badge: counts.favorites,
                       onTap: () => context.push('/favorites')),
                 ),
@@ -83,22 +85,22 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 24),
             _LiturgyPreview(onTap: () => context.go('/liturgy')),
             const SizedBox(height: 24),
-            _SectionLabel('Continue a sua jornada', c),
+            _SectionLabel(l10n.homeJourney, c),
             const SizedBox(height: 12),
             _SecondaryCard(
               icon: Icons.calendar_month_outlined,
-              title: 'Plano de leitura',
-              subtitle: 'Em breve',
+              title: l10n.readingPlan,
+              subtitle: l10n.comingSoon,
               onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Plano de leitura em breve'))),
+                  SnackBar(content: Text(l10n.comingSoon))),
             ),
             const SizedBox(height: 12),
             _SecondaryCard(
               icon: Icons.edit_note,
-              title: 'Notas',
+              title: l10n.notes,
               subtitle: counts.notes == 0
-                  ? 'As suas reflexões pessoais'
-                  : '${counts.notes} ${counts.notes == 1 ? 'nota' : 'notas'}',
+                  ? l10n.notesEmptySubtitle
+                  : l10n.noteCount(counts.notes),
               onTap: () => context.push('/notes'),
             ),
           ],
@@ -107,11 +109,11 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  static String _greeting() {
+  static String _greeting(AppL10n l10n) {
     final h = DateTime.now().hour;
-    if (h < 12) return 'Bom dia,';
-    if (h < 18) return 'Boa tarde,';
-    return 'Boa noite,';
+    if (h < 12) return l10n.greetingMorning;
+    if (h < 18) return l10n.greetingAfternoon;
+    return l10n.greetingEvening;
   }
 }
 
@@ -238,6 +240,7 @@ class _LiturgyPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.bt;
+    final l10n = context.l10n;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -254,17 +257,22 @@ class _LiturgyPreview extends StatelessWidget {
                   decoration: const BoxDecoration(
                       color: LiturgicalPalette.green, shape: BoxShape.circle)),
               const SizedBox(width: 8),
-              Text('Liturgia de hoje',
+              Text(l10n.liturgyToday,
                   style: TextStyle(color: c.textSecondary, fontSize: 13)),
             ]),
             const SizedBox(height: 12),
-            Text('Tempo Comum',
+            Text(l10n.ordinaryTime,
                 style: Theme.of(context).textTheme.headlineMedium),
-            Text('Ano A',
+            Text(l10n.liturgicalYear('A'),
                 style: TextStyle(color: c.textSecondary)),
             const SizedBox(height: 16),
             Wrap(spacing: 8, children: [
-              for (final r in const ['1ª leitura', 'Salmo', '2ª leitura', 'Evangelho'])
+              for (final r in [
+                l10n.readingFirst,
+                l10n.readingPsalm,
+                l10n.readingSecond,
+                l10n.readingGospel
+              ])
                 Chip(
                   label: Text(r),
                   backgroundColor: c.surfaceHigh,

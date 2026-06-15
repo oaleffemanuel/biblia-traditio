@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../bible/application/bible_providers.dart';
 import '../application/annotation_providers.dart';
@@ -26,7 +27,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
     final c = context.bt;
     final notes = ref.watch(allNotesProvider(_q.isEmpty ? null : _q));
     return Scaffold(
-      appBar: AppBar(title: const Text('Notas')),
+      appBar: AppBar(title: Text(context.l10n.notesScreenTitle)),
       body: Column(
         children: [
           Padding(
@@ -35,7 +36,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
               onChanged: (v) => setState(() => _q = v),
               style: TextStyle(color: c.textPrimary),
               decoration: InputDecoration(
-                hintText: 'Pesquisar notas',
+                hintText: context.l10n.searchNotesHint,
                 hintStyle: TextStyle(color: c.textFaint),
                 prefixIcon: Icon(Icons.search, color: c.textFaint),
                 filled: true,
@@ -47,7 +48,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
             ),
           ),
           if (notes.isEmpty)
-            Expanded(child: _empty(c, Icons.note_outlined, 'Nenhuma nota ainda.'))
+            Expanded(child: _empty(c, Icons.note_outlined, context.l10n.noNotesYet))
           else
             Expanded(
               child: ListView.separated(
@@ -79,9 +80,9 @@ class FavoritesScreen extends ConsumerWidget {
     final c = context.bt;
     final favorites = ref.watch(allFavoritesProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Favoritos')),
+      appBar: AppBar(title: Text(context.l10n.favoritesTitle)),
       body: favorites.isEmpty
-          ? _empty(c, Icons.favorite_border, 'Nenhum favorito ainda.')
+          ? _empty(c, Icons.favorite_border, context.l10n.noFavoritesYet)
           : ListView.separated(
               itemCount: favorites.length,
               separatorBuilder: (_, _) => Divider(height: 1, color: c.divider),
@@ -107,9 +108,9 @@ class HighlightsScreen extends ConsumerWidget {
     final c = context.bt;
     final items = ref.watch(allHighlightsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Destaques')),
+      appBar: AppBar(title: Text(context.l10n.highlightsTitle)),
       body: items.isEmpty
-          ? _empty(c, Icons.format_color_fill, 'Nenhum destaque ainda.')
+          ? _empty(c, Icons.format_color_fill, context.l10n.noHighlightsYet)
           : ListView.separated(
               itemCount: items.length,
               separatorBuilder: (_, _) => Divider(height: 1, color: c.divider),

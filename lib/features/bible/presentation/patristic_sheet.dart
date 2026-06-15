@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../application/bible_providers.dart';
 import '../domain/entities.dart';
@@ -50,7 +51,7 @@ class _PatristicBody extends ConsumerWidget {
             Icon(Icons.auto_stories, color: c.accent, size: 20),
             const SizedBox(width: 8),
             Expanded(
-              child: Text('Padres da Igreja',
+              child: Text(context.l10n.churchFathers,
                   style: Theme.of(context)
                       .textTheme
                       .titleLarge
@@ -94,7 +95,7 @@ class _CommentaryCard extends StatelessWidget {
                     ?.copyWith(color: c.accent, fontWeight: FontWeight.w600)),
           ),
           if (item.century.isNotEmpty)
-            Text('séc. ${item.century}',
+            Text(context.l10n.century(item.century),
                 style: TextStyle(color: c.textSecondary, fontSize: 13)),
         ]),
         const SizedBox(height: 8),
@@ -105,7 +106,7 @@ class _CommentaryCard extends StatelessWidget {
                 ?.copyWith(fontSize: 17, height: 1.5)),
         if (item.isMachineTranslation) ...[
           const SizedBox(height: 8),
-          Text('tradução automática · ${item.source ?? 'fonte tradicional'}',
+          Text('${context.l10n.machineTranslation} · ${item.source ?? ''}',
               style: TextStyle(color: c.textFaint, fontSize: 11)),
         ],
       ],

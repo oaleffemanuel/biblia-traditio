@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/di/providers.dart';
+import '../core/l10n_ext.dart';
 import '../core/theme/app_theme.dart';
 import '../features/packages/application/package_providers.dart';
 import '../features/settings/application/settings_providers.dart';
+import '../features/settings/domain/settings.dart';
 import 'router.dart';
 
 class BibliaTraditioApp extends ConsumerWidget {
@@ -19,10 +21,10 @@ class BibliaTraditioApp extends ConsumerWidget {
     final content = ref.watch(contentReadyProvider);
 
     if (dbReady.isLoading || content.isLoading) {
-      return const _Splash(message: 'Preparando a Bíblia…');
+      return const _Splash();
     }
     if (dbReady.hasError) {
-      return const _Splash(message: 'Erro ao iniciar.');
+      return const _Splash(error: true);
     }
 
     final settings = ref.watch(settingsProvider);
@@ -33,17 +35,25 @@ class BibliaTraditioApp extends ConsumerWidget {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: settings.themeMode,
+      locale: _localeFor(settings.language),
+      supportedLocales: AppL10n.supportedLocales,
+      localizationsDelegates: AppL10n.localizationsDelegates,
       routerConfig: router,
     );
   }
+
+  /// Only pt/en are translated; other selections fall back to Portuguese.
+  Locale _localeFor(AppLanguage l) =>
+      l == AppLanguage.en ? const Locale('en') : const Locale('pt');
 }
 
 class _Splash extends StatelessWidget {
-  final String? message;
-  const _Splash({this.message});
+  final bool error;
+  const _Splash({this.error = false});
   @override
   Widget build(BuildContext context) {
     final c = BtColors.dark;
+    // Shown before MaterialApp/Localizations exist, so it is language-neutral.
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
@@ -52,18 +62,16 @@ class _Splash extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.menu_book, color: c.accent, size: 48),
+              Icon(error ? Icons.error_outline : Icons.menu_book,
+                  color: c.accent, size: 48),
               const SizedBox(height: 24),
-              SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: c.accent.withValues(alpha: 0.7)),
-              ),
-              if (message != null) ...[
-                const SizedBox(height: 20),
-                Text(message!, style: TextStyle(color: c.textSecondary)),
-              ],
+              if (!error)
+                SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: c.accent.withValues(alpha: 0.7)),
+                ),
             ],
           ),
         ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../application/bible_providers.dart';
 import '../domain/entities.dart';
@@ -40,7 +41,7 @@ class _BibleLibraryScreenState extends ConsumerState<BibleLibraryScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Bíblia',
+                        Text(context.l10n.bibleTitle,
                             style: Theme.of(context)
                                 .textTheme
                                 .displaySmall
@@ -154,8 +155,8 @@ class _TestamentToggle extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
       ),
       child: Row(children: [
-        seg('Antigo testamento', Testament.ot),
-        seg('Novo testamento', Testament.nt),
+        seg(context.l10n.oldTestament, Testament.ot),
+        seg(context.l10n.newTestament, Testament.nt),
       ]),
     );
   }
@@ -171,7 +172,7 @@ class _SearchField extends StatelessWidget {
       onChanged: onChanged,
       style: TextStyle(color: c.textPrimary),
       decoration: InputDecoration(
-        hintText: 'Pesquisar',
+        hintText: context.l10n.search,
         hintStyle: TextStyle(color: c.textFaint),
         prefixIcon: Icon(Icons.search, color: c.textFaint),
         filled: true,
@@ -200,8 +201,8 @@ class _EmptyLibrary extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               installed
-                  ? 'Nenhum livro encontrado.'
-                  : 'Conteúdo ainda não instalado.\nInstale um pacote de tradução em Ajustes.',
+                  ? context.l10n.noBooksFound
+                  : context.l10n.contentNotInstalled,
               textAlign: TextAlign.center,
               style: TextStyle(color: c.textSecondary),
             ),

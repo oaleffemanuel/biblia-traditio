@@ -1,3 +1,4 @@
+import 'package:biblia_traditio/core/l10n_ext.dart';
 import 'package:biblia_traditio/core/theme/app_theme.dart';
 import 'package:biblia_traditio/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,9 @@ void main() {
       ProviderScope(
         child: MaterialApp(
           theme: AppTheme.dark(),
+          locale: const Locale('pt'),
+          supportedLocales: AppL10n.supportedLocales,
+          localizationsDelegates: AppL10n.localizationsDelegates,
           home: const OnboardingScreen(),
         ),
       ),

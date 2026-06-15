@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../application/annotation_providers.dart';
 import '../domain/entities.dart';
@@ -39,7 +40,9 @@ void showNoteEditor(BuildContext context, WidgetRef ref, VerseRef vref,
             children: [
               Icon(Icons.note_alt_outlined, color: c.accent, size: 20),
               const SizedBox(width: 8),
-              Text('Nota — ${vref.bookId} ${vref.chapter},${vref.verse}',
+              Text(
+                  sheetCtx.l10n.noteEditorTitle(
+                      '${vref.bookId} ${vref.chapter},${vref.verse}'),
                   style: Theme.of(sheetCtx).textTheme.titleMedium),
               const Spacer(),
               if (existing != null)
@@ -60,7 +63,7 @@ void showNoteEditor(BuildContext context, WidgetRef ref, VerseRef vref,
             minLines: 3,
             style: TextStyle(color: c.textPrimary, height: 1.4),
             decoration: InputDecoration(
-              hintText: 'Escreva a sua reflexão…',
+              hintText: sheetCtx.l10n.noteHint,
               hintStyle: TextStyle(color: c.textFaint),
               filled: true,
               fillColor: c.background,
@@ -86,7 +89,7 @@ void showNoteEditor(BuildContext context, WidgetRef ref, VerseRef vref,
               }
               Navigator.pop(sheetCtx);
             },
-            child: const Text('Guardar'),
+            child: Text(sheetCtx.l10n.actionSave),
           ),
         ],
       ),
