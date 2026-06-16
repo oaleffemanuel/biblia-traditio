@@ -466,6 +466,39 @@ class AppL10nPt extends AppL10n {
   String get settingsOfflineResources => 'Recursos offline';
 
   @override
+  String get settingsAbout => 'Sobre';
+
+  @override
+  String get licensesTitle => 'Licenças e atribuições';
+
+  @override
+  String get licensesIntro =>
+      'Biblia Traditio respeita as fontes que utiliza. Veja abaixo a origem e a licença de cada conteúdo.';
+
+  @override
+  String get licVulgataTitle => 'Vulgata Clementina (Latim)';
+
+  @override
+  String get licVulgataBody => 'Texto bíblico em latim, em domínio público.';
+
+  @override
+  String get licPatristicsTitle => 'Comentário dos Padres da Igreja';
+
+  @override
+  String get licPatristicsBody =>
+      'Fontes patrísticas em domínio público, traduzidas e adaptadas automaticamente. Podem conter imprecisões — leia com discernimento.';
+
+  @override
+  String get licPortugueseTitle => 'Bíblia em Português (beta)';
+
+  @override
+  String get licPortugueseBody =>
+      'Versão de uso interno para esta fase de testes. A origem da tradução ainda será confirmada antes de qualquer publicação pública.';
+
+  @override
+  String get ossLicenses => 'Licenças de código aberto';
+
+  @override
   String get settingsContact => 'Contato / Feedback';
 
   @override

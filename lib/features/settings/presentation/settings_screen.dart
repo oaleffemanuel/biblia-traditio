@@ -107,6 +107,13 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: Text(l10n.whatsappSubtitle),
             onTap: () => _openWhatsApp(context),
           ),
+          _section(c, l10n.settingsAbout),
+          ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: Text(l10n.licensesTitle),
+            trailing: Icon(Icons.chevron_right, color: c.textFaint),
+            onTap: () => context.push('/licenses'),
+          ),
           const SizedBox(height: 24),
           Center(
             child: TextButton(

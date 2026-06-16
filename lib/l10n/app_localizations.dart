@@ -931,6 +931,66 @@ abstract class AppL10n {
   /// **'Offline resources'**
   String get settingsOfflineResources;
 
+  /// No description provided for @settingsAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsAbout;
+
+  /// No description provided for @licensesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Licenses & Attributions'**
+  String get licensesTitle;
+
+  /// No description provided for @licensesIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Biblia Traditio respects the sources it uses. Below is the origin and license of each.'**
+  String get licensesIntro;
+
+  /// No description provided for @licVulgataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clementine Vulgate (Latin)'**
+  String get licVulgataTitle;
+
+  /// No description provided for @licVulgataBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Latin biblical text in the public domain.'**
+  String get licVulgataBody;
+
+  /// No description provided for @licPatristicsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Church Fathers\' Commentary'**
+  String get licPatristicsTitle;
+
+  /// No description provided for @licPatristicsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Patristic sources in the public domain, machine-translated and adapted. May contain inaccuracies — read with discernment.'**
+  String get licPatristicsBody;
+
+  /// No description provided for @licPortugueseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Portuguese Bible (beta)'**
+  String get licPortugueseTitle;
+
+  /// No description provided for @licPortugueseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'An internal version for this testing phase. The translation\'s provenance will be confirmed before any public release.'**
+  String get licPortugueseBody;
+
+  /// No description provided for @ossLicenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Open-source licenses'**
+  String get ossLicenses;
+
   /// No description provided for @settingsContact.
   ///
   /// In en, this message translates to:

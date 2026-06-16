@@ -22,7 +22,7 @@ void main() {
     final s = Settings.fromMap(db.allSettings());
     expect(s.onboardingCompleted, isFalse);
     expect(s.language, AppLanguage.pt);
-    expect(s.primaryTranslationId, 'vulgata');
+    expect(s.primaryTranslationId, 'pt_beta');
     expect(s.themeMode, ThemeMode.dark);
     // Parallel Reading off by default, no secondary, auto layout.
     expect(s.parallelReadingEnabled, isFalse);

@@ -27,6 +27,7 @@ class TranslationOption {
   /// Translations the app may offer in onboarding (the live list shown in
   /// Settings comes from the bundled DB via `availableTranslationsProvider`).
   static const catalogue = [
+    TranslationOption('pt_beta', 'Bíblia Católica (Português) — beta', 'pt'),
     TranslationOption('vulgata', 'Vulgata Clementina', 'la'),
     TranslationOption('drb', 'Douay–Rheims (Challoner)', 'en'),
   ];
@@ -53,7 +54,7 @@ class Settings {
     this.onboardingCompleted = false,
     this.displayName = '',
     this.language = AppLanguage.pt,
-    this.primaryTranslationId = 'vulgata',
+    this.primaryTranslationId = 'pt_beta',
     this.themeMode = ThemeMode.dark,
     this.notificationsEnabled = false,
     this.wantsReadingPlan = false,
@@ -66,7 +67,7 @@ class Settings {
         onboardingCompleted: m['onboardingCompleted'] == 'true',
         displayName: m['displayName'] ?? '',
         language: AppLanguage.fromCode(m['language']),
-        primaryTranslationId: m['primaryTranslationId'] ?? 'vulgata',
+        primaryTranslationId: m['primaryTranslationId'] ?? 'pt_beta',
         themeMode: switch (m['themeMode']) {
           'light' => ThemeMode.light,
           'system' => ThemeMode.system,

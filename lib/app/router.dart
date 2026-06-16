@@ -12,6 +12,7 @@ import '../features/home/presentation/home_screen.dart';
 import '../features/liturgy/presentation/liturgy_screen.dart';
 import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../features/search/presentation/search_screen.dart';
+import '../features/settings/presentation/attributions_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 
 /// The router, keyed on whether onboarding is complete. `Provider.family`
@@ -56,6 +57,8 @@ final routerProvider = Provider.family<GoRouter, bool>((ref, completed) {
         ],
       ),
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
+      GoRoute(
+          path: '/licenses', builder: (_, _) => const AttributionsScreen()),
       GoRoute(path: '/notes', builder: (_, _) => const NotesScreen()),
       GoRoute(path: '/favorites', builder: (_, _) => const FavoritesScreen()),
       GoRoute(path: '/highlights', builder: (_, _) => const HighlightsScreen()),
