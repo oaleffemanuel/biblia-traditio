@@ -47,6 +47,7 @@ class _BibleLibraryScreenState extends ConsumerState<BibleLibraryScreen> {
                                 .displaySmall
                                 ?.copyWith(fontWeight: FontWeight.w700)),
                         IconButton(
+                          tooltip: context.l10n.settingsTitle,
                           onPressed: () => context.push('/settings'),
                           icon: Icon(Icons.more_horiz, color: c.textSecondary),
                         ),
@@ -108,7 +109,7 @@ class _BookRow extends StatelessWidget {
             if (book.isDeutero)
               Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: Text('DC',
+                child: Text(context.l10n.deuterocanonicalShort,
                     style: TextStyle(color: c.textFaint, fontSize: 11)),
               ),
           ],

@@ -128,9 +128,12 @@ class _LiturgyScreenState extends ConsumerState<LiturgyScreen> {
               child: _CelebrationCard(day: day),
             ),
             const SizedBox(height: 16),
-            _ReadingChips(readings: readings),
-            const SizedBox(height: 20),
-            if (readings == null)
+            // Until the Lectionary pack ships, `readings` is always null — show
+            // only the notice, never chips that look tappable but do nothing.
+            if (readings != null) ...[
+              _ReadingChips(readings: readings),
+              const SizedBox(height: 20),
+            ] else
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: _LectionaryNotice(c),

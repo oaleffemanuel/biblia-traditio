@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../bible/application/bible_providers.dart';
 import '../application/annotation_providers.dart';
 import '../domain/entities.dart';
 
@@ -11,6 +12,8 @@ void showNoteEditor(BuildContext context, WidgetRef ref, VerseRef vref,
     {Note? existing}) {
   final c = context.bt;
   final controller = TextEditingController(text: existing?.body ?? '');
+  // Localized book name for the title (never the raw id like "gn").
+  final bookName = ref.read(bookByIdProvider(vref.bookId))?.name ?? vref.bookId;
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -42,15 +45,35 @@ void showNoteEditor(BuildContext context, WidgetRef ref, VerseRef vref,
               const SizedBox(width: 8),
               Text(
                   sheetCtx.l10n.noteEditorTitle(
-                      '${vref.bookId} ${vref.chapter},${vref.verse}'),
+                      '$bookName ${vref.chapter},${vref.verse}'),
                   style: Theme.of(sheetCtx).textTheme.titleMedium),
               const Spacer(),
               if (existing != null)
                 IconButton(
+                  tooltip: sheetCtx.l10n.actionDelete,
                   icon: Icon(Icons.delete_outline, color: c.textSecondary),
-                  onPressed: () {
-                    ref.read(annotationControllerProvider).deleteNote(existing.uuid);
-                    Navigator.pop(sheetCtx);
+                  onPressed: () async {
+                    final l10n = sheetCtx.l10n;
+                    final confirmed = await showDialog<bool>(
+                      context: sheetCtx,
+                      builder: (ctx) => AlertDialog(
+                        title: Text(l10n.deleteNoteTitle),
+                        content: Text(l10n.deleteNoteMessage),
+                        actions: [
+                          TextButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              child: Text(l10n.actionCancel)),
+                          FilledButton(
+                              onPressed: () => Navigator.pop(ctx, true),
+                              child: Text(l10n.actionDelete)),
+                        ],
+                      ),
+                    );
+                    if (confirmed != true) return;
+                    ref
+                        .read(annotationControllerProvider)
+                        .deleteNote(existing.uuid);
+                    if (sheetCtx.mounted) Navigator.pop(sheetCtx);
                   },
                 ),
             ],

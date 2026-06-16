@@ -169,6 +169,10 @@ void main() {
     await tap(tester, find.byIcon(Icons.settings_outlined));
     await until(tester, find.text('Comentário dos Padres da Igreja'));
     await tap(tester, find.byIcon(Icons.delete_outline));
+    // B1: removal now requires confirmation (avoids accidental re-download).
+    expect(await until(tester, find.text('Remover pacote?')), isTrue,
+        reason: 'remove confirmation dialog did not appear');
+    await tap(tester, find.text('Remover'));
     expect(await until(tester, find.byIcon(Icons.download)), isTrue,
         reason: 'package not removed');
     debugPrint('RESULT patristics_removed=ok');
@@ -217,5 +221,43 @@ void main() {
     expect(await until(tester, find.textContaining('In principio')), isTrue,
         reason: 'favorite did not persist across relaunch');
     debugPrint('RESULT favorite_persisted=ok');
+  }, timeout: timeout);
+
+  testWidgets('6. parallel reading toggle + no-secondary empty state',
+      (tester) async {
+    await launchToHome(tester);
+    await openGenesis1(tester);
+
+    // Open Parallel Reading options from the reader app bar.
+    await tap(tester, find.byIcon(Icons.view_column_outlined));
+    expect(await until(tester, find.text('Leitura paralela')), isTrue,
+        reason: 'parallel options sheet did not open');
+    debugPrint('RESULT parallel_sheet_open=ok');
+
+    // Enable parallel reading. Only the Vulgate is installed, so we must get a
+    // graceful empty state — never a crash, never a duplicate Vulgate column.
+    await tap(tester, find.byType(Switch));
+    expect(
+        await until(tester,
+            find.text('Nenhuma tradução secundária instalada ainda.')),
+        isTrue,
+        reason: 'empty state for missing secondary not shown');
+    debugPrint('RESULT parallel_no_secondary_empty_state=ok');
+
+    // Dismiss the sheet; the primary text stays readable (graceful fallback).
+    await tester.tapAt(const Offset(20, 40));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(await until(tester, find.textContaining('In principio')), isTrue,
+        reason: 'primary text not readable with parallel-on, no secondary');
+
+    // Verse tap STILL opens the commentary-first panel in parallel mode, and
+    // the canonical verse reference is what drives it (notes/favorites attach
+    // to that ref, unaffected by the column shown).
+    await tap(tester, find.textContaining('In principio'));
+    expect(await until(tester, find.text('Padres da Igreja')), isTrue,
+        reason: 'verse tap did not open commentary panel in parallel mode');
+    debugPrint('RESULT parallel_verse_tap_panel=ok');
+    await tester.tapAt(const Offset(20, 40));
+    await tester.pump(const Duration(milliseconds: 400));
   }, timeout: timeout);
 }

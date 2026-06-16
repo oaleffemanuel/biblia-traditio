@@ -8,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../annotations/application/annotation_providers.dart';
 import '../../annotations/domain/entities.dart';
 import '../../settings/application/settings_providers.dart';
+import '../../settings/domain/settings.dart';
 import '../application/bible_providers.dart';
 import '../domain/entities.dart';
 import 'commentary_panel.dart';
@@ -16,6 +17,10 @@ import 'widgets/navigation_pickers.dart';
 
 /// Muted gold marking verses that carry Church Fathers commentary.
 const Color _kGold = Color(0xFFCBA45A);
+
+/// Below this width phones get the stacked Parallel layout; at/above it (tablet,
+/// landscape) side-by-side columns are the default.
+const double _kSideBySideMinWidth = 600;
 
 class ReaderScreen extends ConsumerStatefulWidget {
   final String bookId;
@@ -77,6 +82,18 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     }
   }
 
+  void _showParallelOptions() {
+    final c = context.bt;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: c.surface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (_) => const _ParallelOptionsSheet(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = context.bt;
@@ -90,10 +107,20 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final highlights =
         ref.watch(highlightsForChapterProvider((bookId: bookId, chapter: chapter)));
 
+    final settings = ref.watch(settingsProvider);
+    final secondaryId = ref.watch(resolvedSecondaryTranslationIdProvider);
+    final parallelWanted = settings.parallelReadingEnabled;
+    final parallelActive = parallelWanted && secondaryId != null;
+    final parallel = parallelActive
+        ? ref.watch(parallelChapterProvider((bookId: bookId, chapter: chapter)))
+        : null;
+
     final headingByVerse = <int, SectionHeading>{
       for (final h in content?.headings ?? const []) h.beforeVerse: h,
     };
     final verses = content?.verses ?? const <Verse>[];
+    final rows = parallel?.rows ?? const <ParallelVerse>[];
+    final verseCount = parallelActive ? rows.length : verses.length;
 
     return Scaffold(
       appBar: AppBar(
@@ -113,62 +140,129 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           if (book != null)
             _pill(c, '$chapter', onTap: () => _pickChapter(book)),
           IconButton(
+            icon: Icon(Icons.view_column_outlined,
+                color: parallelActive ? c.accent : c.textSecondary, size: 20),
+            tooltip: context.l10n.parallelReading,
+            onPressed: _showParallelOptions,
+          ),
+          IconButton(
             icon: Icon(Icons.format_list_numbered,
                 color: c.textSecondary, size: 20),
             tooltip: context.l10n.goToVerse,
-            onPressed: verses.isEmpty ? null : () => _pickVerse(verses.length),
+            onPressed: verseCount == 0 ? null : () => _pickVerse(verseCount),
           ),
         ],
       ),
       body: SafeArea(
         child: (content == null)
             ? _NoText(c)
-            : ScrollablePositionedList.builder(
-                itemScrollController: _scrollController,
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 80),
-                itemCount: verses.length + 2, // header + verses + footer
-                itemBuilder: (context, index) {
-                  if (index == 0) {
-                    return _Header(bookId: bookId, book: book, chapter: chapter);
-                  }
-                  if (index == verses.length + 1) {
-                    return _ChapterNav(
+            : Column(
+                children: [
+                  // Parallel requested but no second translation is installed:
+                  // keep the primary readable, point the user to Settings.
+                  if (parallelWanted && secondaryId == null)
+                    const _SecondaryMissingBanner(),
+                  Expanded(
+                    child: _buildList(
+                      context: context,
                       book: book,
+                      bookId: bookId,
                       chapter: chapter,
-                      onGo: _goTo,
-                    );
-                  }
-                  final v = verses[index - 1];
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (headingByVerse[v.number] != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 18, bottom: 10),
-                          child: Text(_titleCase(headingByVerse[v.number]!.text),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(fontWeight: FontWeight.w700)),
-                        ),
-                      _VerseTile(
-                        verse: v,
-                        hasCommentary: markers.contains(v.number),
-                        highlight: highlights[v.number],
-                        onTap: () => showCommentaryPanel(
-                          context,
-                          ref,
-                          VerseRef(bookId, chapter, v.number),
-                          bookName: book?.name ?? bookId,
-                          verseText: v.text,
-                        ),
-                      ),
-                    ],
-                  );
-                },
+                      verses: verses,
+                      rows: rows,
+                      parallelActive: parallelActive,
+                      headingByVerse: headingByVerse,
+                      markers: markers,
+                      highlights: highlights,
+                    ),
+                  ),
+                ],
               ),
       ),
     );
+  }
+
+  Widget _buildList({
+    required BuildContext context,
+    required BibleBook? book,
+    required String bookId,
+    required int chapter,
+    required List<Verse> verses,
+    required List<ParallelVerse> rows,
+    required bool parallelActive,
+    required Map<int, SectionHeading> headingByVerse,
+    required Set<int> markers,
+    required Map<int, HighlightColor> highlights,
+  }) {
+    final count = parallelActive ? rows.length : verses.length;
+    final sideBySide = parallelActive && _sideBySide(context);
+
+    return ScrollablePositionedList.builder(
+      itemScrollController: _scrollController,
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 80),
+      itemCount: count + 2, // header + verses + footer
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return _Header(bookId: bookId, book: book, chapter: chapter);
+        }
+        if (index == count + 1) {
+          return _ChapterNav(book: book, chapter: chapter, onGo: _goTo);
+        }
+        final number = parallelActive ? rows[index - 1].number : verses[index - 1].number;
+        final heading = headingByVerse[number];
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (heading != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 18, bottom: 10),
+                child: Text(_titleCase(heading.text),
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w700)),
+              ),
+            if (parallelActive)
+              _ParallelVerseTile(
+                row: rows[index - 1],
+                hasCommentary: markers.contains(number),
+                highlight: highlights[number],
+                sideBySide: sideBySide,
+                onTap: () => showCommentaryPanel(
+                  context,
+                  ref,
+                  VerseRef(bookId, chapter, number),
+                  bookName: book?.name ?? bookId,
+                  verseText: rows[index - 1].canonicalText,
+                ),
+              )
+            else
+              _VerseTile(
+                verse: verses[index - 1],
+                hasCommentary: markers.contains(number),
+                highlight: highlights[number],
+                onTap: () => showCommentaryPanel(
+                  context,
+                  ref,
+                  VerseRef(bookId, chapter, number),
+                  bookName: book?.name ?? bookId,
+                  verseText: verses[index - 1].text,
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  bool _sideBySide(BuildContext context) {
+    final layout = ref.read(settingsProvider).parallelLayout;
+    return switch (layout) {
+      ParallelLayout.sideBySide => true,
+      ParallelLayout.stacked => false,
+      ParallelLayout.auto =>
+        MediaQuery.of(context).size.width >= _kSideBySideMinWidth,
+    };
   }
 
   static Widget _pill(BtColors c, String text, {VoidCallback? onTap}) =>
@@ -266,6 +360,34 @@ class _ChapterNav extends StatelessWidget {
   }
 }
 
+/// The gold-dot + verse-number marker, shared by single and parallel tiles.
+class _VerseNumber extends StatelessWidget {
+  final int number;
+  final bool hasCommentary;
+  const _VerseNumber({required this.number, required this.hasCommentary});
+  @override
+  Widget build(BuildContext context) {
+    final c = context.bt;
+    // The gold dot's footprint is always reserved (transparent when the verse
+    // has no commentary) so verse numbers never shift horizontally as markers
+    // appear/disappear.
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      Container(
+        width: 5,
+        height: 5,
+        margin: const EdgeInsets.only(top: 3),
+        decoration: BoxDecoration(
+            color: hasCommentary ? _kGold : Colors.transparent,
+            shape: BoxShape.circle),
+      ),
+      const SizedBox(width: 4),
+      Text('$number',
+          style: TextStyle(
+              color: c.accent, fontSize: 12, fontWeight: FontWeight.w600)),
+    ]);
+  }
+}
+
 class _VerseTile extends StatelessWidget {
   final Verse verse;
   final bool hasCommentary;
@@ -279,7 +401,6 @@ class _VerseTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.bt;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
@@ -293,28 +414,12 @@ class _VerseTile extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 2),
         child: Text.rich(
           TextSpan(children: [
-            // Gold dot marks verses the Church Fathers have commented on.
             WidgetSpan(
               alignment: PlaceholderAlignment.top,
               child: Padding(
                 padding: const EdgeInsets.only(right: 8, top: 2),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  if (hasCommentary) ...[
-                    Container(
-                      width: 5,
-                      height: 5,
-                      margin: const EdgeInsets.only(top: 3),
-                      decoration: const BoxDecoration(
-                          color: _kGold, shape: BoxShape.circle),
-                    ),
-                    const SizedBox(width: 4),
-                  ],
-                  Text('${verse.number}',
-                      style: TextStyle(
-                          color: c.accent,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600)),
-                ]),
+                child:
+                    _VerseNumber(number: verse.number, hasCommentary: hasCommentary),
               ),
             ),
             TextSpan(
@@ -322,6 +427,270 @@ class _VerseTile extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyLarge),
           ]),
         ),
+      ),
+    );
+  }
+}
+
+/// A canonical verse rendered in two translations. Highlights/commentary/tap
+/// all key off the canonical [VerseRef] (book, chapter, number) regardless of
+/// which column the user looks at.
+class _ParallelVerseTile extends StatelessWidget {
+  final ParallelVerse row;
+  final bool hasCommentary;
+  final HighlightColor? highlight;
+  final bool sideBySide;
+  final VoidCallback onTap;
+  const _ParallelVerseTile({
+    required this.row,
+    required this.hasCommentary,
+    required this.highlight,
+    required this.sideBySide,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.bt;
+    final body =
+        sideBySide ? _sideBySide(context, c) : _stacked(context, c);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        decoration: highlight == null
+            ? null
+            : BoxDecoration(
+                color: highlight!.color.withValues(alpha: 0.22),
+                borderRadius: BorderRadius.circular(6)),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        margin: const EdgeInsets.symmetric(vertical: 2),
+        child: body,
+      ),
+    );
+  }
+
+  Widget _sideBySide(BuildContext context, BtColors c) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 2, right: 8),
+            child:
+                _VerseNumber(number: row.number, hasCommentary: hasCommentary),
+          ),
+          Expanded(child: _columnText(context, c, row.primary?.text)),
+          Container(
+            width: 1,
+            margin: const EdgeInsets.symmetric(horizontal: 12),
+            color: c.divider,
+          ),
+          Expanded(child: _columnText(context, c, row.secondary?.text)),
+        ],
+      ),
+    );
+  }
+
+  Widget _stacked(BuildContext context, BtColors c) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 2, right: 8),
+              child: _VerseNumber(
+                  number: row.number, hasCommentary: hasCommentary),
+            ),
+            Expanded(child: _columnText(context, c, row.primary?.text)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Container(
+          margin: const EdgeInsets.only(left: 4),
+          padding: const EdgeInsets.only(left: 12),
+          decoration: BoxDecoration(
+              border: Border(left: BorderSide(color: c.divider, width: 2))),
+          child: _columnText(context, c, row.secondary?.text, secondary: true),
+        ),
+      ],
+    );
+  }
+
+  Widget _columnText(BuildContext context, BtColors c, String? text,
+      {bool secondary = false}) {
+    if (text == null) {
+      return Text(context.l10n.verseNotInTranslation,
+          style: TextStyle(
+              color: c.textFaint, fontStyle: FontStyle.italic, fontSize: 14));
+    }
+    final base = Theme.of(context).textTheme.bodyLarge;
+    return Text(text,
+        style: secondary ? base?.copyWith(color: c.textSecondary) : base);
+  }
+}
+
+/// Shown in the reader when the user has Parallel Reading on but no second
+/// translation is installed: keeps the primary text readable and routes to the
+/// Offline Resources section to add one.
+class _SecondaryMissingBanner extends StatelessWidget {
+  const _SecondaryMissingBanner();
+  @override
+  Widget build(BuildContext context) {
+    final c = context.bt;
+    return Container(
+      width: double.infinity,
+      color: c.surfaceHigh.withValues(alpha: 0.5),
+      padding: const EdgeInsets.fromLTRB(20, 12, 12, 12),
+      child: Row(
+        children: [
+          Icon(Icons.view_column_outlined, size: 20, color: c.textSecondary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(context.l10n.noSecondaryTranslation,
+                style: TextStyle(color: c.textSecondary, height: 1.3)),
+          ),
+          TextButton(
+            onPressed: () => context.push('/settings'),
+            child: Text(context.l10n.openOfflineResources,
+                style: TextStyle(color: c.accent)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bottom-sheet controls for Parallel Reading: enable, pick the secondary
+/// translation (or learn how to install one), and choose the layout.
+class _ParallelOptionsSheet extends ConsumerWidget {
+  const _ParallelOptionsSheet();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.bt;
+    final l10n = context.l10n;
+    final s = ref.watch(settingsProvider);
+    final ctrl = ref.read(settingsControllerProvider);
+    final candidates = ref.watch(secondaryTranslationCandidatesProvider);
+    final secondaryId = ref.watch(resolvedSecondaryTranslationIdProvider);
+
+    return SafeArea(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 12),
+            Center(
+              child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                      color: c.divider,
+                      borderRadius: BorderRadius.circular(2))),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+              child: Text(l10n.parallelOptionsTitle,
+                  style: Theme.of(context).textTheme.titleMedium),
+            ),
+            SwitchListTile(
+              secondary: const Icon(Icons.view_column_outlined),
+              title: Text(l10n.parallelReading),
+              subtitle: Text(
+                  s.parallelReadingEnabled ? l10n.parallelReading : l10n.singleTranslation),
+              value: s.parallelReadingEnabled,
+              onChanged: ctrl.setParallelReading,
+            ),
+            if (s.parallelReadingEnabled) ...[
+              const Divider(height: 1),
+              _sectionLabel(c, l10n.secondaryTranslation),
+              if (candidates.isEmpty)
+                _EmptySecondary(onOpenSettings: () {
+                  Navigator.pop(context);
+                  context.push('/settings');
+                })
+              else
+                for (final t in candidates)
+                  ListTile(
+                    title: Text(t.title),
+                    trailing: t.id == secondaryId
+                        ? Icon(Icons.check, color: c.accent)
+                        : null,
+                    onTap: () => ctrl.setSecondaryTranslation(t.id),
+                  ),
+              const Divider(height: 1),
+              _sectionLabel(c, l10n.parallelLayoutLabel),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                child: Wrap(
+                  spacing: 8,
+                  children: [
+                    for (final entry in <(ParallelLayout, String)>[
+                      (ParallelLayout.auto, l10n.layoutAuto),
+                      (ParallelLayout.stacked, l10n.layoutStacked),
+                      (ParallelLayout.sideBySide, l10n.layoutSideBySide),
+                    ])
+                      ChoiceChip(
+                        label: Text(entry.$2),
+                        selected: s.parallelLayout == entry.$1,
+                        onSelected: (_) => ctrl.setParallelLayout(entry.$1),
+                        backgroundColor: c.surfaceHigh,
+                        selectedColor: c.accentSoft,
+                        side: BorderSide.none,
+                        labelStyle: TextStyle(
+                            color: s.parallelLayout == entry.$1
+                                ? c.accent
+                                : c.textSecondary),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionLabel(BtColors c, String title) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
+        child: Text(title.toUpperCase(),
+            style: TextStyle(
+                color: c.textFaint,
+                fontSize: 12,
+                letterSpacing: 1,
+                fontWeight: FontWeight.w600)),
+      );
+}
+
+class _EmptySecondary extends StatelessWidget {
+  final VoidCallback onOpenSettings;
+  const _EmptySecondary({required this.onOpenSettings});
+  @override
+  Widget build(BuildContext context) {
+    final c = context.bt;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(context.l10n.noSecondaryTranslation,
+              style: TextStyle(color: c.textSecondary, height: 1.4)),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: onOpenSettings,
+            icon: const Icon(Icons.download_outlined, size: 18),
+            label: Text(context.l10n.openOfflineResources),
+            style: OutlinedButton.styleFrom(
+                foregroundColor: c.accent,
+                side: BorderSide(color: c.accent.withValues(alpha: 0.5))),
+          ),
+        ],
       ),
     );
   }

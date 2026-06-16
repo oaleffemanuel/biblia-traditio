@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/di/providers.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/snack.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../annotations/application/annotation_providers.dart';
 import '../../annotations/domain/entities.dart';
@@ -421,6 +422,7 @@ class _ActionBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.bt;
+    final l10n = context.l10n;
     final ctrl = ref.read(annotationControllerProvider);
     final favorite = ref.watch(isFavoriteProvider(vref));
     final bookmarked = ref.watch(isBookmarkedProvider(vref));
@@ -435,20 +437,34 @@ class _ActionBar extends ConsumerWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _act(c, Icons.format_color_fill, c.textPrimary, onHighlight),
-            _act(c, favorite ? Icons.favorite : Icons.favorite_border,
-                favorite ? c.accent : c.textPrimary, () {
-              ctrl.toggleFavorite(vref, '“$verseText”  ($reference)');
-            }),
-            _act(c, Icons.ios_share, c.textPrimary, () {
+            _act(c, Icons.format_color_fill, c.textPrimary, l10n.highlight,
+                onHighlight),
+            // Favorite/bookmark are NOT silent: the icon fills and turns accent
+            // the instant they're tapped — that's the feedback. A SnackBar here
+            // would float over this very action bar (covering the other actions
+            // and stealing taps), so we keep the visual toggle as the signal.
+            _act(
+                c,
+                favorite ? Icons.favorite : Icons.favorite_border,
+                favorite ? c.accent : c.textPrimary,
+                favorite ? l10n.unfavorite : l10n.favorite,
+                () => ctrl.toggleFavorite(vref, '“$verseText”  ($reference)')),
+            _act(c, Icons.ios_share, c.textPrimary, l10n.share, () {
               showShareVerse(context, reference: reference, text: verseText);
             }),
-            _act(c, Icons.copy, c.textPrimary, () {
+            _act(c, Icons.copy, c.textPrimary, l10n.copyVerse, () {
               Clipboard.setData(
                   ClipboardData(text: '“$verseText”\n— $reference'));
+              // Copy is silent — close the panel so the confirmation toast is
+              // visible (it would otherwise be hidden behind this sheet).
+              Navigator.pop(context);
+              showSnack(l10n.copied);
             }),
-            _act(c, bookmarked ? Icons.bookmark : Icons.bookmark_border,
+            _act(
+                c,
+                bookmarked ? Icons.bookmark : Icons.bookmark_border,
                 bookmarked ? c.accent : c.textPrimary,
+                bookmarked ? l10n.unbookmark : l10n.bookmark,
                 () => ctrl.toggleBookmark(vref)),
           ],
         ),
@@ -456,8 +472,10 @@ class _ActionBar extends ConsumerWidget {
     );
   }
 
-  Widget _act(BtColors c, IconData icon, Color color, VoidCallback onTap) =>
-      IconButton(icon: Icon(icon, color: color), onPressed: onTap);
+  Widget _act(BtColors c, IconData icon, Color color, String tooltip,
+          VoidCallback onTap) =>
+      IconButton(
+          tooltip: tooltip, icon: Icon(icon, color: color), onPressed: onTap);
 }
 
 class _Empty extends StatelessWidget {

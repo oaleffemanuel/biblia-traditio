@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/snack.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../packages/application/package_providers.dart';
 import '../../packages/domain/content_package.dart';
@@ -104,7 +105,7 @@ class SettingsScreen extends ConsumerWidget {
                 color: Color(0xFF25D366)),
             title: Text(l10n.whatsappTitle),
             subtitle: Text(l10n.whatsappSubtitle),
-            onTap: _openWhatsApp,
+            onTap: () => _openWhatsApp(context),
           ),
           const SizedBox(height: 24),
           Center(
@@ -119,17 +120,21 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _openWhatsApp() async {
+  Future<void> _openWhatsApp(BuildContext context) async {
     const phone = '5531975965032'; // +55 31 97596-5032
     const msg = 'Olá! Escrevo sobre o app Biblia Traditio.';
     final encoded = Uri.encodeComponent(msg);
-    // Prefer the WhatsApp app; fall back to the browser (wa.me).
+    // Prefer the WhatsApp app; fall back to the browser (wa.me). Capture the
+    // failure message before any await so we never touch a stale context.
+    final failMsg = context.l10n.contactLaunchFailed;
     final appUri = Uri.parse('whatsapp://send?phone=$phone&text=$encoded');
     final webUri = Uri.parse('https://wa.me/$phone?text=$encoded');
-    if (await canLaunchUrl(appUri)) {
-      await launchUrl(appUri);
-    } else {
-      await launchUrl(webUri, mode: LaunchMode.externalApplication);
+    try {
+      if (await canLaunchUrl(appUri) && await launchUrl(appUri)) return;
+      if (await launchUrl(webUri, mode: LaunchMode.externalApplication)) return;
+      showSnack(failMsg);
+    } catch (_) {
+      showSnack(failMsg);
     }
   }
 
@@ -234,11 +239,13 @@ class _PackageTileState extends ConsumerState<_PackageTile> {
       _busy = true;
       _progress = 0;
     });
+    final successMsg = context.l10n.installSuccess;
     try {
       await ref.read(packageControllerProvider).install(widget.pkg,
           onProgress: (p) {
         if (mounted) setState(() => _progress = p);
       });
+      showSnack(successMsg);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -249,8 +256,31 @@ class _PackageTileState extends ConsumerState<_PackageTile> {
     }
   }
 
+  /// Confirms first — removing forces a fresh (potentially large) re-download.
   Future<void> _remove() async {
-    await ref.read(packageControllerProvider).remove(widget.pkg);
+    final l10n = context.l10n;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.removePackageTitle),
+        content: Text(l10n.removePackageMessage),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.actionCancel)),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.actionRemove)),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await ref.read(packageControllerProvider).remove(widget.pkg);
+      showSnack(l10n.removeSuccess);
+    } catch (e) {
+      showSnack(l10n.installFailed('$e'));
+    }
   }
 
   @override
@@ -282,10 +312,12 @@ class _PackageTileState extends ConsumerState<_PackageTile> {
                   ? (pkg.required
                       ? Icon(Icons.check_circle, color: LiturgicalPalette.green)
                       : IconButton(
+                          tooltip: l10n.actionRemove,
                           icon: Icon(Icons.delete_outline,
                               color: c.textSecondary),
                           onPressed: _remove))
                   : IconButton(
+                      tooltip: l10n.actionDownload,
                       icon: Icon(Icons.download, color: c.accent),
                       onPressed: _install),
         ),

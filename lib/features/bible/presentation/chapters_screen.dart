@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../application/bible_providers.dart';
 import 'widgets/book_emblem.dart';
@@ -15,7 +16,17 @@ class ChaptersScreen extends ConsumerWidget {
     final c = context.bt;
     final book = ref.watch(bookByIdProvider(bookId));
     if (book == null) {
-      return const Scaffold(body: Center(child: Text('—')));
+      return Scaffold(
+        appBar: AppBar(),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Text(context.l10n.scriptureNotInstalled,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: c.textSecondary, height: 1.5)),
+          ),
+        ),
+      );
     }
     return Scaffold(
       appBar: AppBar(title: Text(book.name)),

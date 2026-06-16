@@ -71,6 +71,64 @@ class ChapterContent {
   bool get isEmpty => verses.isEmpty;
 }
 
+/// One row of Parallel Reading: a single canonical verse number paired with its
+/// rendering in each translation. Either side may be `null` when that
+/// translation lacks the verse (different versification, deuterocanonical gaps,
+/// Psalms numbering, etc.) — the UI then shows a "not available" placeholder.
+@immutable
+class ParallelVerse {
+  final int number;
+  final Verse? primary;
+  final Verse? secondary;
+  const ParallelVerse(this.number, this.primary, this.secondary);
+
+  /// Text used for the canonical snapshot (commentary header, share, favorite):
+  /// the primary reading, falling back to the secondary when primary is absent.
+  String get canonicalText => primary?.text ?? secondary?.text ?? '';
+}
+
+/// Two single-translation chapters aligned by canonical verse number for
+/// side-by-side / stacked reading. The primary chapter is the spine: its order
+/// and section headings win. Notes/highlights/favorites are unaffected — they
+/// always key off the canonical [VerseRef] (bookId, chapter, verse), never a
+/// column.
+@immutable
+class ParallelChapter {
+  final String bookId;
+  final int chapter;
+  final List<ParallelVerse> rows;
+  final List<SectionHeading> headings; // from the primary translation
+  const ParallelChapter(this.bookId, this.chapter, this.rows, this.headings);
+
+  bool get isEmpty => rows.isEmpty;
+
+  /// Aligns [primary] and [secondary] by verse number. Primary verses keep
+  /// their native order (including suffix splits); each is paired with the
+  /// secondary verse of the same number when one exists. Verses present only in
+  /// the secondary translation are appended in numeric order so nothing is
+  /// silently dropped. A null [secondary] yields rows with no secondary side
+  /// (the "no secondary translation" case still renders the primary cleanly).
+  factory ParallelChapter.align(
+      ChapterContent primary, ChapterContent? secondary) {
+    final secVerses = secondary?.verses ?? const <Verse>[];
+    final secByNum = <int, Verse>{for (final v in secVerses) v.number: v};
+    final primaryNums = <int>{for (final v in primary.verses) v.number};
+
+    final rows = <ParallelVerse>[
+      for (final v in primary.verses)
+        ParallelVerse(v.number, v, secByNum[v.number]),
+    ];
+    final extras = secVerses
+        .where((v) => !primaryNums.contains(v.number))
+        .toList()
+      ..sort((a, b) => a.number.compareTo(b.number));
+    rows.addAll(extras.map((v) => ParallelVerse(v.number, null, v)));
+
+    return ParallelChapter(
+        primary.bookId, primary.chapter, rows, primary.headings);
+  }
+}
+
 /// A search result. `snippet` may contain U+2068…U+2069 markers around matched
 /// terms for emphasis in the UI.
 @immutable

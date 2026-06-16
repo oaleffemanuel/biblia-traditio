@@ -36,6 +36,46 @@ class AppL10nEn extends AppL10n {
   String get actionClose => 'Close';
 
   @override
+  String get actionDelete => 'Delete';
+
+  @override
+  String get actionRemove => 'Remove';
+
+  @override
+  String get actionDownload => 'Download';
+
+  @override
+  String get removePackageTitle => 'Remove package?';
+
+  @override
+  String get removePackageMessage =>
+      'You\'ll need to download it again to reinstall.';
+
+  @override
+  String get deleteNoteTitle => 'Delete note?';
+
+  @override
+  String get deleteNoteMessage => 'This can\'t be undone.';
+
+  @override
+  String get contactLaunchFailed => 'Couldn\'t open WhatsApp.';
+
+  @override
+  String get copied => 'Copied';
+
+  @override
+  String get installSuccess => 'Installed successfully';
+
+  @override
+  String get removeSuccess => 'Package removed';
+
+  @override
+  String get highlight => 'Highlight';
+
+  @override
+  String get deuterocanonicalShort => 'DC';
+
+  @override
   String get greetingMorning => 'Good morning,';
 
   @override
@@ -306,6 +346,41 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get noteHint => 'Write your reflection…';
+
+  @override
+  String get parallelReading => 'Parallel reading';
+
+  @override
+  String get singleTranslation => 'Single translation';
+
+  @override
+  String get parallelOptionsTitle => 'Parallel reading';
+
+  @override
+  String get secondaryTranslation => 'Secondary translation';
+
+  @override
+  String get noSecondaryTranslation =>
+      'No secondary translation installed yet.';
+
+  @override
+  String get openOfflineResources => 'Open Offline resources';
+
+  @override
+  String get verseNotInTranslation =>
+      'Verse not available in this translation.';
+
+  @override
+  String get parallelLayoutLabel => 'Layout';
+
+  @override
+  String get layoutAuto => 'Automatic';
+
+  @override
+  String get layoutStacked => 'Stacked';
+
+  @override
+  String get layoutSideBySide => 'Side by side';
 
   @override
   String get searchHint => 'Search Scripture, Fathers, notes…';

@@ -151,6 +151,84 @@ abstract class AppL10n {
   /// **'Close'**
   String get actionClose;
 
+  /// No description provided for @actionDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get actionDelete;
+
+  /// No description provided for @actionRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get actionRemove;
+
+  /// No description provided for @actionDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get actionDownload;
+
+  /// No description provided for @removePackageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove package?'**
+  String get removePackageTitle;
+
+  /// No description provided for @removePackageMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll need to download it again to reinstall.'**
+  String get removePackageMessage;
+
+  /// No description provided for @deleteNoteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete note?'**
+  String get deleteNoteTitle;
+
+  /// No description provided for @deleteNoteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This can\'t be undone.'**
+  String get deleteNoteMessage;
+
+  /// No description provided for @contactLaunchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open WhatsApp.'**
+  String get contactLaunchFailed;
+
+  /// No description provided for @copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get copied;
+
+  /// No description provided for @installSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed successfully'**
+  String get installSuccess;
+
+  /// No description provided for @removeSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Package removed'**
+  String get removeSuccess;
+
+  /// No description provided for @highlight.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight'**
+  String get highlight;
+
+  /// No description provided for @deuterocanonicalShort.
+  ///
+  /// In en, this message translates to:
+  /// **'DC'**
+  String get deuterocanonicalShort;
+
   /// No description provided for @greetingMorning.
   ///
   /// In en, this message translates to:
@@ -624,6 +702,72 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Write your reflection…'**
   String get noteHint;
+
+  /// No description provided for @parallelReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Parallel reading'**
+  String get parallelReading;
+
+  /// No description provided for @singleTranslation.
+  ///
+  /// In en, this message translates to:
+  /// **'Single translation'**
+  String get singleTranslation;
+
+  /// No description provided for @parallelOptionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Parallel reading'**
+  String get parallelOptionsTitle;
+
+  /// No description provided for @secondaryTranslation.
+  ///
+  /// In en, this message translates to:
+  /// **'Secondary translation'**
+  String get secondaryTranslation;
+
+  /// No description provided for @noSecondaryTranslation.
+  ///
+  /// In en, this message translates to:
+  /// **'No secondary translation installed yet.'**
+  String get noSecondaryTranslation;
+
+  /// No description provided for @openOfflineResources.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Offline resources'**
+  String get openOfflineResources;
+
+  /// No description provided for @verseNotInTranslation.
+  ///
+  /// In en, this message translates to:
+  /// **'Verse not available in this translation.'**
+  String get verseNotInTranslation;
+
+  /// No description provided for @parallelLayoutLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Layout'**
+  String get parallelLayoutLabel;
+
+  /// No description provided for @layoutAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get layoutAuto;
+
+  /// No description provided for @layoutStacked.
+  ///
+  /// In en, this message translates to:
+  /// **'Stacked'**
+  String get layoutStacked;
+
+  /// No description provided for @layoutSideBySide.
+  ///
+  /// In en, this message translates to:
+  /// **'Side by side'**
+  String get layoutSideBySide;
 
   /// No description provided for @searchHint.
   ///

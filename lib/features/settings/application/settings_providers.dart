@@ -29,6 +29,12 @@ class SettingsController {
   void setNotifications(bool v) => _set('notificationsEnabled', '$v');
   void setWantsReadingPlan(bool v) => _set('wantsReadingPlan', '$v');
   void completeOnboarding() => _set('onboardingCompleted', 'true');
+
+  void setParallelReading(bool v) => _set('parallelReadingEnabled', '$v');
+  void setSecondaryTranslation(String id) =>
+      _set('secondaryTranslationId', id);
+  void setParallelLayout(ParallelLayout l) =>
+      _set('parallelLayout', Settings.parallelLayoutKey(l));
 }
 
 final settingsControllerProvider =
@@ -49,4 +55,26 @@ final resolvedTranslationIdProvider = Provider<String>((ref) {
   final available = ref.watch(availableTranslationsProvider);
   if (available.any((t) => t.id == pref)) return pref;
   return available.isNotEmpty ? available.first.id : pref;
+});
+
+/// Installed translations eligible to be the Parallel Reading secondary column:
+/// everything except the active primary. Empty until a second translation pack
+/// is installed (the common case today, where only the Vulgate ships).
+final secondaryTranslationCandidatesProvider =
+    Provider<List<({String id, String lang, String title})>>((ref) {
+  final primary = ref.watch(resolvedTranslationIdProvider);
+  return ref
+      .watch(availableTranslationsProvider)
+      .where((t) => t.id != primary)
+      .toList();
+});
+
+/// The translation to render in the secondary column, or `null` when the user
+/// hasn't chosen one, it isn't installed, or it collides with the primary.
+/// Guarantees Parallel Reading never queries a translation that isn't present.
+final resolvedSecondaryTranslationIdProvider = Provider<String?>((ref) {
+  final pref = ref.watch(settingsProvider).secondaryTranslationId;
+  if (pref.isEmpty) return null;
+  final candidates = ref.watch(secondaryTranslationCandidatesProvider);
+  return candidates.any((t) => t.id == pref) ? pref : null;
 });

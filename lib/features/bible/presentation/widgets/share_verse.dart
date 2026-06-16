@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../../core/l10n_ext.dart';
+import '../../../../core/snack.dart';
 import '../../../../core/theme/app_theme.dart';
 
 /// Opens the share sheet for a verse: copy, share text, or share a beautiful
@@ -45,11 +47,13 @@ void showShareVerse(BuildContext context,
                 Expanded(
                   child: _Action(
                     icon: Icons.copy,
-                    label: 'Copiar',
+                    label: sheetCtx.l10n.shareCopy,
                     onTap: () {
                       Clipboard.setData(
                           ClipboardData(text: '“$text”\n— $reference'));
+                      final copied = sheetCtx.l10n.copied;
                       Navigator.pop(sheetCtx);
+                      showSnack(copied);
                     },
                   ),
                 ),
@@ -57,7 +61,7 @@ void showShareVerse(BuildContext context,
                 Expanded(
                   child: _Action(
                     icon: Icons.notes,
-                    label: 'Texto',
+                    label: sheetCtx.l10n.shareText,
                     onTap: () {
                       Navigator.pop(sheetCtx);
                       SharePlus.instance
@@ -69,7 +73,7 @@ void showShareVerse(BuildContext context,
                 Expanded(
                   child: _Action(
                     icon: Icons.image_outlined,
-                    label: 'Imagem',
+                    label: sheetCtx.l10n.shareImage,
                     onTap: () async {
                       await _shareCardImage(cardKey, reference);
                       if (sheetCtx.mounted) Navigator.pop(sheetCtx);

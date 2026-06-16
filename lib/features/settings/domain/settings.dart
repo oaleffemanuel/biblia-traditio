@@ -32,6 +32,10 @@ class TranslationOption {
   ];
 }
 
+/// How Parallel Reading arranges the two translation columns. [auto] picks
+/// side-by-side on wide layouts (tablets) and stacked on phones.
+enum ParallelLayout { auto, stacked, sideBySide }
+
 @immutable
 class Settings {
   final bool onboardingCompleted;
@@ -41,6 +45,9 @@ class Settings {
   final ThemeMode themeMode;
   final bool notificationsEnabled;
   final bool wantsReadingPlan;
+  final bool parallelReadingEnabled;
+  final String secondaryTranslationId;
+  final ParallelLayout parallelLayout;
 
   const Settings({
     this.onboardingCompleted = false,
@@ -50,6 +57,9 @@ class Settings {
     this.themeMode = ThemeMode.dark,
     this.notificationsEnabled = false,
     this.wantsReadingPlan = false,
+    this.parallelReadingEnabled = false,
+    this.secondaryTranslationId = '',
+    this.parallelLayout = ParallelLayout.auto,
   });
 
   factory Settings.fromMap(Map<String, String> m) => Settings(
@@ -64,11 +74,24 @@ class Settings {
         },
         notificationsEnabled: m['notificationsEnabled'] == 'true',
         wantsReadingPlan: m['wantsReadingPlan'] == 'true',
+        parallelReadingEnabled: m['parallelReadingEnabled'] == 'true',
+        secondaryTranslationId: m['secondaryTranslationId'] ?? '',
+        parallelLayout: switch (m['parallelLayout']) {
+          'stacked' => ParallelLayout.stacked,
+          'sideBySide' => ParallelLayout.sideBySide,
+          _ => ParallelLayout.auto,
+        },
       );
 
   static String themeModeKey(ThemeMode m) => switch (m) {
         ThemeMode.light => 'light',
         ThemeMode.system => 'system',
         ThemeMode.dark => 'dark',
+      };
+
+  static String parallelLayoutKey(ParallelLayout l) => switch (l) {
+        ParallelLayout.auto => 'auto',
+        ParallelLayout.stacked => 'stacked',
+        ParallelLayout.sideBySide => 'sideBySide',
       };
 }

@@ -24,6 +24,21 @@ void main() {
     expect(s.language, AppLanguage.pt);
     expect(s.primaryTranslationId, 'vulgata');
     expect(s.themeMode, ThemeMode.dark);
+    // Parallel Reading off by default, no secondary, auto layout.
+    expect(s.parallelReadingEnabled, isFalse);
+    expect(s.secondaryTranslationId, '');
+    expect(s.parallelLayout, ParallelLayout.auto);
+  });
+
+  test('parallel reading preferences persist and reconstruct', () {
+    db.setSetting('parallelReadingEnabled', 'true');
+    db.setSetting('secondaryTranslationId', 'drb');
+    db.setSetting('parallelLayout', Settings.parallelLayoutKey(ParallelLayout.sideBySide));
+
+    final s = Settings.fromMap(db.allSettings());
+    expect(s.parallelReadingEnabled, isTrue);
+    expect(s.secondaryTranslationId, 'drb');
+    expect(s.parallelLayout, ParallelLayout.sideBySide);
   });
 
   test('onboarding choices persist and reconstruct', () {

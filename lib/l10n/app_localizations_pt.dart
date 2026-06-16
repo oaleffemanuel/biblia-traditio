@@ -36,6 +36,46 @@ class AppL10nPt extends AppL10n {
   String get actionClose => 'Fechar';
 
   @override
+  String get actionDelete => 'Excluir';
+
+  @override
+  String get actionRemove => 'Remover';
+
+  @override
+  String get actionDownload => 'Baixar';
+
+  @override
+  String get removePackageTitle => 'Remover pacote?';
+
+  @override
+  String get removePackageMessage =>
+      'Você precisará baixá-lo novamente para reinstalar.';
+
+  @override
+  String get deleteNoteTitle => 'Excluir nota?';
+
+  @override
+  String get deleteNoteMessage => 'Esta ação não pode ser desfeita.';
+
+  @override
+  String get contactLaunchFailed => 'Não foi possível abrir o WhatsApp.';
+
+  @override
+  String get copied => 'Copiado';
+
+  @override
+  String get installSuccess => 'Instalado com sucesso';
+
+  @override
+  String get removeSuccess => 'Pacote removido';
+
+  @override
+  String get highlight => 'Destacar';
+
+  @override
+  String get deuterocanonicalShort => 'DC';
+
+  @override
   String get greetingMorning => 'Bom dia,';
 
   @override
@@ -306,6 +346,41 @@ class AppL10nPt extends AppL10n {
 
   @override
   String get noteHint => 'Escreva a sua reflexão…';
+
+  @override
+  String get parallelReading => 'Leitura paralela';
+
+  @override
+  String get singleTranslation => 'Tradução única';
+
+  @override
+  String get parallelOptionsTitle => 'Leitura paralela';
+
+  @override
+  String get secondaryTranslation => 'Tradução secundária';
+
+  @override
+  String get noSecondaryTranslation =>
+      'Nenhuma tradução secundária instalada ainda.';
+
+  @override
+  String get openOfflineResources => 'Abrir Recursos offline';
+
+  @override
+  String get verseNotInTranslation =>
+      'Versículo não disponível nesta tradução.';
+
+  @override
+  String get parallelLayoutLabel => 'Disposição';
+
+  @override
+  String get layoutAuto => 'Automático';
+
+  @override
+  String get layoutStacked => 'Empilhado';
+
+  @override
+  String get layoutSideBySide => 'Lado a lado';
 
   @override
   String get searchHint => 'Pesquisar Escritura, Padres, notas…';

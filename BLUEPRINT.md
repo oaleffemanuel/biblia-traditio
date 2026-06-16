@@ -57,7 +57,9 @@ Everything below assumes 3 tabs and a PD-sourced primary translation, both easil
 - **7 calendar tests** validate it — incl. the exact screenshot day (12 Jun 2026 = Sacred Heart, Tempo Comum, **Ano A**), Easter dates 2024-27, cycle rotation, season colours, fixed solemnities. Full suite now **15 tests green**, `flutter analyze` clean.
 - **Readings** are deliberately behind a `LectionaryRepository` interface (empty until a pack ships) — the calendar is exact; fabricating Scripture references would be unacceptable. The tab shows a clear "Lecionário em breve" notice.
 
-**Pending next:** scripture text import (awaits the legal call on Matos Soares) + lectionary pack, Parallel Reading Mode, localization (ARB) wiring, at-rest encryption.
+**Parallel Reading Mode (done):** Reader app-bar toggle (`view_column`) opens a Parallel options sheet — enable, pick the secondary translation, choose layout (Auto / Stacked / Side-by-side; Auto = side-by-side ≥600 dp, stacked below). Columns are joined by **canonical verse number** (`ParallelChapter.align`): primary is the spine, missing secondary verses show a "Versículo não disponível nesta tradução." placeholder, secondary-only verses (versification/Psalms differences) are appended, not dropped. Verse tap still opens the commentary-first panel; gold commentary dots + highlights + notes/favorites all attach to the canonical `VerseRef`, never a column. With only the Vulgate installed the sheet shows a graceful "no secondary translation" empty state routing to Settings → Offline Resources (no duplicate Vulgate). Settings persist `parallelReadingEnabled` / `secondaryTranslationId` / `parallelLayout`.
+
+**Pending next:** scripture text import (awaits the legal call on Matos Soares) + lectionary pack, at-rest encryption.
 
 ---
 
