@@ -41,6 +41,15 @@ for p in pkgs:
         lic = (p.get("license") or "").upper()
         if "DEV" in lic or "AVE MARIA" in lic or pid in ("pt_cat","avemaria"):
             print(f"  ✗ {pid}: dev/copyrighted Bible bundled — NOT shippable"); bad = 1
+        # Beta/internal-provenance scripture is acceptable for an INTERNAL beta
+        # build but must never reach a public release. Gated by the BETA env var.
+        blob = " ".join(str(p.get(k, "")) for k in ("id", "license", "source")).lower()
+        if any(w in blob for w in ("beta", "interno", "a confirmar", "unverified")):
+            if os.environ.get("BETA"):
+                print(f"  ⚠ {pid}: beta/internal scripture — allowed for internal beta (BETA=1)")
+            else:
+                print(f"  ✗ {pid}: beta/internal scripture — NOT for public release "
+                      f"(set BETA=1 for an internal beta build)"); bad = 1
     asset = p.get("asset")
     if asset:
         gz = os.path.join(pkgdir, os.path.basename(asset))

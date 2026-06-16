@@ -26,6 +26,22 @@ rm -f "$DATA/bible_vulgata.sqlite" "$DATA/bible_vulgata.sqlite-wal" "$DATA/bible
 dart run bin/import.dart usfx --src "$VUL" --translation vulgata --lang la \
   --title "Vulgata Clementina" --license "Domínio público" --out "$DATA/bible_vulgata.sqlite"
 
+# Portuguese (BETA): an internal Catholic PT corpus (iacula) added as a second
+# translation in the SAME bible DB so it appears in translation selection and
+# Parallel Reading. Provenance unconfirmed → flagged "beta" (see check_release).
+# Degrades to a Latin-only build if the source isn't present.
+PT_SRC="${IACULA_BIBLE_DIR:-$HOME/workspace/iacula-mobile/iacula_app/assets/seed/bible}"
+if [ -d "$PT_SRC" ]; then
+  echo "▶ Bible (Português — beta, corpus interno)"
+  python3 "$IMP/convert_iacula_bible.py" "$PT_SRC" "$DATA/pt_iacula.json"
+  dart run bin/import.dart biblejson --src "$DATA/pt_iacula.json" --translation pt_beta --lang pt \
+    --title "Bíblia Católica (Português)" \
+    --license "Uso interno (beta) — origem da tradução a confirmar" \
+    --out "$DATA/bible_vulgata.sqlite"
+else
+  echo "▶ Bible (Português) — SKIPPED: source not found at $PT_SRC (Latin-only build)"
+fi
+
 echo "▶ Patristics"
 rm -f "$DATA/patristics.sqlite" "$DATA/patristics.sqlite-wal" "$DATA/patristics.sqlite-shm"
 dart run bin/import.dart patristics --src "$PATRISTICS_DIR" --out "$DATA/patristics.sqlite"

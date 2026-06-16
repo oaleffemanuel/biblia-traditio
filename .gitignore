@@ -59,3 +59,4 @@ tool/importer/data/reports/
 assets/packages/*.sqlite.gz
 assets/packages/manifest.json
 tool/importer/data/*.xml
+tool/importer/data/*.json
