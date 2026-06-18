@@ -49,6 +49,10 @@ class UserDatabase {
         id INTEGER PRIMARY KEY CHECK(id = 1),
         translation_id TEXT, book_id TEXT, chapter INTEGER, verse INTEGER,
         updated_at INTEGER);
+      CREATE TABLE IF NOT EXISTS reading_plan_day(
+        plan_id TEXT, day INTEGER, completed_at INTEGER,
+        is_dirty INTEGER DEFAULT 1, is_deleted INTEGER DEFAULT 0,
+        PRIMARY KEY(plan_id, day));
       CREATE INDEX IF NOT EXISTS idx_note_ref ON note(book_id, chapter, verse);
       CREATE TABLE IF NOT EXISTS app_setting(key TEXT PRIMARY KEY, value TEXT);
     ''');
@@ -233,5 +237,43 @@ class UserDatabase {
       r['verse'] as int,
       _at(r['updated_at']),
     );
+  }
+
+  // ── Reading plan ───────────────────────────────────────────────────────
+  // The plan's start (day 1) is stored as a UTC epoch-day in app_setting, so
+  // "today's day" is a pure date difference. Per-day completion lives in its
+  // own table (sync-ready). Both are scoped by plan_id for future plans.
+  String _planStartKey(String planId) => 'readingPlan.$planId.startEpochDay';
+
+  int? readingPlanStart(String planId) {
+    final rows = _db
+        .select('SELECT value FROM app_setting WHERE key=?', [_planStartKey(planId)]);
+    if (rows.isEmpty) return null;
+    return int.tryParse(rows.first['value'] as String);
+  }
+
+  void setReadingPlanStart(String planId, int epochDay) =>
+      setSetting(_planStartKey(planId), '$epochDay');
+
+  Set<int> completedPlanDays(String planId) => _db
+      .select(
+          'SELECT day FROM reading_plan_day WHERE plan_id=? AND is_deleted=0',
+          [planId])
+      .map((r) => r['day'] as int)
+      .toSet();
+
+  void setPlanDayCompleted(String planId, int day, bool completed) {
+    if (completed) {
+      _db.execute('''
+        INSERT INTO reading_plan_day(plan_id,day,completed_at,is_dirty,is_deleted)
+        VALUES(?,?,?,1,0)
+        ON CONFLICT(plan_id,day) DO UPDATE SET
+          completed_at=excluded.completed_at, is_dirty=1, is_deleted=0
+      ''', [planId, day, _now]);
+    } else {
+      _db.execute(
+          'UPDATE reading_plan_day SET is_deleted=1, is_dirty=1, completed_at=? WHERE plan_id=? AND day=?',
+          [_now, planId, day]);
+    }
   }
 }

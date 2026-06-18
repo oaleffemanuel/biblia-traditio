@@ -106,6 +106,30 @@ class AppL10nEn extends AppL10n {
   String get comingSoon => 'Coming soon';
 
   @override
+  String get planSubtitle => 'A year through Sacred Scripture';
+
+  @override
+  String get planToday => 'Today';
+
+  @override
+  String planDay(int day) {
+    return 'Day $day';
+  }
+
+  @override
+  String planDayProgress(int day, int total) {
+    return 'Day $day of $total';
+  }
+
+  @override
+  String planProgress(int done, int total) {
+    return '$done of $total days read';
+  }
+
+  @override
+  String get planMarkRead => 'Mark as read';
+
+  @override
   String get notes => 'Notes';
 
   @override

@@ -289,6 +289,42 @@ abstract class AppL10n {
   /// **'Coming soon'**
   String get comingSoon;
 
+  /// No description provided for @planSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A year through Sacred Scripture'**
+  String get planSubtitle;
+
+  /// No description provided for @planToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get planToday;
+
+  /// No description provided for @planDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day {day}'**
+  String planDay(int day);
+
+  /// No description provided for @planDayProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Day {day} of {total}'**
+  String planDayProgress(int day, int total);
+
+  /// No description provided for @planProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} days read'**
+  String planProgress(int done, int total);
+
+  /// No description provided for @planMarkRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as read'**
+  String get planMarkRead;
+
   /// No description provided for @notes.
   ///
   /// In en, this message translates to:

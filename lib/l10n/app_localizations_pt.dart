@@ -106,6 +106,30 @@ class AppL10nPt extends AppL10n {
   String get comingSoon => 'Em breve';
 
   @override
+  String get planSubtitle => 'Um ano pela Sagrada Escritura';
+
+  @override
+  String get planToday => 'Hoje';
+
+  @override
+  String planDay(int day) {
+    return 'Dia $day';
+  }
+
+  @override
+  String planDayProgress(int day, int total) {
+    return 'Dia $day de $total';
+  }
+
+  @override
+  String planProgress(int done, int total) {
+    return '$done de $total dias lidos';
+  }
+
+  @override
+  String get planMarkRead => 'Marcar como lido';
+
+  @override
   String get notes => 'Notas';
 
   @override

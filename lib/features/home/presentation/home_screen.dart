@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../annotations/application/annotation_providers.dart';
+import '../../reading_plan/application/reading_plan_providers.dart';
 import '../../settings/application/settings_providers.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -87,13 +88,7 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 24),
             _SectionLabel(l10n.homeJourney, c),
             const SizedBox(height: 12),
-            _SecondaryCard(
-              icon: Icons.calendar_month_outlined,
-              title: l10n.readingPlan,
-              subtitle: l10n.comingSoon,
-              onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.comingSoon))),
-            ),
+            _ReadingPlanCard(),
             const SizedBox(height: 12),
             _SecondaryCard(
               icon: Icons.edit_note,
@@ -164,6 +159,28 @@ class _QuickCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Home entry into the reading plan. Shows the live day/progress once started,
+/// otherwise a short invitation — never blocks on the asset load.
+class _ReadingPlanCard extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final plan = ref.watch(readingPlanProvider).value;
+    String subtitle = l10n.planSubtitle;
+    if (plan != null) {
+      final st = ref
+          .watch(planStateProvider((planId: plan.id, totalDays: plan.days)));
+      if (st.started) subtitle = l10n.planDayProgress(st.currentDay, plan.days);
+    }
+    return _SecondaryCard(
+      icon: Icons.calendar_month_outlined,
+      title: l10n.readingPlan,
+      subtitle: subtitle,
+      onTap: () => context.push('/reading-plan'),
     );
   }
 }
