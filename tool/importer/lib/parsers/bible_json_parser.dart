@@ -40,6 +40,25 @@ class BibleJsonParser {
 
   String? _resolve(String nome) => _normNameToId[_norm(nome)];
 
+  /// Defensive scripture sanitizer: no source should ever leak markup into a
+  /// verse. Strips HTML tags (keeping inner text, e.g. a cross-reference link
+  /// '<a ...>Is 40, 3</a>' becomes 'Is 40, 3'), unescapes common entities, and
+  /// collapses the whitespace left behind.
+  static String _sanitize(String s) {
+    var x = s.replaceAll(RegExp(r'<[^>]*>'), '');
+    x = x
+        .replaceAll('&quot;', '"')
+        .replaceAll('&#39;', "'")
+        .replaceAll('&apos;', "'")
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll('&amp;', '&');
+    x = x.replaceAll(RegExp(r'\s+([,.;:!?])'), r'$1');
+    x = x.replaceAll(RegExp(r'\(\s+'), '(').replaceAll(RegExp(r'\s+\)'), ')');
+    return x.replaceAll(RegExp(r'\s{2,}'), ' ').trim();
+  }
+
   Future<void> parseFile(String path) async {
     final data = jsonDecode(await File(path).readAsString()) as Map<String, dynamic>;
     for (final section in ['antigoTestamento', 'novoTestamento']) {
@@ -61,7 +80,7 @@ class BibleJsonParser {
           for (final v in (ch['versiculos'] as List? ?? const [])) {
             if (v is! Map) continue;
             final n = (v['versiculo'] as num?)?.toInt();
-            final text = (v['texto'] ?? '').toString().trim();
+            final text = _sanitize((v['texto'] ?? '').toString());
             if (n == null || text.isEmpty) continue;
             verses.add(ParsedVerse(n, text));
             verseCount++;

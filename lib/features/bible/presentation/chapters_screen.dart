@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../application/bible_providers.dart';
+import '../domain/psalm_numbering.dart';
 import 'widgets/book_emblem.dart';
 
 class ChaptersScreen extends ConsumerWidget {
@@ -51,6 +52,10 @@ class ChaptersScreen extends ConsumerWidget {
                 itemCount: book.chapterCount,
                 itemBuilder: (_, i) {
                   final n = i + 1;
+                  // For Psalms, show the traditional Vulgate number with the
+                  // Hebrew/modern number beneath it (e.g. 22 / (23)).
+                  final hebrew =
+                      book.id == 'ps' ? PsalmNumbering.hebrewLabel(n) : null;
                   return InkWell(
                     onTap: () => context.push('/bible/${book.id}/$n'),
                     borderRadius: BorderRadius.circular(14),
@@ -60,11 +65,20 @@ class ChaptersScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(14),
                       ),
                       alignment: Alignment.center,
-                      child: Text('$n',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w500)),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('$n',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w500)),
+                          if (hebrew != null)
+                            Text('($hebrew)',
+                                style: TextStyle(
+                                    color: c.textFaint, fontSize: 10)),
+                        ],
+                      ),
                     ),
                   );
                 },

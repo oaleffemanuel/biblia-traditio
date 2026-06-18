@@ -39,6 +39,25 @@ class PatristicsParseResult {
   int orphans = 0; // refs whose book id could not be resolved
 }
 
+/// Maps a Hebrew/Masoretic psalm (chapter, verse) to the Vulgate/Septuagint
+/// numbering used by the app's scripture. Most psalms differ by one (Vulgate
+/// merges Heb 9+10, so everything after shifts); the merge/split regions around
+/// 113–117 and 147 are handled explicitly. Verse offsets are derived from the
+/// Vulgate verse counts and reconcile exactly except Vulgate 9 (the Heb 9/10
+/// boundary is off by one due to the Vulgate title verse — a documented edge).
+(int, int) psalmHebrewToVulgate(int hc, int hv) {
+  if (hc <= 8) return (hc, hv);
+  if (hc == 9) return (9, hv); // Heb 9 → Vulgate 9 (first part)
+  if (hc == 10) return (9, hv + 21); // Heb 10 appended into Vulgate 9
+  if (hc <= 113) return (hc - 1, hv); // 11..113 → 10..112
+  if (hc == 114) return (113, hv); // Heb 114 → Vulgate 113 (first part)
+  if (hc == 115) return (113, hv + 8); // Heb 115 appended (after Heb 114's 8 vv)
+  if (hc == 116) return hv <= 9 ? (114, hv) : (115, hv - 9); // split
+  if (hc <= 146) return (hc - 1, hv); // 117..146 → 116..145
+  if (hc == 147) return hv <= 11 ? (146, hv) : (147, hv - 11); // split
+  return (hc, hv); // 148..150 coincide
+}
+
 /// Ingests the verse-keyed patristic corpus:
 ///   { id, name, language, translation_engine, format,
 ///     chapters: { "<ch>": { "<verse>": [ {author, year, text}, ... ] } } }
@@ -108,6 +127,11 @@ class PatristicsParser {
           if (vs == null) continue;
           final list = vEntry.value;
           if (list is! List) continue;
+          // The Psalms commentary corpus is Hebrew/Masoretic-numbered; the app's
+          // scripture is Vulgate/Septuagint-numbered. Remap so commentary lands
+          // on the matching Vulgate psalm (otherwise it's offset by one).
+          final (rch, rvs) =
+              bookId == 'ps' ? psalmHebrewToVulgate(ch, vs) : (ch, vs);
           for (final item in list) {
             if (item is! Map) continue;
             final author = (item['author'] ?? '').toString().trim();
@@ -117,8 +141,8 @@ class PatristicsParser {
             result.fathers.add(author);
             result.commentaries.add(CommentaryRecord(
               bookId: bookId,
-              chapter: ch,
-              verse: vs,
+              chapter: rch,
+              verse: rvs,
               fatherName: author,
               year: year,
               century: _centuryFromYear(year),

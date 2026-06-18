@@ -57,6 +57,27 @@ OVERRIDES = {
     'II e III São João, S. Judas 1': [('2jn', [1]), ('3jn', [1]), ('jud', [1])],
 }
 
+def heb_to_vulgate_ps(h):
+    """The source schedule uses Hebrew/modern Psalm numbers (e.g. 'Salmo 119' is
+    the long acrostic); the app stores Vulgate numbering. Map so 'Salmo 23'
+    opens the Good Shepherd (Vulgate 22). Keep the displayed label as-is."""
+    if h <= 8:
+        return h
+    if h in (9, 10):
+        return 9
+    if h <= 113:
+        return h - 1
+    if h in (114, 115):
+        return 113
+    if h == 116:
+        return 114
+    if h <= 146:
+        return h - 1
+    if h == 147:
+        return 146
+    return h
+
+
 CANON73 = {
     'gn', 'ex', 'lv', 'nm', 'dt', 'jo', 'jgs', 'rt', '1sm', '2sm', '1kgs',
     '2kgs', '1chr', '2chr', 'ezr', 'neh', 'tb', 'jdt', 'est', '1mac', '2mac',
@@ -112,7 +133,11 @@ def main():
             segs, unres = parse(txt)
             if unres:
                 problems.append((e['Dia'], txt, unres))
-            targets = [{'book': b, 'chapter': c} for (b, chs) in segs for c in chs]
+            targets = [
+                {'book': b,
+                 'chapter': heb_to_vulgate_ps(c) if b == 'ps' else c}
+                for (b, chs) in segs for c in chs
+            ]
             if targets:
                 readings.append({'ref': txt, 'targets': targets})
         entries.append({'day': e['Dia'], 'readings': readings})
@@ -125,7 +150,7 @@ def main():
 
     out = {
         'id': 'bible_in_a_year',
-        'version': 1,
+        'version': 2,
         'days': len(entries),
         'title': {'pt': 'Bíblia em um ano', 'en': 'Bible in a Year'},
         'source': 'Cronograma de leitura — Victor Sales Pinheiro',

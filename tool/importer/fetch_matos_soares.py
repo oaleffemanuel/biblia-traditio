@@ -116,6 +116,18 @@ def extract(htmltext):
     return json.loads(blob)
 
 
+def sanitize(t):
+    """Strip HTML the source embeds for cross-references, keeping the inner
+    citation text: '(<a href=...>Is 40, 3</a>)' -> '(Is 40, 3)'. Also unescape
+    entities and collapse whitespace left behind."""
+    t = re.sub(r'<[^>]*>', '', t)          # drop tags, keep inner text
+    t = htmllib.unescape(t)                 # &quot; &amp; &#39; -> " & '
+    t = re.sub(r'\s+([,.;:!?])', r'\1', t)  # tidy space before punctuation
+    t = re.sub(r'\(\s+', '(', t)            # tidy "( Is" -> "(Is"
+    t = re.sub(r'\s+\)', ')', t)
+    return re.sub(r'\s{2,}', ' ', t).strip()
+
+
 def looks_like_heading(t):
     s = t.strip()
     letters = [c for c in s if c.isalpha()]
@@ -149,7 +161,7 @@ def main():
             continue
         chapters = []
         for c in data['chapters']:
-            verses = [v.strip() for v in c['verses']]
+            verses = [sanitize(v) for v in c['verses']]
             for vi, txt in enumerate(verses, 1):
                 if looks_like_heading(txt):
                     problems.append(f"{name} {c['number']}:{vi}: heading-like «{txt}»")

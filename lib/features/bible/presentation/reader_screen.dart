@@ -11,12 +11,21 @@ import '../../settings/application/settings_providers.dart';
 import '../../settings/domain/settings.dart';
 import '../application/bible_providers.dart';
 import '../domain/entities.dart';
+import '../domain/psalm_numbering.dart';
 import 'commentary_panel.dart';
 import 'widgets/book_emblem.dart';
 import 'widgets/navigation_pickers.dart';
 
 /// Muted gold marking verses that carry Church Fathers commentary.
 const Color _kGold = Color(0xFFCBA45A);
+
+/// " (23)" beside a Vulgate psalm so readers who know the Hebrew/modern number
+/// still recognise it; empty for non-psalms and for psalms that coincide.
+String _psalmSuffix(String bookId, int chapter) {
+  if (bookId != 'ps') return '';
+  final h = PsalmNumbering.hebrewLabel(chapter);
+  return h == null ? '' : ' ($h)';
+}
 
 /// Below this width phones get the stacked Parallel layout; at/above it (tablet,
 /// landscape) side-by-side columns are the default.
@@ -138,7 +147,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         ]),
         actions: [
           if (book != null)
-            _pill(c, '$chapter', onTap: () => _pickChapter(book)),
+            _pill(c, '$chapter${_psalmSuffix(bookId, chapter)}',
+                onTap: () => _pickChapter(book)),
           IconButton(
             icon: Icon(Icons.view_column_outlined,
                 color: parallelActive ? c.accent : c.textSecondary, size: 20),
@@ -311,7 +321,7 @@ class _Header extends StatelessWidget {
       const SizedBox(height: 16),
       Text(book?.name ?? bookId,
           style: Theme.of(context).textTheme.headlineMedium),
-      Text(context.l10n.chapterTitle(chapter),
+      Text('${context.l10n.chapterTitle(chapter)}${_psalmSuffix(bookId, chapter)}',
           style: Theme.of(context)
               .textTheme
               .titleLarge
@@ -345,7 +355,7 @@ class _ChapterNav extends StatelessWidget {
             style: TextButton.styleFrom(
                 foregroundColor: hasPrev ? c.accent : c.textFaint),
           ),
-          Text('${book!.name} $chapter',
+          Text('${book!.name} $chapter${_psalmSuffix(book!.id, chapter)}',
               style: TextStyle(color: c.textFaint, fontSize: 12)),
           TextButton.icon(
             onPressed: hasNext ? () => onGo(book!.id, chapter + 1) : null,
