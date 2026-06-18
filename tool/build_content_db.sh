@@ -47,6 +47,21 @@ else
   echo "▶ Bible (Português) — SKIPPED: source not found at $PT_SRC (Latin-only build)"
 fi
 
+# Portuguese — Padre Matos Soares (public-domain candidate). A third translation
+# in the same DB. Fetched once from padrepauloricardo.org (clean structured blob,
+# proper versification) and cached; regenerate by deleting the cached JSON.
+MS_JSON="$DATA/pt_matos_soares.json"
+[ -f "$MS_JSON" ] || python3 "$IMP/fetch_matos_soares.py" "$MS_JSON" || true
+if [ -f "$MS_JSON" ]; then
+  echo "▶ Bible (Português — Padre Matos Soares)"
+  dart run bin/import.dart biblejson --src "$MS_JSON" --translation pt_matos_soares --lang pt \
+    --title "Padre Matos Soares" \
+    --license "Domínio público (Pe. Matos Soares †1950) — verificação de proveniência em beta" \
+    --out "$DATA/bible_vulgata.sqlite"
+else
+  echo "▶ Bible (Matos Soares) — SKIPPED: $MS_JSON not available"
+fi
+
 echo "▶ Patristics"
 # Merge: original corpus = coverage floor; corrected corpus overlaid per book.
 # Drops the redundant coment-jude.json (alias jude→jud would double-import Jude).
@@ -82,12 +97,12 @@ cat > "$PKG/manifest.json" <<JSON
   "packages": [
     {
       "id": "bible_vulgata",
-      "title": "Vulgata Clementina",
+      "title": "Bíblia (Vulgata Clementina + Português)",
       "language": "la",
       "type": "bible_translation",
-      "version": 1,
-      "source": "open-bibles (Clementine Vulgate, USFX)",
-      "license": "Domínio público",
+      "version": 3,
+      "source": "Vulgata: open-bibles (Clementine, USFX). Português: corpus interno (iacula) — origem da tradução a confirmar. Matos Soares: padrepauloricardo.org (edição matos-soares).",
+      "license": "Vulgata: domínio público. Português (beta): uso interno — origem da tradução a confirmar. Matos Soares: domínio público (Pe. Matos Soares †1950) — verificação de proveniência em beta.",
       "asset": "assets/packages/bible_vulgata.sqlite.gz",
       "url": null,
       "sizeBytes": $BV_SZ,

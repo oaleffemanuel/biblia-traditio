@@ -520,6 +520,13 @@ class AppL10nPt extends AppL10n {
       'Versão de uso interno para esta fase de testes. A origem da tradução ainda será confirmada antes de qualquer publicação pública.';
 
   @override
+  String get licMatosTitle => 'Padre Matos Soares (Português)';
+
+  @override
+  String get licMatosBody =>
+      'Tradução católica do Pe. Matos Soares (falecido em 1950) — candidata a domínio público no Brasil desde 2021 (vida + 70 anos). A proveniência está em verificação durante o beta.';
+
+  @override
   String get ossLicenses => 'Licenças de código aberto';
 
   @override

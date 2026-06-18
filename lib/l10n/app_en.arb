@@ -178,6 +178,8 @@
   "licPatristicsBody": "Patristic sources in the public domain, machine-translated and adapted. May contain inaccuracies — read with discernment.",
   "licPortugueseTitle": "Portuguese Bible (beta)",
   "licPortugueseBody": "An internal version for this testing phase. The translation's provenance will be confirmed before any public release.",
+  "licMatosTitle": "Padre Matos Soares (Portuguese)",
+  "licMatosBody": "Catholic translation by Fr. Matos Soares (d. 1950) — a public-domain candidate in Brazil since 2021 (life + 70 years). Provenance is being verified during the beta.",
   "ossLicenses": "Open-source licenses",
   "settingsContact": "Contact / Feedback",
   "whatsappTitle": "Contact us on WhatsApp",

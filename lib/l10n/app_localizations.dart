@@ -1021,6 +1021,18 @@ abstract class AppL10n {
   /// **'An internal version for this testing phase. The translation\'s provenance will be confirmed before any public release.'**
   String get licPortugueseBody;
 
+  /// No description provided for @licMatosTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Padre Matos Soares (Portuguese)'**
+  String get licMatosTitle;
+
+  /// No description provided for @licMatosBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Catholic translation by Fr. Matos Soares (d. 1950) — a public-domain candidate in Brazil since 2021 (life + 70 years). Provenance is being verified during the beta.'**
+  String get licMatosBody;
+
   /// No description provided for @ossLicenses.
   ///
   /// In en, this message translates to:

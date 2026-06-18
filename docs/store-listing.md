@@ -84,6 +84,25 @@ Doutores da Igreja, calendário litúrgico.
 
 ---
 
+## Content provenance
+
+- **Vulgata Clementina** (`vulgata`, Latin) — public domain; source open-bibles
+  (Clementine USFX).
+- **Bíblia Católica em Português** (`pt_beta`) — internal iacula corpus; provenance
+  **unconfirmed**; beta-gated.
+- **Padre Matos Soares** (`pt_matos_soares`, Portuguese) — Catholic translation by
+  Fr. António Pereira de Matos Soares (**d. 1950**). Under Brazilian copyright
+  (life + 70 years) the work is a **public-domain candidate since 2021**. Text was
+  collected from padrepauloricardo.org (edição *matos-soares*) — a faithful
+  digitisation adds no new rights to a public-domain text; the PD basis is the
+  translator's death + 70 years, not the digitiser. Full 73-book Catholic canon,
+  35,816 verses, chapter counts validated against the canon. **Beta-gated** until
+  provenance (and the specific edition) is formally signed off.
+- **Comentário dos Padres da Igreja** (patristics) — Catena/Haydock, public-domain
+  sources; machine translation reviewed/curated; flagged as machine translation.
+
+---
+
 ## Open questions before publishing (privacy policy + store)
 
 1. **Publisher / developer legal name** for the store account and the policy
@@ -95,10 +114,12 @@ Doutores da Igreja, calendário litúrgico.
 3. **Support email.** Both stores require an email contact (separate from the
    in-app WhatsApp). Which address should we list?
 4. **Effective date** — confirm 16 June 2026, or set to first public submission.
-5. **Portuguese Bible provenance** — what's the plan to confirm/clear (or replace
-   with a licensed/PD text such as Matos Soares or Figueiredo) before the public
-   release? The `BETA=1` release gate currently blocks public shipping of this
-   text on purpose.
+5. **Portuguese Bible provenance** — `pt_beta` (internal iacula corpus) still has
+   unconfirmed provenance. A provenance-documented alternative, **`pt_matos_soares`
+   (Padre Matos Soares)**, now ships alongside it (see "Content provenance" below);
+   decide before public release whether Matos Soares replaces `pt_beta` as default.
+   The `BETA=1` release gate still blocks public shipping of both PT texts until
+   their provenance is formally signed off.
 6. **Data Safety form (Google) / App Privacy (Apple)** — we'll declare "no data
    collected." Confirm that remains true at submission (no analytics/crash SDK
    added).

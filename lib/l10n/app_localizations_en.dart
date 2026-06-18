@@ -520,6 +520,13 @@ class AppL10nEn extends AppL10n {
       'An internal version for this testing phase. The translation\'s provenance will be confirmed before any public release.';
 
   @override
+  String get licMatosTitle => 'Padre Matos Soares (Portuguese)';
+
+  @override
+  String get licMatosBody =>
+      'Catholic translation by Fr. Matos Soares (d. 1950) — a public-domain candidate in Brazil since 2021 (life + 70 years). Provenance is being verified during the beta.';
+
+  @override
   String get ossLicenses => 'Open-source licenses';
 
   @override
