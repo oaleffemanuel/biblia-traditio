@@ -146,9 +146,13 @@ class _DayCard extends StatelessWidget {
           ),
           for (final r in day.readings)
             InkWell(
+              // `go`, not `push`: opening a reading crosses from this top-level
+              // route into the Bible shell branch. Pushing would duplicate the
+              // branch's page key (NavigatorState._debugCheckDuplicatedPageKeys)
+              // and fail to navigate; go activates the Bible tab at the verse.
               onTap: r.targets.isEmpty
                   ? null
-                  : () => context.push(
+                  : () => context.go(
                       '/bible/${r.targets.first.bookId}/${r.targets.first.chapter}'),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
