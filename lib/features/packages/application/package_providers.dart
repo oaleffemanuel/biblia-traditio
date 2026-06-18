@@ -25,6 +25,9 @@ final contentReadyProvider = FutureProvider<bool>((ref) async {
   final mgr = ref.watch(packageManagerProvider);
   final pkgs = await ref.watch(manifestProvider.future);
   await mgr.ensureRequiredInstalled(pkgs);
+  // Keep already-installed optional packs (e.g. patristics) current when their
+  // bundled version bumps, so a content update never strands availability.
+  await mgr.refreshOutdatedBundled(pkgs);
   return true;
 });
 

@@ -13,7 +13,12 @@ IMP="$ROOT/tool/importer"
 DATA="$IMP/data"
 PKG="$ROOT/assets/packages"
 VUL="$DATA/lat-clementine.usfx.xml"
+# Patristic corpus. PATRISTICS_DIR is the coverage floor (original corpus);
+# PATRISTICS_CORRECTED_DIR (optional) is an overlay of curated/blacklist-fixed
+# books that take precedence per-book. The two are merged before import so a
+# missing corrected book never drops coverage. See the "Patristics" step below.
 PATRISTICS_DIR="${PATRISTICS_DIR:-$HOME/Downloads/Bíblia Católica Tradicional - Comentada/Comentários}"
+PATRISTICS_CORRECTED_DIR="${PATRISTICS_CORRECTED_DIR:-$HOME/Downloads/Biblia Catolica Tradicional Comentada/Comentários Corrigidos (GPT)}"
 VUL_URL="https://raw.githubusercontent.com/seven1m/open-bibles/master/lat-clementine.usfx.xml"
 
 mkdir -p "$DATA" "$PKG"
@@ -43,8 +48,23 @@ else
 fi
 
 echo "▶ Patristics"
+# Merge: original corpus = coverage floor; corrected corpus overlaid per book.
+# Drops the redundant coment-jude.json (alias jude→jud would double-import Jude).
+PAT_SRC="$PATRISTICS_DIR"
+if [ -d "$PATRISTICS_CORRECTED_DIR" ]; then
+  MERGED="$DATA/patristics_merged"
+  rm -rf "$MERGED"; mkdir -p "$MERGED"
+  cp -f "$PATRISTICS_DIR"/coment-*.json "$MERGED"/ 2>/dev/null || true
+  [ -f "$PATRISTICS_DIR/aliases_normalizados.json" ] && cp -f "$PATRISTICS_DIR/aliases_normalizados.json" "$MERGED"/
+  cp -f "$PATRISTICS_CORRECTED_DIR"/coment-*.json "$MERGED"/ 2>/dev/null || true
+  rm -f "$MERGED/coment-jude.json"   # dedup: keep coment-jud.json (canonical Jude)
+  PAT_SRC="$MERGED"
+  echo "  merged corrected overlay → $MERGED ($(ls "$MERGED"/coment-*.json | wc -l | tr -d ' ') books)"
+else
+  echo "  corrected overlay not found at $PATRISTICS_CORRECTED_DIR — using base corpus only"
+fi
 rm -f "$DATA/patristics.sqlite" "$DATA/patristics.sqlite-wal" "$DATA/patristics.sqlite-shm"
-dart run bin/import.dart patristics --src "$PATRISTICS_DIR" --out "$DATA/patristics.sqlite"
+dart run bin/import.dart patristics --src "$PAT_SRC" --out "$DATA/patristics.sqlite"
 
 sha() { shasum -a 256 "$1" | awk '{print $1}'; }
 sz()  { stat -f%z "$1"; }
@@ -80,9 +100,9 @@ cat > "$PKG/manifest.json" <<JSON
       "title": "Comentário dos Padres da Igreja",
       "language": "pt-BR",
       "type": "patristics",
-      "version": 1,
-      "source": "Catena / Haydock (tradução automática de fontes em domínio público)",
-      "license": "Fontes em domínio público; tradução automática",
+      "version": 2,
+      "source": "Catena / Haydock (tradução automática de fontes em domínio público; revisão e curadoria de autoria)",
+      "license": "Fontes em domínio público; tradução automática revisada",
       "asset": "assets/packages/patristics.sqlite.gz",
       "url": null,
       "sizeBytes": $PA_SZ,

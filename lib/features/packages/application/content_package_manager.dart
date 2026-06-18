@@ -71,6 +71,29 @@ class ContentPackageManager {
     }
   }
 
+  /// A bundled package that was installed at a *different* (older) version than
+  /// the one shipping in this build — i.e. a content update is available.
+  bool _presentButStale(ContentPackage pkg) {
+    if (_dir == null) return false;
+    final db = File(installedPathSync(pkg.id));
+    final ok = _okMarker(pkg.id);
+    return db.existsSync() &&
+        ok.existsSync() &&
+        ok.readAsStringSync().trim() != '${pkg.version}';
+  }
+
+  /// Refreshes bundled packages the user *already has* when their version
+  /// increased (e.g. corrected commentary). Never installs a package the user
+  /// never chose — optional packs stay opt-in; this only keeps existing ones
+  /// current so a content update can't strand availability (e.g. gold dots).
+  Future<void> refreshOutdatedBundled(List<ContentPackage> packages,
+      {void Function(String id, double progress)? onProgress}) async {
+    await _contentDir();
+    for (final pkg in packages.where((p) => p.isBundled && _presentButStale(p))) {
+      await install(pkg, onProgress: onProgress);
+    }
+  }
+
   Future<void> install(ContentPackage pkg,
       {void Function(String id, double progress)? onProgress}) async {
     await _contentDir();
