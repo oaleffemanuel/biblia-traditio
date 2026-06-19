@@ -82,8 +82,13 @@ EN2ID = {
     '2 timothy': '2tm', 'titus': 'tit', 'philemon': 'phlm', 'hebrews': 'heb',
     'james': 'jas', '1 peter': '1pt', '2 peter': '2pt', '1 john': '1jn',
     '2 john': '2jn', '3 john': '3jn', 'jude': 'jud', 'revelation': 'rv',
+    'phiippians': 'phil',  # known source typo
 }
 EN_NAMES = sorted(EN2ID, key=len, reverse=True)
+
+# Single-chapter books: the lectionary cites them as "Jude 17" / "Philemon 7-20"
+# where the number is the VERSE within the only chapter (chapter 1).
+SINGLE_CHAPTER = {'ob', 'phlm', '2jn', '3jn', 'jud'}
 
 SLOTS = [('first', 'firstReading'), ('psalm', 'psalm'),
          ('second', 'secondReading'), ('gospel', 'gospel')]
@@ -98,30 +103,6 @@ def psalm_heb_to_vulgate(h):
     if h <= 146: return h - 1
     if h == 147: return 146
     return h
-
-
-def easter(y):
-    a = y % 19; b = y // 100; c = y % 100; d = b // 4; e = b % 4
-    f = (b + 8) // 25; g = (b - f + 1) // 3
-    h = (19 * a + b - d - g + 15) % 30; i = c // 4; k = c % 4
-    l = (32 + 2 * e + 2 * i - h - k) % 7
-    m = (a + 11 * h + 22 * l) // 451
-    mo = (h + l - 7 * m + 114) // 31
-    da = ((h + l - 7 * m + 114) % 31) + 1
-    import datetime
-    return datetime.date(y, mo, da)
-
-
-def solemnities(y):
-    import datetime
-    e = easter(y)
-    td = datetime.timedelta
-    fixed = [(1, 1), (1, 6), (3, 19), (3, 25), (6, 24), (6, 29), (8, 15),
-             (11, 1), (11, 2), (12, 8), (12, 25)]
-    days = {datetime.date(y, m, d) for (m, d) in fixed}
-    days |= {e - td(days=3), e - td(days=2), e - td(days=1),  # Triduum
-             e + td(days=39), e + td(days=60), e + td(days=68)}  # Asc, Corpus, S.Heart
-    return days
 
 
 def norm(s):
@@ -143,11 +124,15 @@ def parse_ref(raw):
         return None
     bid = EN2ID[book]
     rest = s[len(book):].strip()
-    m = re.match(r'^(\d+)\s*[:.]\s*(.+)$', rest) or re.match(r'^(\d+)\s*$', rest)
-    if not m:
-        return None
-    chapter = int(m.group(1))
-    versespec = (m.group(2) if m.lastindex and m.lastindex >= 2 else '').strip()
+    single = bid in SINGLE_CHAPTER and ':' not in rest
+    if single:
+        chapter, versespec = 1, rest  # "Jude 17" → chapter 1, verse 17
+    else:
+        m = re.match(r'^(\d+)\s*[:.]\s*(.+)$', rest) or re.match(r'^(\d+)\s*$', rest)
+        if not m:
+            return None
+        chapter = int(m.group(1))
+        versespec = (m.group(2) if m.lastindex and m.lastindex >= 2 else '').strip()
     fv = re.search(r'\d+', versespec)
     verse = int(fv.group()) if fv else 1
     # Open target: Psalms map Hebrew→Vulgate; others unchanged.
@@ -159,7 +144,10 @@ def parse_ref(raw):
     # cross-chapter "…—9:3" tail), and use PT separators ("." between segments).
     disp = re.split(r'[—–]', versespec)[0].strip() if versespec else ''
     vtxt = disp.replace(' ', '').replace(',', '.')
-    ref = f'{abbr} {chapter},{vtxt}' if vtxt else f'{abbr} {chapter}'
+    if single:
+        ref = f'{abbr} {vtxt}' if vtxt else abbr  # "Jd 17-25" (no chapter)
+    else:
+        ref = f'{abbr} {chapter},{vtxt}' if vtxt else f'{abbr} {chapter}'
     return {'slot': None, 'book': bid, 'chapter': target_ch,
             'displayChapter': chapter, 'verse': verse, 'ref': ref}
 
@@ -188,7 +176,6 @@ def main():
     args = ap.parse_args()
 
     files = load_source(args)
-    sol = solemnities(args.year)
     con = sqlite3.connect(BIBLE_DB)
 
     def verse_exists(bid, ch, v):
@@ -206,9 +193,6 @@ def main():
         try:
             dt = datetime.date(args.year, int(md[:2]), int(md[3:5]))
         except ValueError:
-            continue
-        is_sunday = dt.weekday() == 6
-        if not (is_sunday or dt in sol):
             continue
         rd = payload.get('readings', {})
         readings = []
@@ -235,9 +219,9 @@ def main():
             iso = dt.isoformat()
             entries[iso] = {'date': iso, 'readings': readings}
 
-    out = {'id': 'lectionary', 'version': 1,
+    out = {'id': 'lectionary', 'version': 2,
            'source': 'cpbjr/catholic-readings-api (MIT) — General Roman Calendar references',
-           'scope': 'Sundays + principal solemnities',
+           'scope': 'Full daily lectionary (weekdays, feasts, solemnities, all seasons)',
            'year': args.year, 'days': len(entries), 'entries': entries}
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     json.dump(out, open(OUT, 'w'), ensure_ascii=False, separators=(',', ':'))

@@ -14,39 +14,88 @@ const _canon = {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('bundled lectionary loads and is well-formed', () async {
-    final repo = await BundledLectionaryRepository.load();
-    // Every reading points at a canonical book + sane chapter, and is openable.
-    final christmas = repo.readingsFor(DateTime(2026, 12, 25));
-    expect(christmas, isNotNull);
-    expect(christmas!.map((r) => r.slot),
-        containsAll([ReadingSlot.first, ReadingSlot.psalm, ReadingSlot.gospel]));
-    for (final r in christmas) {
+  late BundledLectionaryRepository repo;
+  setUpAll(() async => repo = await BundledLectionaryRepository.load());
+
+  void expectAllOpenableCanonical(List<Reading> readings) {
+    for (final r in readings) {
       expect(_canon.contains(r.bookId), isTrue, reason: r.reference);
       expect(r.chapter, greaterThanOrEqualTo(1));
       expect(r.canOpen, isTrue);
     }
+  }
+
+  test('ordinary weekday has first + psalm + gospel (no second)', () {
+    final day = repo.readingsFor(DateTime(2026, 6, 22)); // Monday, Ordinary Time
+    expect(day, isNotNull);
+    final slots = day!.map((r) => r.slot).toSet();
+    expect(slots, containsAll([ReadingSlot.first, ReadingSlot.psalm, ReadingSlot.gospel]));
+    expect(slots.contains(ReadingSlot.second), isFalse);
+    expectAllOpenableCanonical(day);
   });
 
-  test('psalm references open the Vulgate-numbered chapter', () async {
-    final repo = await BundledLectionaryRepository.load();
-    // 12th Sunday in Ordinary Time, Year A: responsorial psalm 69 (Hebrew) →
-    // the app's Vulgate Psalm 68; the display keeps the lectionary's "Sl 69".
-    final day = repo.readingsFor(DateTime(2026, 6, 21));
+  test('Sunday has all four readings', () {
+    final day = repo.readingsFor(DateTime(2026, 6, 21)); // 12th Sunday OT (A)
     expect(day, isNotNull);
+    expect(day!.map((r) => r.slot),
+        containsAll(ReadingSlot.values));
+    expectAllOpenableCanonical(day);
+  });
+
+  test('solemnity (Christmas) has all four readings', () {
+    final day = repo.readingsFor(DateTime(2026, 12, 25));
+    expect(day, isNotNull);
+    expect(day!.map((r) => r.slot), containsAll(ReadingSlot.values));
+    final gospel = day.firstWhere((r) => r.slot == ReadingSlot.gospel);
+    expect(gospel.bookId, 'jn'); // John 1:1-18
+  });
+
+  test('Lent weekday resolves and opens the reader', () {
+    final day = repo.readingsFor(DateTime(2026, 2, 19)); // Thu after Ash Wed
+    expect(day, isNotNull);
+    final gospel = day!.firstWhere((r) => r.slot == ReadingSlot.gospel);
+    expect(gospel.bookId, 'lk');
+    expectAllOpenableCanonical(day);
+  });
+
+  test('Easter weekday resolves', () {
+    final day = repo.readingsFor(DateTime(2026, 4, 6)); // Easter Monday
+    expect(day, isNotNull);
+    final gospel = day!.firstWhere((r) => r.slot == ReadingSlot.gospel);
+    expect(gospel.bookId, 'mt');
+    expectAllOpenableCanonical(day);
+  });
+
+  test('responsorial psalm maps Hebrew→Vulgate, display keeps Hebrew', () {
+    final day = repo.readingsFor(DateTime(2026, 6, 21));
     final psalm = day!.firstWhere((r) => r.slot == ReadingSlot.psalm);
     expect(psalm.bookId, 'ps');
-    expect(psalm.chapter, 68); // Vulgate
-    expect(psalm.reference, contains('69')); // Hebrew, as the lectionary cites
+    expect(psalm.chapter, 68); // Hebrew 69 → Vulgate 68
+    expect(psalm.reference, contains('69')); // displayed as the lectionary cites
   });
 
-  test('a day with no readings returns null (graceful empty state)', () async {
-    final repo = await BundledLectionaryRepository.load();
-    // An ordinary weekday not in the Sundays+solemnities MVP set.
-    expect(repo.readingsFor(DateTime(2026, 6, 17)), isNull);
+  test('every reading carries a deep-link target', () {
+    final day = repo.readingsFor(DateTime(2026, 12, 25))!;
+    for (final r in day) {
+      expect(r.canOpen, isTrue);
+      expect(r.verse, isNotNull); // first verse of the pericope
+    }
   });
 
-  test('empty repository yields null', () {
+  test('coverage is full-year: a random weekday in each season resolves', () {
+    for (final dt in [
+      DateTime(2026, 1, 14), // Christmas/Ordinary
+      DateTime(2026, 3, 4), // Lent
+      DateTime(2026, 4, 22), // Easter
+      DateTime(2026, 7, 15), // Ordinary
+      DateTime(2026, 12, 3), // Advent
+    ]) {
+      expect(repo.readingsFor(dt), isNotNull, reason: '$dt');
+    }
+  });
+
+  test('out-of-coverage date returns null (graceful empty state)', () {
+    expect(repo.readingsFor(DateTime(2030, 6, 17)), isNull);
     expect(const EmptyLectionaryRepository().readingsFor(DateTime(2026, 1, 1)),
         isNull);
   });
