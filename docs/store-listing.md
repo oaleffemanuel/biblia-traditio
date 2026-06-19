@@ -6,6 +6,22 @@ before publishing publicly (see privacy-policy / check_release `BETA=1` gate).
 
 ---
 
+## Public URLs (App Store Connect / Play Console)
+
+Hosted on **GitHub Pages** from `/docs` on `main` (static, no backend):
+
+- **Privacy Policy URL:** `https://oaleffemanuel.github.io/biblia-traditio/privacy.html` (PT-BR + EN on one page)
+- **Support URL:** `https://oaleffemanuel.github.io/biblia-traditio/support.html`
+- **Landing:** `https://oaleffemanuel.github.io/biblia-traditio/`
+- **Support email:** `atendimento@colegioaltavista.com.br` (confirm/replace if a dedicated app-support address is preferred)
+- **Support WhatsApp:** +55 31 97596-5032
+
+Source files: `docs/index.html`, `docs/privacy.html`, `docs/support.html`,
+`docs/styles.css`, `docs/.nojekyll`. Pages must be enabled once in repo
+**Settings → Pages → Source: Deploy from a branch → `main` / `/docs`**.
+
+---
+
 ## Subtitle / short description
 
 **Apple subtitle** (≤ 30 chars):
@@ -108,11 +124,12 @@ Doutores da Igreja, calendário litúrgico.
 1. **Publisher / developer legal name** for the store account and the policy
    header? (Is the publisher "Colégio Alta Vista", a personal developer account,
    or another entity?)
-2. **Where will the privacy policy be hosted?** A public URL is required by both
-   stores (e.g., GitHub Pages, or a page under colegioaltavista.com.br). The
-   markdown here needs a canonical URL.
-3. **Support email.** Both stores require an email contact (separate from the
-   in-app WhatsApp). Which address should we list?
+2. ~~Where will the privacy policy be hosted?~~ **DONE** — GitHub Pages from
+   `/docs` on `main`: `https://oaleffemanuel.github.io/biblia-traditio/privacy.html`.
+   (Enable once in Settings → Pages; see "Public URLs" above.)
+3. **Support email** — currently `atendimento@colegioaltavista.com.br` (org
+   address) is published on the Support page. Confirm this, or swap for a
+   dedicated app-support inbox before public release.
 4. **Effective date** — confirm 16 June 2026, or set to first public submission.
 5. **Portuguese Bible provenance** — `pt_beta` (internal iacula corpus) still has
    unconfirmed provenance. A provenance-documented alternative, **`pt_matos_soares`
