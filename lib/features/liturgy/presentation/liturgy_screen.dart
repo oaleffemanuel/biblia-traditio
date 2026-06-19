@@ -47,6 +47,7 @@ class _LiturgyScreenState extends ConsumerState<LiturgyScreen> {
   @override
   Widget build(BuildContext context) {
     final c = context.bt;
+    final light = Theme.of(context).brightness == Brightness.light;
     final day = ref.watch(liturgicalDayProvider(_selected));
     final readings = ref.watch(readingsForProvider(_selected));
     final strip =
@@ -114,7 +115,7 @@ class _LiturgyScreenState extends ConsumerState<LiturgyScreen> {
                               width: 6,
                               height: 6,
                               decoration: BoxDecoration(
-                                  color: dayColor.color,
+                                  color: dayColor.dotColor(light: light),
                                   shape: BoxShape.circle)),
                         ],
                       ),
@@ -165,6 +166,7 @@ class _CelebrationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.bt;
     final l10n = context.l10n;
+    final light = Theme.of(context).brightness == Brightness.light;
     final rank = switch (day.rank) {
       LiturgicalRank.solemnity => l10n.rankSolemnity,
       LiturgicalRank.feast => l10n.rankFeast,
@@ -183,7 +185,8 @@ class _CelebrationCard extends StatelessWidget {
                 width: 10,
                 height: 10,
                 decoration: BoxDecoration(
-                    color: day.color.color, shape: BoxShape.circle)),
+                    color: day.color.dotColor(light: light),
+                    shape: BoxShape.circle)),
             const SizedBox(width: 8),
             Expanded(
               child: Text(day.celebration,
@@ -274,6 +277,7 @@ class _CalendarModalState extends ConsumerState<_CalendarModal> {
   @override
   Widget build(BuildContext context) {
     final c = context.bt;
+    final light = Theme.of(context).brightness == Brightness.light;
     final colors =
         ref.watch(monthColorsProvider((year: _month.year, month: _month.month)));
     final firstWeekday = _month.weekday % 7; // Sun=0
@@ -348,7 +352,7 @@ class _CalendarModalState extends ConsumerState<_CalendarModal> {
                           height: 5,
                           decoration: BoxDecoration(
                               color: (colors[dayNum] ?? LiturgicalColor.green)
-                                  .color,
+                                  .dotColor(light: light),
                               shape: BoxShape.circle)),
                     ],
                   ),

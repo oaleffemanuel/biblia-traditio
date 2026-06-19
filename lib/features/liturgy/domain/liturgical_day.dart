@@ -13,6 +13,15 @@ extension LiturgicalColorX on LiturgicalColor {
         LiturgicalColor.purple => LiturgicalPalette.purple,
         LiturgicalColor.rose => LiturgicalPalette.rose,
       };
+  /// Dot fill that stays visible on both themes. Liturgical white (#EDE9E3) is
+  /// nearly invisible on the light ivory canvas, so on light themes the white
+  /// (solemnity) dot renders as a warm gold; every other colour reads fine on
+  /// both backgrounds, and the dark theme is unchanged.
+  Color dotColor({required bool light}) =>
+      (this == LiturgicalColor.white && light)
+          ? const Color(0xFFC9A227)
+          : color;
+
   String get label => switch (this) {
         LiturgicalColor.green => 'Verde',
         LiturgicalColor.red => 'Vermelho',

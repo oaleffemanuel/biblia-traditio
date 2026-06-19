@@ -56,7 +56,7 @@ class Settings {
     this.displayName = '',
     this.language = AppLanguage.pt,
     this.primaryTranslationId = 'pt_matos_soares',
-    this.themeMode = ThemeMode.dark,
+    this.themeMode = ThemeMode.system,
     this.notificationsEnabled = false,
     this.wantsReadingPlan = false,
     this.parallelReadingEnabled = false,
@@ -71,8 +71,8 @@ class Settings {
         primaryTranslationId: m['primaryTranslationId'] ?? 'pt_matos_soares',
         themeMode: switch (m['themeMode']) {
           'light' => ThemeMode.light,
-          'system' => ThemeMode.system,
-          _ => ThemeMode.dark,
+          'dark' => ThemeMode.dark,
+          _ => ThemeMode.system, // default + unknown → follow the OS
         },
         notificationsEnabled: m['notificationsEnabled'] == 'true',
         wantsReadingPlan: m['wantsReadingPlan'] == 'true',

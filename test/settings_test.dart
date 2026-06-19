@@ -23,7 +23,7 @@ void main() {
     expect(s.onboardingCompleted, isFalse);
     expect(s.language, AppLanguage.pt);
     expect(s.primaryTranslationId, 'pt_matos_soares');
-    expect(s.themeMode, ThemeMode.dark);
+    expect(s.themeMode, ThemeMode.system); // follows the OS by default
     // Parallel Reading off by default, no secondary, auto layout.
     expect(s.parallelReadingEnabled, isFalse);
     expect(s.secondaryTranslationId, '');
