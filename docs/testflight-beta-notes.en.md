@@ -31,8 +31,9 @@ tap from any verse, fully offline.
 
 ## How to send feedback
 
-WhatsApp: **+55 31 97596-5032**. Tell us what felt unclear, slow, or broken —
-and what you loved. Screenshots help.
+WhatsApp: [**+55 31 97596-5032**](https://wa.me/5531975965032) · Email: ealeff586@gmail.com.
+Tell us what felt unclear, slow, or broken — and what you loved. Screenshots
+help.
 
 ## Beta disclaimer
 

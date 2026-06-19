@@ -13,7 +13,7 @@ Hosted on **GitHub Pages** from `/docs` on `main` (static, no backend):
 - **Privacy Policy URL:** `https://oaleffemanuel.github.io/biblia-traditio/privacy.html` (PT-BR + EN on one page)
 - **Support URL:** `https://oaleffemanuel.github.io/biblia-traditio/support.html`
 - **Landing:** `https://oaleffemanuel.github.io/biblia-traditio/`
-- **Support email:** `atendimento@colegioaltavista.com.br` (confirm/replace if a dedicated app-support address is preferred)
+- **Support email:** `ealeff586@gmail.com`
 - **Support WhatsApp:** +55 31 97596-5032
 
 Source files: `docs/index.html`, `docs/privacy.html`, `docs/support.html`,
@@ -127,9 +127,8 @@ Doutores da Igreja, calendário litúrgico.
 2. ~~Where will the privacy policy be hosted?~~ **DONE** — GitHub Pages from
    `/docs` on `main`: `https://oaleffemanuel.github.io/biblia-traditio/privacy.html`.
    (Enable once in Settings → Pages; see "Public URLs" above.)
-3. **Support email** — currently `atendimento@colegioaltavista.com.br` (org
-   address) is published on the Support page. Confirm this, or swap for a
-   dedicated app-support inbox before public release.
+3. ~~Support email~~ **DONE** — `ealeff586@gmail.com` is published on the Support
+   and Privacy pages and used in App Store Connect.
 4. **Effective date** — confirm 16 June 2026, or set to first public submission.
 5. **Portuguese Bible provenance** — `pt_beta` (internal iacula corpus) still has
    unconfirmed provenance. A provenance-documented alternative, **`pt_matos_soares`

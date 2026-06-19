@@ -34,8 +34,9 @@ Igreja, a um toque de qualquer versículo, totalmente offline.
 
 ## Como enviar feedback
 
-WhatsApp: **+55 31 97596-5032**. Conte o que ficou confuso, lento ou com falha —
-e o que você gostou. Capturas de tela ajudam.
+WhatsApp: [**+55 31 97596-5032**](https://wa.me/5531975965032) · E-mail: ealeff586@gmail.com.
+Conte o que ficou confuso, lento ou com falha — e o que você gostou. Capturas de
+tela ajudam.
 
 ## Aviso de beta
 

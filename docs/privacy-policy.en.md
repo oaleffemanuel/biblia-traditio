@@ -62,4 +62,4 @@ Continued use of the app after an update means you accept the revised policy.
 
 ## Contact
 
-Questions about privacy? Contact us on **WhatsApp: +55 31 97596-5032**.
+Questions about privacy? Contact us on [WhatsApp: +55 31 97596-5032](https://wa.me/5531975965032) or by email: ealeff586@gmail.com.

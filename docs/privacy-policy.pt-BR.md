@@ -67,4 +67,4 @@ atualização significa que você aceita a política revisada.
 
 ## Contato
 
-Dúvidas sobre privacidade? Fale conosco no **WhatsApp: +55 31 97596-5032**.
+Dúvidas sobre privacidade? Fale conosco pelo [WhatsApp: +55 31 97596-5032](https://wa.me/5531975965032) ou por e-mail: ealeff586@gmail.com.
