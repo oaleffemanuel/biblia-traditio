@@ -5,6 +5,7 @@ import '../core/di/providers.dart';
 import '../core/l10n_ext.dart';
 import '../core/snack.dart';
 import '../core/theme/app_theme.dart';
+import '../features/liturgy/application/liturgy_providers.dart';
 import '../features/packages/application/package_providers.dart';
 import '../features/settings/application/settings_providers.dart';
 import '../features/settings/domain/settings.dart';
@@ -20,8 +21,12 @@ class BibliaTraditioApp extends ConsumerWidget {
     // ready. Decompression runs off the main isolate — the UI never freezes.
     final dbReady = ref.watch(userDatabaseProvider);
     final content = ref.watch(contentReadyProvider);
+    // Preload the bundled lectionary during the splash. The Liturgy tab is kept
+    // alive in the shell's IndexedStack, so resolving this small asset before any
+    // screen builds avoids an async provider notifying mid-build later.
+    final lectionary = ref.watch(lectionaryProvider);
 
-    if (dbReady.isLoading || content.isLoading) {
+    if (dbReady.isLoading || content.isLoading || lectionary.isLoading) {
       return const _Splash();
     }
     // Surface a clear, recoverable error instead of falling through to an empty

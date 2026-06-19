@@ -1102,7 +1102,7 @@ abstract class AppL10n {
   /// No description provided for @lectionaryNotice.
   ///
   /// In en, this message translates to:
-  /// **'The liturgical calendar is available offline. The Mass readings require the Lectionary pack (coming soon).'**
+  /// **'Readings for this day are not available yet.'**
   String get lectionaryNotice;
 
   /// No description provided for @preparingBible.

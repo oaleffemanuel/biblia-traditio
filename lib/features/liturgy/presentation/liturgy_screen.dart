@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
@@ -205,26 +206,30 @@ class _CelebrationCard extends StatelessWidget {
 }
 
 class _ReadingChips extends StatelessWidget {
-  final List<Reading>? readings;
+  final List<Reading> readings;
   const _ReadingChips({required this.readings});
   @override
   Widget build(BuildContext context) {
     final c = context.bt;
+    final l10n = context.l10n;
     return SizedBox(
       height: 44,
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         children: [
-          for (final slot in ReadingSlot.values)
+          for (final r in readings)
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: ActionChip(
-                label: Text(slotLabel(context.l10n, slot)),
+                label: Text('${slotLabel(l10n, r.slot)} · ${r.reference}'),
                 backgroundColor: c.surfaceHigh,
                 side: BorderSide.none,
                 labelStyle: TextStyle(color: c.textPrimary),
-                onPressed: () {},
+                // Cross-branch nav (Liturgy → Bible): use go, not push.
+                onPressed: r.canOpen
+                    ? () => context.go('/bible/${r.bookId}/${r.chapter}')
+                    : null,
               ),
             ),
         ],

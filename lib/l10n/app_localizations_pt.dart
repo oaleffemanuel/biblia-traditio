@@ -567,7 +567,7 @@ class AppL10nPt extends AppL10n {
 
   @override
   String get lectionaryNotice =>
-      'O calendário litúrgico está disponível offline. As leituras da Missa requerem o pacote do Lecionário (em breve).';
+      'As leituras deste dia ainda não estão disponíveis.';
 
   @override
   String get preparingBible => 'Preparando a Bíblia…';

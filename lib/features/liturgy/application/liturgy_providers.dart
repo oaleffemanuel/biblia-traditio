@@ -23,11 +23,13 @@ final monthColorsProvider =
   };
 });
 
-/// The active lectionary (empty until a readings pack is installed).
-final lectionaryProvider =
-    Provider<LectionaryRepository>((ref) => const EmptyLectionaryRepository());
+/// Loads the bundled lectionary references (Sundays + solemnities) once.
+final lectionaryProvider = FutureProvider<LectionaryRepository>(
+    (ref) => BundledLectionaryRepository.load());
 
+/// Readings for a date, or null while loading / when none are available — the
+/// screen renders the graceful empty state for null.
 final readingsForProvider =
     Provider.family<List<Reading>?, DateTime>((ref, date) {
-  return ref.watch(lectionaryProvider).readingsFor(date);
+  return ref.watch(lectionaryProvider).value?.readingsFor(date);
 });

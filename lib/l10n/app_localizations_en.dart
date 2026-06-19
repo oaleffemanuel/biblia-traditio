@@ -566,8 +566,7 @@ class AppL10nEn extends AppL10n {
   String get celebrationOfDay => 'Celebration of the day';
 
   @override
-  String get lectionaryNotice =>
-      'The liturgical calendar is available offline. The Mass readings require the Lectionary pack (coming soon).';
+  String get lectionaryNotice => 'Readings for this day are not available yet.';
 
   @override
   String get preparingBible => 'Preparing the Bible…';
