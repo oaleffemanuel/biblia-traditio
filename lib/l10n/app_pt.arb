@@ -57,7 +57,7 @@
   "readingGospel": "Evangelho",
 
   "onbNameTitle": "Como devemos chamá-lo?",
-  "onbNameSubtitle": "Usaremos o seu nome para o saudar.",
+  "onbNameSubtitle": "Usaremos o seu nome para saudá-lo.",
   "namePlaceholder": "O seu nome",
   "onbLanguageTitle": "Idioma",
   "onbLanguageSubtitle": "Em que língua prefere a interface?",
@@ -69,7 +69,7 @@
   "onbPlanSubtitle": "Deseja seguir um plano para ler as Escrituras?",
   "onbContinue": "Continuar",
   "onbEnter": "Entrar",
-  "onbSkip": "Saltar",
+  "onbSkip": "Pular",
   "enable": "Ativar",
   "notNow": "Agora não",
 
@@ -184,6 +184,8 @@
   "liturgyTitle": "Liturgia",
   "celebrationOfDay": "Celebração do dia",
   "lectionaryNotice": "As leituras deste dia ainda não estão disponíveis.",
+  "liturgyOpenInBible": "Abrir na Bíblia",
+  "readingTextUnavailable": "Texto da leitura não disponível.",
   "preparingBible": "Preparando a Bíblia…",
   "startupError": "Erro ao iniciar.",
 

@@ -34,7 +34,15 @@ const double _kSideBySideMinWidth = 600;
 class ReaderScreen extends ConsumerStatefulWidget {
   final String bookId;
   final int chapter;
-  const ReaderScreen({super.key, required this.bookId, required this.chapter});
+  /// Whether opening this chapter updates Home → "Continue reading". True for
+  /// personal Bible browsing; false when opened from a separate context
+  /// (Liturgy, Reading Plan) so those never overwrite the user's own position.
+  final bool recordProgress;
+  const ReaderScreen(
+      {super.key,
+      required this.bookId,
+      required this.chapter,
+      this.recordProgress = true});
 
   @override
   ConsumerState<ReaderScreen> createState() => _ReaderScreenState();
@@ -43,14 +51,19 @@ class ReaderScreen extends ConsumerStatefulWidget {
 class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   final _scrollController = ItemScrollController();
 
+  void _maybeRecord() {
+    if (!widget.recordProgress) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final t = ref.read(resolvedTranslationIdProvider);
+      ref.read(annotationControllerProvider).recordProgress(
+          t, VerseRef(widget.bookId, widget.chapter, 1));
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final translation = ref.read(resolvedTranslationIdProvider);
-      ref.read(annotationControllerProvider).recordProgress(
-          translation, VerseRef(widget.bookId, widget.chapter, 1));
-    });
+    _maybeRecord();
   }
 
   @override
@@ -60,11 +73,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     // the new position when the book/chapter changes.
     if (old.bookId != widget.bookId || old.chapter != widget.chapter) {
       if (_scrollController.isAttached) _scrollController.jumpTo(index: 0);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final t = ref.read(resolvedTranslationIdProvider);
-        ref.read(annotationControllerProvider).recordProgress(
-            t, VerseRef(widget.bookId, widget.chapter, 1));
-      });
+      _maybeRecord();
     }
   }
 

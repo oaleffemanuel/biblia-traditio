@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../bible/application/bible_providers.dart';
+import '../../bible/domain/entities.dart';
 import '../application/liturgy_providers.dart';
 import '../domain/lectionary.dart';
 import '../domain/liturgical_day.dart';
@@ -130,12 +132,11 @@ class _LiturgyScreenState extends ConsumerState<LiturgyScreen> {
               child: _CelebrationCard(day: day),
             ),
             const SizedBox(height: 16),
-            // Until the Lectionary pack ships, `readings` is always null — show
-            // only the notice, never chips that look tappable but do nothing.
-            if (readings != null) ...[
-              _ReadingChips(readings: readings),
-              const SizedBox(height: 20),
-            ] else
+            // Readings render inline (resolved from the app's own Bible text);
+            // null → the day isn't in the dataset, show the graceful notice.
+            if (readings != null)
+              _ReadingsSection(readings: readings)
+            else
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: _LectionaryNotice(c),
@@ -208,35 +209,153 @@ class _CelebrationCard extends StatelessWidget {
   }
 }
 
-class _ReadingChips extends StatelessWidget {
+/// The day's readings as inline expandable cards. The first is expanded by
+/// default; the rest open on tap. Reading text is resolved at runtime from the
+/// app's own Bible (primary translation) — the dataset stores references only.
+class _ReadingsSection extends StatefulWidget {
   final List<Reading> readings;
-  const _ReadingChips({required this.readings});
+  const _ReadingsSection({required this.readings});
+  @override
+  State<_ReadingsSection> createState() => _ReadingsSectionState();
+}
+
+class _ReadingsSectionState extends State<_ReadingsSection> {
+  final _expanded = {0}; // first reading open by default
+
   @override
   Widget build(BuildContext context) {
-    final c = context.bt;
-    final l10n = context.l10n;
-    return SizedBox(
-      height: 44,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      child: Column(
         children: [
-          for (final r in readings)
+          for (var i = 0; i < widget.readings.length; i++)
             Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: ActionChip(
-                label: Text('${slotLabel(l10n, r.slot)} · ${r.reference}'),
-                backgroundColor: c.surfaceHigh,
-                side: BorderSide.none,
-                labelStyle: TextStyle(color: c.textPrimary),
-                // Cross-branch nav (Liturgy → Bible): use go, not push.
-                onPressed: r.canOpen
-                    ? () => context.go('/bible/${r.bookId}/${r.chapter}')
-                    : null,
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _ReadingCard(
+                reading: widget.readings[i],
+                expanded: _expanded.contains(i),
+                onToggle: () => setState(() =>
+                    _expanded.contains(i) ? _expanded.remove(i) : _expanded.add(i)),
               ),
             ),
         ],
       ),
+    );
+  }
+}
+
+class _ReadingCard extends ConsumerWidget {
+  final Reading reading;
+  final bool expanded;
+  final VoidCallback onToggle;
+  const _ReadingCard(
+      {required this.reading, required this.expanded, required this.onToggle});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.bt;
+    final l10n = context.l10n;
+    return Container(
+      decoration: BoxDecoration(
+          color: c.surface, borderRadius: BorderRadius.circular(18)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: onToggle,
+            borderRadius: BorderRadius.circular(18),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 16, 8, 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(slotLabel(l10n, reading.slot).toUpperCase(),
+                            style: TextStyle(
+                                color: c.accent,
+                                fontSize: 11,
+                                letterSpacing: 1,
+                                fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 3),
+                        Text(reading.reference,
+                            style: Theme.of(context).textTheme.titleMedium),
+                      ],
+                    ),
+                  ),
+                  if (reading.canOpen)
+                    IconButton(
+                      icon: Icon(Icons.menu_book_outlined,
+                          size: 20, color: c.textSecondary),
+                      tooltip: l10n.liturgyOpenInBible,
+                      // Separate context: ?src=liturgy so it never overwrites
+                      // Home → "Continue reading".
+                      onPressed: () => context
+                          .go('/bible/${reading.bookId}/${reading.chapter}?src=liturgy'),
+                    ),
+                  Icon(expanded ? Icons.expand_less : Icons.expand_more,
+                      color: c.textFaint),
+                ],
+              ),
+            ),
+          ),
+          if (expanded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+              child: _ReadingText(reading: reading),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Resolves the reading's verse span into Bible text (primary translation).
+class _ReadingText extends ConsumerWidget {
+  final Reading reading;
+  const _ReadingText({required this.reading});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.bt;
+    if (!reading.canOpen) {
+      return Text(context.l10n.readingTextUnavailable,
+          style: TextStyle(color: c.textFaint));
+    }
+    final content = ref.watch(chapterProvider(
+        (bookId: reading.bookId!, chapter: reading.chapter!)));
+    final start = reading.verseStart ?? 1;
+    final end = reading.verseEnd ?? start;
+    final verses = (content?.verses ?? const <Verse>[])
+        .where((v) => v.number >= start && v.number <= end)
+        .toList();
+    if (verses.isEmpty) {
+      return Text(context.l10n.readingTextUnavailable,
+          style: TextStyle(color: c.textFaint));
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final v in verses)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: RichText(
+              text: TextSpan(
+                style: Theme.of(context).textTheme.bodyLarge,
+                children: [
+                  TextSpan(
+                      text: '${v.number}  ',
+                      style: TextStyle(
+                          color: c.accent,
+                          fontSize: 12,
+                          fontFeatures: const [])),
+                  TextSpan(text: v.text),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

@@ -1105,6 +1105,18 @@ abstract class AppL10n {
   /// **'Readings for this day are not available yet.'**
   String get lectionaryNotice;
 
+  /// No description provided for @liturgyOpenInBible.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Bible'**
+  String get liturgyOpenInBible;
+
+  /// No description provided for @readingTextUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading text not available.'**
+  String get readingTextUnavailable;
+
   /// No description provided for @preparingBible.
   ///
   /// In en, this message translates to:

@@ -153,7 +153,7 @@ class _DayCard extends StatelessWidget {
               onTap: r.targets.isEmpty
                   ? null
                   : () => context.go(
-                      '/bible/${r.targets.first.bookId}/${r.targets.first.chapter}'),
+                      '/bible/${r.targets.first.bookId}/${r.targets.first.chapter}?src=plan'),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                 child: Row(

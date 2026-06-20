@@ -196,6 +196,8 @@
   "liturgyTitle": "Liturgy",
   "celebrationOfDay": "Celebration of the day",
   "lectionaryNotice": "Readings for this day are not available yet.",
+  "liturgyOpenInBible": "Open in Bible",
+  "readingTextUnavailable": "Reading text not available.",
   "preparingBible": "Preparing the Bible…",
   "startupError": "Failed to start.",
 

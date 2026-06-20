@@ -48,6 +48,10 @@ final routerProvider = Provider.family<GoRouter, bool>((ref, completed) {
                       builder: (_, s) => ReaderScreen(
                         bookId: s.pathParameters['bookId']!,
                         chapter: int.parse(s.pathParameters['chapter']!),
+                        // ?src=liturgy|plan opens the reader in a separate
+                        // context that must not overwrite "Continue reading".
+                        recordProgress:
+                            s.uri.queryParameters['src'] == null,
                       ),
                     ),
                   ],

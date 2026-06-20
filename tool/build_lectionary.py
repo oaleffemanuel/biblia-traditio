@@ -148,8 +148,16 @@ def parse_ref(raw):
         ref = f'{abbr} {vtxt}' if vtxt else abbr  # "Jd 17-25" (no chapter)
     else:
         ref = f'{abbr} {chapter},{vtxt}' if vtxt else f'{abbr} {chapter}'
+    # Contiguous verse span (start..end) for in-tab rendering, in the start
+    # chapter's numbering. Non-psalms are exact; psalms keep the lectionary's
+    # (Hebrew) numbers and are clamped to the Vulgate psalm's bounds at build —
+    # they can differ by ~1 verse vs the Vulgate superscription numbering.
+    nums = [int(x) for x in re.findall(r'\d+', disp)]
+    vmin = min(nums) if nums else 1
+    vmax = max(nums) if nums else vmin
     return {'slot': None, 'book': bid, 'chapter': target_ch,
-            'displayChapter': chapter, 'verse': verse, 'ref': ref}
+            'displayChapter': chapter, 'verse': verse, 'ref': ref,
+            'vmin': vmin, 'vmax': vmax}
 
 
 def load_source(args):
@@ -188,6 +196,12 @@ def main():
             "SELECT 1 FROM verse WHERE translation_id='vulgata' AND book_id=? "
             "AND chapter=? LIMIT 1", (bid, ch)).fetchone() is not None
 
+    def chapter_max_verse(bid, ch):
+        r = con.execute(
+            "SELECT MAX(verse) FROM verse WHERE translation_id='vulgata' "
+            "AND book_id=? AND chapter=?", (bid, ch)).fetchone()
+        return r[0] if r and r[0] else 1
+
     entries, problems, skipped_refs = {}, [], 0
     for md, payload in sorted(files.items()):
         try:
@@ -213,6 +227,10 @@ def main():
                     f"{dt} {slot}: {p['book']} {p['chapter']}:{p['verse']} not in Bible «{raw}»")
                 skipped_refs += 1
                 continue
+            # Contiguous render span, clamped to the chapter's real bounds.
+            vmax_ch = chapter_max_verse(p['book'], p['chapter'])
+            p['vStart'] = max(1, min(p.pop('vmin'), vmax_ch))
+            p['vEnd'] = max(p['vStart'], min(p.pop('vmax'), vmax_ch))
             p['slot'] = slot
             readings.append(p)
         if readings:

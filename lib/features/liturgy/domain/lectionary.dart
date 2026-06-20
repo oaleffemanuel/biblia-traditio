@@ -32,7 +32,10 @@ class Reading {
   final String? bookId; // resolved canonical book code, when known
   final int? chapter; // open target (Vulgate numbering for psalms)
   final int? verse; // first verse of the pericope
-  const Reading(this.slot, this.reference, {this.bookId, this.chapter, this.verse});
+  final int? verseStart; // contiguous render span (start)…
+  final int? verseEnd; // …and end, both in the target chapter's numbering
+  const Reading(this.slot, this.reference,
+      {this.bookId, this.chapter, this.verse, this.verseStart, this.verseEnd});
 
   bool get canOpen => bookId != null && chapter != null;
 
@@ -42,6 +45,8 @@ class Reading {
         bookId: j['book'] as String?,
         chapter: (j['chapter'] as num?)?.toInt(),
         verse: (j['verse'] as num?)?.toInt(),
+        verseStart: (j['vStart'] as num?)?.toInt(),
+        verseEnd: (j['vEnd'] as num?)?.toInt(),
       );
 }
 

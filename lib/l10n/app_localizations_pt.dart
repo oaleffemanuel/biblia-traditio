@@ -173,7 +173,7 @@ class AppL10nPt extends AppL10n {
   String get onbNameTitle => 'Como devemos chamá-lo?';
 
   @override
-  String get onbNameSubtitle => 'Usaremos o seu nome para o saudar.';
+  String get onbNameSubtitle => 'Usaremos o seu nome para saudá-lo.';
 
   @override
   String get namePlaceholder => 'O seu nome';
@@ -212,7 +212,7 @@ class AppL10nPt extends AppL10n {
   String get onbEnter => 'Entrar';
 
   @override
-  String get onbSkip => 'Saltar';
+  String get onbSkip => 'Pular';
 
   @override
   String get enable => 'Ativar';
@@ -568,6 +568,12 @@ class AppL10nPt extends AppL10n {
   @override
   String get lectionaryNotice =>
       'As leituras deste dia ainda não estão disponíveis.';
+
+  @override
+  String get liturgyOpenInBible => 'Abrir na Bíblia';
+
+  @override
+  String get readingTextUnavailable => 'Texto da leitura não disponível.';
 
   @override
   String get preparingBible => 'Preparando a Bíblia…';

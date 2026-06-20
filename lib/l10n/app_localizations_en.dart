@@ -569,6 +569,12 @@ class AppL10nEn extends AppL10n {
   String get lectionaryNotice => 'Readings for this day are not available yet.';
 
   @override
+  String get liturgyOpenInBible => 'Open in Bible';
+
+  @override
+  String get readingTextUnavailable => 'Reading text not available.';
+
+  @override
   String get preparingBible => 'Preparing the Bible…';
 
   @override

@@ -118,6 +118,35 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
+  /// Translation step: only translations actually installed in the content DB
+  /// (no hardcoded/unavailable options). Falls back to the first available.
+  Widget _translationStep(BtColors c) {
+    final l10n = context.l10n;
+    final available = ref.watch(availableTranslationsProvider);
+    if (available.isEmpty) {
+      return _ChoiceStep<({String id, String lang, String title})>(
+        c,
+        title: l10n.onbTranslationTitle,
+        subtitle: l10n.onbTranslationSubtitle,
+        options: const [],
+        labelOf: (t) => t.title,
+        selected: (id: _translationId, lang: 'pt', title: _translationId),
+        onSelect: (_) {},
+      );
+    }
+    final selected = available.firstWhere((t) => t.id == _translationId,
+        orElse: () => available.first);
+    return _ChoiceStep<({String id, String lang, String title})>(
+      c,
+      title: l10n.onbTranslationTitle,
+      subtitle: l10n.onbTranslationSubtitle,
+      options: available,
+      labelOf: (t) => t.title,
+      selected: selected,
+      onSelect: (t) => setState(() => _translationId = t.id),
+    );
+  }
+
   Widget _buildStep(BtColors c) {
     final l10n = context.l10n;
     return switch (_step) {
@@ -127,21 +156,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           c,
           title: l10n.onbLanguageTitle,
           subtitle: l10n.onbLanguageSubtitle,
-          options: AppLanguage.values,
+          options: AppLanguage.implemented, // only translated UI languages
           labelOf: (l) => l.label,
-          selected: _language,
+          selected: AppLanguage.implemented.contains(_language)
+              ? _language
+              : AppLanguage.pt,
           onSelect: (l) => setState(() => _language = l),
         ),
-      3 => _ChoiceStep<TranslationOption>(
-          c,
-          title: l10n.onbTranslationTitle,
-          subtitle: l10n.onbTranslationSubtitle,
-          options: TranslationOption.catalogue,
-          labelOf: (t) => t.title,
-          selected: TranslationOption.catalogue
-              .firstWhere((t) => t.id == _translationId),
-          onSelect: (t) => setState(() => _translationId = t.id),
-        ),
+      3 => _translationStep(c),
       4 => _ToggleStep(
           c,
           icon: Icons.notifications_none,

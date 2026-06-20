@@ -71,7 +71,7 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => _pick<AppLanguage>(
               context,
               l10n.settingsAppLanguage,
-              AppLanguage.values,
+              AppLanguage.implemented, // only translated UI languages
               (l) => l.label,
               s.language,
               ctrl.setLanguage,

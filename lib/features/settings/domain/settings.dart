@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// UI languages the app ships (content language follows the chosen translation).
+/// UI languages. `values` keeps codes the parser may encounter; [implemented]
+/// is the subset with real ARB/localization files and is the ONLY list exposed
+/// in onboarding/Settings. Add a language to [implemented] once its ARB ships
+/// (see docs/localization.md).
 enum AppLanguage {
   pt('pt', 'Português'),
   en('en', 'English'),
@@ -12,26 +15,11 @@ enum AppLanguage {
   final String label;
   const AppLanguage(this.code, this.label);
 
+  /// UI languages actually translated and selectable today.
+  static const List<AppLanguage> implemented = [pt, en];
+
   static AppLanguage fromCode(String? c) =>
       values.firstWhere((l) => l.code == c, orElse: () => pt);
-}
-
-/// A selectable Bible translation (mirrors content-DB `translation` rows; the
-/// catalogue is static until packs are downloadable).
-class TranslationOption {
-  final String id;
-  final String title;
-  final String langCode;
-  const TranslationOption(this.id, this.title, this.langCode);
-
-  /// Translations the app may offer in onboarding (the live list shown in
-  /// Settings comes from the bundled DB via `availableTranslationsProvider`).
-  static const catalogue = [
-    TranslationOption('pt_matos_soares', 'Padre Matos Soares (Português)', 'pt'),
-    TranslationOption('pt_beta', 'Bíblia Católica (Português) — beta', 'pt'),
-    TranslationOption('vulgata', 'Vulgata Clementina', 'la'),
-    TranslationOption('drb', 'Douay–Rheims (Challoner)', 'en'),
-  ];
 }
 
 /// How Parallel Reading arranges the two translation columns. [auto] picks

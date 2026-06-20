@@ -74,12 +74,26 @@ void main() {
     expect(psalm.reference, contains('69')); // displayed as the lectionary cites
   });
 
-  test('every reading carries a deep-link target', () {
+  test('every reading carries a deep-link target + render span', () {
     final day = repo.readingsFor(DateTime(2026, 12, 25))!;
     for (final r in day) {
       expect(r.canOpen, isTrue);
       expect(r.verse, isNotNull); // first verse of the pericope
+      expect(r.verseStart, isNotNull);
+      expect(r.verseEnd, isNotNull);
+      expect(r.verseStart! >= 1, isTrue);
+      expect(r.verseEnd! >= r.verseStart!, isTrue);
     }
+  });
+
+  test('verse span matches the reference for an exact (non-psalm) reading', () {
+    // 12th Sunday OT: first reading Jr 20,10-13 → render span verses 10..13.
+    final first = repo
+        .readingsFor(DateTime(2026, 6, 21))!
+        .firstWhere((r) => r.slot == ReadingSlot.first);
+    expect(first.bookId, 'jer');
+    expect(first.verseStart, 10);
+    expect(first.verseEnd, 13);
   });
 
   test('coverage is full-year: a random weekday in each season resolves', () {
