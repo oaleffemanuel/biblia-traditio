@@ -50,6 +50,8 @@ tool/importer/data/*.sqlite
 tool/importer/data/*.sqlite-*
 tool/importer/data/normalized/
 tool/importer/data/reports/
+# merged commentary staging (build intermediate, ~68MB, regenerable)
+tool/importer/data/patristics_merged/
 
 # Bundled content DB is a build artifact (large; may contain non-PD dev text).
 # Regenerate with tool/build_content_db.sh — never commit it.
