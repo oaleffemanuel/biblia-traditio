@@ -38,21 +38,13 @@ class _BibleLibraryScreenState extends ConsumerState<BibleLibraryScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(context.l10n.bibleTitle,
-                            style: Theme.of(context)
-                                .textTheme
-                                .displaySmall
-                                ?.copyWith(fontWeight: FontWeight.w700)),
-                        IconButton(
-                          tooltip: context.l10n.settingsTitle,
-                          onPressed: () => context.push('/settings'),
-                          icon: Icon(Icons.more_horiz, color: c.textSecondary),
-                        ),
-                      ],
-                    ),
+                    // Settings lives on Home; the Bible screen no longer carries
+                    // a redundant overflow menu.
+                    Text(context.l10n.bibleTitle,
+                        style: Theme.of(context)
+                            .textTheme
+                            .displaySmall
+                            ?.copyWith(fontWeight: FontWeight.w700)),
                     const SizedBox(height: 8),
                     _SearchField(onChanged: (v) => setState(() => _query = v)),
                     const SizedBox(height: 16),

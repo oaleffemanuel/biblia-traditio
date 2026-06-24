@@ -2,11 +2,9 @@
   "@@locale": "en",
   "appName": "Biblia Traditio",
   "tagline": "Scripture in the light of Tradition.",
-
   "navHome": "Home",
   "navLiturgy": "Liturgy",
   "navBible": "Bible",
-
   "actionSave": "Save",
   "actionCancel": "Cancel",
   "actionConfirm": "Confirm",
@@ -14,7 +12,6 @@
   "actionDelete": "Delete",
   "actionRemove": "Remove",
   "actionDownload": "Download",
-
   "removePackageTitle": "Remove package?",
   "removePackageMessage": "You'll need to download it again to reinstall.",
   "deleteNoteTitle": "Delete note?",
@@ -25,7 +22,6 @@
   "removeSuccess": "Package removed",
   "highlight": "Highlight",
   "deuterocanonicalShort": "DC",
-
   "greetingMorning": "Good morning,",
   "greetingAfternoon": "Good afternoon,",
   "greetingEvening": "Good evening,",
@@ -39,25 +35,60 @@
   "planSubtitle": "A year through Sacred Scripture",
   "planToday": "Today",
   "planDay": "Day {day}",
-  "@planDay": { "placeholders": { "day": { "type": "int" } } },
+  "@planDay": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
   "planDayProgress": "Day {day} of {total}",
-  "@planDayProgress": { "placeholders": { "day": { "type": "int" }, "total": { "type": "int" } } },
+  "@planDayProgress": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "planProgress": "{done} of {total} days read",
-  "@planProgress": { "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } } },
+  "@planProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "planMarkRead": "Mark as read",
   "notes": "Notes",
   "notesEmptySubtitle": "Your personal reflections",
   "noteCount": "{count, plural, =1{1 note} other{{count} notes}}",
-  "@noteCount": { "placeholders": { "count": { "type": "int" } } },
+  "@noteCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "liturgyToday": "Today's liturgy",
   "ordinaryTime": "Ordinary Time",
   "liturgicalYear": "Year {cycle}",
-  "@liturgicalYear": { "placeholders": { "cycle": { "type": "String" } } },
-  "readingFirst": "1st reading",
+  "@liturgicalYear": {
+    "placeholders": {
+      "cycle": {
+        "type": "String"
+      }
+    }
+  },
+  "readingFirst": "First Reading",
   "readingPsalm": "Psalm",
-  "readingSecond": "2nd reading",
+  "readingSecond": "Second Reading",
   "readingGospel": "Gospel",
-
   "onbNameTitle": "What should we call you?",
   "onbNameSubtitle": "We'll use your name to greet you.",
   "namePlaceholder": "Your name",
@@ -74,7 +105,6 @@
   "onbSkip": "Skip",
   "enable": "Enable",
   "notNow": "Not now",
-
   "bibleTitle": "Bible",
   "search": "Search",
   "oldTestament": "Old Testament",
@@ -84,14 +114,25 @@
   "noBooksFound": "No books found.",
   "contentNotInstalled": "Content not installed yet.\nInstall a translation pack in Settings.",
   "chapterTitle": "Chapter {number}",
-  "@chapterTitle": { "placeholders": { "number": { "type": "int" } } },
+  "@chapterTitle": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "chapterPickerTitle": "{book} — chapter",
-  "@chapterPickerTitle": { "placeholders": { "book": { "type": "String" } } },
+  "@chapterPickerTitle": {
+    "placeholders": {
+      "book": {
+        "type": "String"
+      }
+    }
+  },
   "goToVerse": "Go to verse",
   "previous": "Previous",
   "next": "Next",
   "scriptureNotInstalled": "The Bible text is not installed yet.",
-
   "share": "Share",
   "copyVerse": "Copy verse",
   "favorite": "Favorite",
@@ -100,7 +141,13 @@
   "unbookmark": "Remove bookmark",
   "note": "Note",
   "notesWithCount": "Notes ({count})",
-  "@notesWithCount": { "placeholders": { "count": { "type": "int" } } },
+  "@notesWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "churchFathers": "Church Fathers",
   "myNotes": "My Notes",
   "noCommentaryForVerse": "No commentary available for this verse yet.",
@@ -108,25 +155,41 @@
   "noNotesForVerse": "No notes for this verse yet.",
   "writeReflection": "Write a reflection",
   "commentaryCount": "{count, plural, =1{1 commentary} other{{count} commentaries}}",
-  "@commentaryCount": { "placeholders": { "count": { "type": "int" } } },
+  "@commentaryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "filterAll": "All",
-  "filterFathers": "Fathers",
+  "filterFathers": "Patristics",
   "filterMedieval": "Medieval",
   "filterAugustine": "St Augustine",
   "filterAquinas": "St Thomas Aquinas",
   "colorMode": "Color mode",
   "fontSizeSoon": "Font size (soon)",
   "century": "cent. {value}",
-  "@century": { "placeholders": { "value": { "type": "String" } } },
+  "@century": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "machineTranslation": "machine translation",
   "shareCopy": "Copy",
   "shareText": "Text",
   "shareImage": "Image",
-
   "noteEditorTitle": "Note — {reference}",
-  "@noteEditorTitle": { "placeholders": { "reference": { "type": "String" } } },
+  "@noteEditorTitle": {
+    "placeholders": {
+      "reference": {
+        "type": "String"
+      }
+    }
+  },
   "noteHint": "Write your reflection…",
-
   "parallelReading": "Parallel reading",
   "singleTranslation": "Single translation",
   "parallelOptionsTitle": "Parallel reading",
@@ -138,7 +201,6 @@
   "layoutAuto": "Automatic",
   "layoutStacked": "Stacked",
   "layoutSideBySide": "Side by side",
-
   "searchHint": "Search Scripture, Fathers, notes…",
   "searchScopeAll": "All",
   "searchScopeScripture": "Scripture",
@@ -146,9 +208,14 @@
   "searchScopeNotes": "Notes",
   "searchTypeMore": "Type at least 2 letters to search.",
   "searchNoResults": "No results for “{query}”.",
-  "@searchNoResults": { "placeholders": { "query": { "type": "String" } } },
+  "@searchNoResults": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
   "sectionScripture": "Scripture",
-
   "notesScreenTitle": "Notes",
   "searchNotesHint": "Search notes",
   "noNotesYet": "No notes yet.",
@@ -156,7 +223,6 @@
   "noFavoritesYet": "No favorites yet.",
   "highlightsTitle": "Highlights",
   "noHighlightsYet": "No highlights yet.",
-
   "settingsTitle": "Settings",
   "settingsAccount": "Account",
   "settingsName": "Name",
@@ -187,12 +253,32 @@
   "noTranslationInstalled": "None installed",
   "packageRequired": "Required",
   "packageInstalled": "Installed · {size}",
-  "@packageInstalled": { "placeholders": { "size": { "type": "String" } } },
+  "@packageInstalled": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "packageDownload": "Download {download} · {installed} installed",
-  "@packageDownload": { "placeholders": { "download": { "type": "String" }, "installed": { "type": "String" } } },
+  "@packageDownload": {
+    "placeholders": {
+      "download": {
+        "type": "String"
+      },
+      "installed": {
+        "type": "String"
+      }
+    }
+  },
   "installFailed": "Install failed: {error}",
-  "@installFailed": { "placeholders": { "error": { "type": "String" } } },
-
+  "@installFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "liturgyTitle": "Liturgy",
   "celebrationOfDay": "Celebration of the day",
   "lectionaryNotice": "Readings for this day are not available yet.",
@@ -200,7 +286,6 @@
   "readingTextUnavailable": "Reading text not available.",
   "preparingBible": "Preparing the Bible…",
   "startupError": "Failed to start.",
-
   "seasonAdvent": "Advent",
   "seasonChristmas": "Christmas Time",
   "seasonOrdinary": "Ordinary Time",
@@ -209,5 +294,19 @@
   "seasonEaster": "Eastertide",
   "rankSolemnity": "Solemnity",
   "rankFeast": "Feast",
-  "rankMemorial": "Memorial"
+  "rankMemorial": "Memorial",
+  "liturgyResponseWordOfLord": "The word of the Lord.",
+  "liturgyResponseThanksToGod": "Thanks be to God.",
+  "liturgyResponseGloryToYou": "Glory to you, O Lord.",
+  "liturgyResponseWordOfSalvation": "The Gospel of the Lord.",
+  "liturgyGospelAccording": "A reading from the holy Gospel according to {evangelist}",
+  "@liturgyGospelAccording": {
+    "placeholders": {
+      "evangelist": {
+        "type": "String"
+      }
+    }
+  },
+  "licGreekTitle": "Greek New Testament (SBLGNT)",
+  "licGreekBody": "The SBL Greek New Testament (SBLGNT), © Society of Biblical Literature and Logos Bible Software. Used under the Creative Commons Attribution 4.0 license."
 }

@@ -158,13 +158,13 @@ class AppL10nPt extends AppL10n {
   }
 
   @override
-  String get readingFirst => '1ª leitura';
+  String get readingFirst => 'Primeira Leitura';
 
   @override
   String get readingPsalm => 'Salmo';
 
   @override
-  String get readingSecond => '2ª leitura';
+  String get readingSecond => 'Segunda Leitura';
 
   @override
   String get readingGospel => 'Evangelho';
@@ -329,7 +329,7 @@ class AppL10nPt extends AppL10n {
   String get filterAll => 'Todos';
 
   @override
-  String get filterFathers => 'Padres';
+  String get filterFathers => 'Patrística';
 
   @override
   String get filterMedieval => 'Medieval';
@@ -607,4 +607,28 @@ class AppL10nPt extends AppL10n {
 
   @override
   String get rankMemorial => 'Memória';
+
+  @override
+  String get liturgyResponseWordOfLord => 'Palavra do Senhor.';
+
+  @override
+  String get liturgyResponseThanksToGod => 'Graças a Deus.';
+
+  @override
+  String get liturgyResponseGloryToYou => 'Glória a vós, Senhor.';
+
+  @override
+  String get liturgyResponseWordOfSalvation => 'Palavra da Salvação.';
+
+  @override
+  String liturgyGospelAccording(String evangelist) {
+    return 'Proclamação do Evangelho de Jesus Cristo segundo $evangelist';
+  }
+
+  @override
+  String get licGreekTitle => 'Novo Testamento Grego (SBLGNT)';
+
+  @override
+  String get licGreekBody =>
+      'O Novo Testamento Grego SBL (SBLGNT), © Society of Biblical Literature e Logos Bible Software. Usado sob a licença Creative Commons Atribuição 4.0.';
 }

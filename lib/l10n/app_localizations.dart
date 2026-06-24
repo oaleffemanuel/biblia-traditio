@@ -364,7 +364,7 @@ abstract class AppL10n {
   /// No description provided for @readingFirst.
   ///
   /// In en, this message translates to:
-  /// **'1st reading'**
+  /// **'First Reading'**
   String get readingFirst;
 
   /// No description provided for @readingPsalm.
@@ -376,7 +376,7 @@ abstract class AppL10n {
   /// No description provided for @readingSecond.
   ///
   /// In en, this message translates to:
-  /// **'2nd reading'**
+  /// **'Second Reading'**
   String get readingSecond;
 
   /// No description provided for @readingGospel.
@@ -664,7 +664,7 @@ abstract class AppL10n {
   /// No description provided for @filterFathers.
   ///
   /// In en, this message translates to:
-  /// **'Fathers'**
+  /// **'Patristics'**
   String get filterFathers;
 
   /// No description provided for @filterMedieval.
@@ -1182,6 +1182,48 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Memorial'**
   String get rankMemorial;
+
+  /// No description provided for @liturgyResponseWordOfLord.
+  ///
+  /// In en, this message translates to:
+  /// **'The word of the Lord.'**
+  String get liturgyResponseWordOfLord;
+
+  /// No description provided for @liturgyResponseThanksToGod.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks be to God.'**
+  String get liturgyResponseThanksToGod;
+
+  /// No description provided for @liturgyResponseGloryToYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Glory to you, O Lord.'**
+  String get liturgyResponseGloryToYou;
+
+  /// No description provided for @liturgyResponseWordOfSalvation.
+  ///
+  /// In en, this message translates to:
+  /// **'The Gospel of the Lord.'**
+  String get liturgyResponseWordOfSalvation;
+
+  /// No description provided for @liturgyGospelAccording.
+  ///
+  /// In en, this message translates to:
+  /// **'A reading from the holy Gospel according to {evangelist}'**
+  String liturgyGospelAccording(String evangelist);
+
+  /// No description provided for @licGreekTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Greek New Testament (SBLGNT)'**
+  String get licGreekTitle;
+
+  /// No description provided for @licGreekBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The SBL Greek New Testament (SBLGNT), © Society of Biblical Literature and Logos Bible Software. Used under the Creative Commons Attribution 4.0 license.'**
+  String get licGreekBody;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

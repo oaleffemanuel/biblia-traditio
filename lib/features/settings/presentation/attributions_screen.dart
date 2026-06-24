@@ -39,6 +39,10 @@ class AttributionsScreen extends StatelessWidget {
                 icon: Icons.history_edu_outlined,
                 title: l10n.licMatosTitle,
                 body: l10n.licMatosBody),
+            _SourceCard(
+                icon: Icons.translate,
+                title: l10n.licGreekTitle,
+                body: l10n.licGreekBody),
             const SizedBox(height: 8),
             ListTile(
               contentPadding: EdgeInsets.zero,

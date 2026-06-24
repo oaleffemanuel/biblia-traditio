@@ -62,11 +62,29 @@ else
   echo "▶ Bible (Matos Soares) — SKIPPED: $MS_JSON not available"
 fi
 
+# Greek New Testament — SBLGNT (CC BY 4.0). Original-language NT; verse
+# numbering aligns with the NT canon, so it works in Parallel Reading. Fetched
+# once from morphgnt/sblgnt and cached.
+GRC_JSON="$DATA/grc_sblgnt.json"
+[ -f "$GRC_JSON" ] || python3 "$IMP/fetch_sblgnt.py" "$GRC_JSON" || true
+if [ -f "$GRC_JSON" ]; then
+  echo "▶ Bible (Grego — SBLGNT)"
+  dart run bin/import.dart biblejson --src "$GRC_JSON" --translation grc_sblgnt --lang grc \
+    --title "Novo Testamento Grego (SBLGNT)" \
+    --license "CC BY 4.0 — SBL Greek New Testament (Society of Biblical Literature & Logos Bible Software)" \
+    --out "$DATA/bible_vulgata.sqlite"
+else
+  echo "▶ Bible (SBLGNT) — SKIPPED: $GRC_JSON not available"
+fi
+
+sha() { shasum -a 256 "$1" | awk '{print $1}'; }
+sz()  { stat -f%z "$1"; }
+
 echo "▶ Patristics"
 # Merge: original corpus = coverage floor; corrected corpus overlaid per book.
 # Drops the redundant coment-jude.json (alias jude→jud would double-import Jude).
 PAT_SRC="$PATRISTICS_DIR"
-if [ -d "$PATRISTICS_CORRECTED_DIR" ]; then
+if [ -d "$PATRISTICS_CORRECTED_DIR" ] && [ -d "$PATRISTICS_DIR" ]; then
   MERGED="$DATA/patristics_merged"
   rm -rf "$MERGED"; mkdir -p "$MERGED"
   cp -f "$PATRISTICS_DIR"/coment-*.json "$MERGED"/ 2>/dev/null || true
@@ -75,21 +93,23 @@ if [ -d "$PATRISTICS_CORRECTED_DIR" ]; then
   rm -f "$MERGED/coment-jude.json"   # dedup: keep coment-jud.json (canonical Jude)
   PAT_SRC="$MERGED"
   echo "  merged corrected overlay → $MERGED ($(ls "$MERGED"/coment-*.json | wc -l | tr -d ' ') books)"
-else
-  echo "  corrected overlay not found at $PATRISTICS_CORRECTED_DIR — using base corpus only"
 fi
-rm -f "$DATA/patristics.sqlite" "$DATA/patristics.sqlite-wal" "$DATA/patristics.sqlite-shm"
-dart run bin/import.dart patristics --src "$PAT_SRC" --out "$DATA/patristics.sqlite"
-
-sha() { shasum -a 256 "$1" | awk '{print $1}'; }
-sz()  { stat -f%z "$1"; }
-
-echo "▶ compress + checksum"
 gzip -9 -c "$DATA/bible_vulgata.sqlite" > "$PKG/bible_vulgata.sqlite.gz"
-gzip -9 -c "$DATA/patristics.sqlite"    > "$PKG/patristics.sqlite.gz"
-
 BV_SHA=$(sha "$DATA/bible_vulgata.sqlite"); BV_SZ=$(sz "$DATA/bible_vulgata.sqlite"); BV_GZ=$(sz "$PKG/bible_vulgata.sqlite.gz")
-PA_SHA=$(sha "$DATA/patristics.sqlite");    PA_SZ=$(sz "$DATA/patristics.sqlite");    PA_GZ=$(sz "$PKG/patristics.sqlite.gz")
+if [ -d "$PAT_SRC" ]; then
+  rm -f "$DATA/patristics.sqlite" "$DATA/patristics.sqlite-wal" "$DATA/patristics.sqlite-shm"
+  dart run bin/import.dart patristics --src "$PAT_SRC" --out "$DATA/patristics.sqlite"
+  gzip -9 -c "$DATA/patristics.sqlite" > "$PKG/patristics.sqlite.gz"
+  PA_SHA=$(sha "$DATA/patristics.sqlite"); PA_SZ=$(sz "$DATA/patristics.sqlite")
+elif [ -f "$PKG/patristics.sqlite.gz" ]; then
+  # Source not present (build-machine corpus absent) — keep the existing pack.
+  echo "  patristics source not found at $PAT_SRC — reusing existing package (unchanged)"
+  PA_SZ=$(gzip -dc "$PKG/patristics.sqlite.gz" | wc -c | tr -d ' ')
+  PA_SHA=$(gzip -dc "$PKG/patristics.sqlite.gz" | shasum -a 256 | awk '{print $1}')
+else
+  echo "  ✗ no patristics source and no existing pack — aborting"; exit 1
+fi
+PA_GZ=$(sz "$PKG/patristics.sqlite.gz")
 
 cat > "$PKG/manifest.json" <<JSON
 {
@@ -97,12 +117,12 @@ cat > "$PKG/manifest.json" <<JSON
   "packages": [
     {
       "id": "bible_vulgata",
-      "title": "Bíblia (Vulgata Clementina + Português)",
+      "title": "Bíblia (Vulgata + Português + Grego)",
       "language": "la",
       "type": "bible_translation",
-      "version": 4,
-      "source": "Vulgata: open-bibles (Clementine, USFX). Português: corpus interno (iacula) — origem da tradução a confirmar. Matos Soares: padrepauloricardo.org (edição matos-soares).",
-      "license": "Vulgata: domínio público. Português (beta): uso interno — origem da tradução a confirmar. Matos Soares: domínio público (Pe. Matos Soares †1950) — verificação de proveniência em beta.",
+      "version": 5,
+      "source": "Vulgata: open-bibles (Clementine, USFX). Português: corpus interno (iacula) — origem da tradução a confirmar. Matos Soares: padrepauloricardo.org (edição matos-soares). Grego: SBLGNT via morphgnt.",
+      "license": "Vulgata: domínio público. Português (beta): uso interno — origem da tradução a confirmar. Matos Soares: domínio público (Pe. Matos Soares †1950) — verificação de proveniência em beta. Grego: CC BY 4.0 (SBLGNT, SBL & Logos).",
       "asset": "assets/packages/bible_vulgata.sqlite.gz",
       "url": null,
       "sizeBytes": $BV_SZ,

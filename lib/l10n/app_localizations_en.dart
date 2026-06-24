@@ -158,13 +158,13 @@ class AppL10nEn extends AppL10n {
   }
 
   @override
-  String get readingFirst => '1st reading';
+  String get readingFirst => 'First Reading';
 
   @override
   String get readingPsalm => 'Psalm';
 
   @override
-  String get readingSecond => '2nd reading';
+  String get readingSecond => 'Second Reading';
 
   @override
   String get readingGospel => 'Gospel';
@@ -329,7 +329,7 @@ class AppL10nEn extends AppL10n {
   String get filterAll => 'All';
 
   @override
-  String get filterFathers => 'Fathers';
+  String get filterFathers => 'Patristics';
 
   @override
   String get filterMedieval => 'Medieval';
@@ -606,4 +606,28 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get rankMemorial => 'Memorial';
+
+  @override
+  String get liturgyResponseWordOfLord => 'The word of the Lord.';
+
+  @override
+  String get liturgyResponseThanksToGod => 'Thanks be to God.';
+
+  @override
+  String get liturgyResponseGloryToYou => 'Glory to you, O Lord.';
+
+  @override
+  String get liturgyResponseWordOfSalvation => 'The Gospel of the Lord.';
+
+  @override
+  String liturgyGospelAccording(String evangelist) {
+    return 'A reading from the holy Gospel according to $evangelist';
+  }
+
+  @override
+  String get licGreekTitle => 'Greek New Testament (SBLGNT)';
+
+  @override
+  String get licGreekBody =>
+      'The SBL Greek New Testament (SBLGNT), © Society of Biblical Literature and Logos Bible Software. Used under the Creative Commons Attribution 4.0 license.';
 }

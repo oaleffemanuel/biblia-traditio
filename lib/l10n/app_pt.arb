@@ -2,11 +2,9 @@
   "@@locale": "pt",
   "appName": "Biblia Traditio",
   "tagline": "A Escritura à luz da Tradição.",
-
   "navHome": "Início",
   "navLiturgy": "Liturgia",
   "navBible": "Bíblia",
-
   "actionSave": "Guardar",
   "actionCancel": "Cancelar",
   "actionConfirm": "Confirmar",
@@ -14,7 +12,6 @@
   "actionDelete": "Excluir",
   "actionRemove": "Remover",
   "actionDownload": "Baixar",
-
   "removePackageTitle": "Remover pacote?",
   "removePackageMessage": "Você precisará baixá-lo novamente para reinstalar.",
   "deleteNoteTitle": "Excluir nota?",
@@ -25,7 +22,6 @@
   "removeSuccess": "Pacote removido",
   "highlight": "Destacar",
   "deuterocanonicalShort": "DC",
-
   "greetingMorning": "Bom dia,",
   "greetingAfternoon": "Boa tarde,",
   "greetingEvening": "Boa noite,",
@@ -39,11 +35,35 @@
   "planSubtitle": "Um ano pela Sagrada Escritura",
   "planToday": "Hoje",
   "planDay": "Dia {day}",
-  "@planDay": { "placeholders": { "day": { "type": "int" } } },
+  "@planDay": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
   "planDayProgress": "Dia {day} de {total}",
-  "@planDayProgress": { "placeholders": { "day": { "type": "int" }, "total": { "type": "int" } } },
+  "@planDayProgress": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "planProgress": "{done} de {total} dias lidos",
-  "@planProgress": { "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } } },
+  "@planProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "planMarkRead": "Marcar como lido",
   "notes": "Notas",
   "notesEmptySubtitle": "As suas reflexões pessoais",
@@ -51,11 +71,10 @@
   "liturgyToday": "Liturgia de hoje",
   "ordinaryTime": "Tempo Comum",
   "liturgicalYear": "Ano {cycle}",
-  "readingFirst": "1ª leitura",
+  "readingFirst": "Primeira Leitura",
   "readingPsalm": "Salmo",
-  "readingSecond": "2ª leitura",
+  "readingSecond": "Segunda Leitura",
   "readingGospel": "Evangelho",
-
   "onbNameTitle": "Como devemos chamá-lo?",
   "onbNameSubtitle": "Usaremos o seu nome para saudá-lo.",
   "namePlaceholder": "O seu nome",
@@ -72,7 +91,6 @@
   "onbSkip": "Pular",
   "enable": "Ativar",
   "notNow": "Agora não",
-
   "bibleTitle": "Bíblia",
   "search": "Pesquisar",
   "oldTestament": "Antigo testamento",
@@ -87,7 +105,6 @@
   "previous": "Anterior",
   "next": "Próximo",
   "scriptureNotInstalled": "O texto bíblico ainda não está instalado.",
-
   "share": "Partilhar",
   "copyVerse": "Copiar versículo",
   "favorite": "Favoritar",
@@ -104,7 +121,7 @@
   "writeReflection": "Escrever uma reflexão",
   "commentaryCount": "{count, plural, =1{1 comentário} other{{count} comentários}}",
   "filterAll": "Todos",
-  "filterFathers": "Padres",
+  "filterFathers": "Patrística",
   "filterMedieval": "Medieval",
   "filterAugustine": "Santo Agostinho",
   "filterAquinas": "S. Tomás de Aquino",
@@ -115,10 +132,8 @@
   "shareCopy": "Copiar",
   "shareText": "Texto",
   "shareImage": "Imagem",
-
   "noteEditorTitle": "Nota — {reference}",
   "noteHint": "Escreva a sua reflexão…",
-
   "parallelReading": "Leitura paralela",
   "singleTranslation": "Tradução única",
   "parallelOptionsTitle": "Leitura paralela",
@@ -130,7 +145,6 @@
   "layoutAuto": "Automático",
   "layoutStacked": "Empilhado",
   "layoutSideBySide": "Lado a lado",
-
   "searchHint": "Pesquisar Escritura, Padres, notas…",
   "searchScopeAll": "Tudo",
   "searchScopeScripture": "Escritura",
@@ -139,7 +153,6 @@
   "searchTypeMore": "Escreva ao menos 2 letras para pesquisar.",
   "searchNoResults": "Nenhum resultado para “{query}”.",
   "sectionScripture": "Escritura",
-
   "notesScreenTitle": "Notas",
   "searchNotesHint": "Pesquisar notas",
   "noNotesYet": "Nenhuma nota ainda.",
@@ -147,7 +160,6 @@
   "noFavoritesYet": "Nenhum favorito ainda.",
   "highlightsTitle": "Destaques",
   "noHighlightsYet": "Nenhum destaque ainda.",
-
   "settingsTitle": "Ajustes",
   "settingsAccount": "Conta",
   "settingsName": "Nome",
@@ -180,7 +192,6 @@
   "packageInstalled": "Instalado · {size}",
   "packageDownload": "Download {download} · {installed} instalado",
   "installFailed": "Falha ao instalar: {error}",
-
   "liturgyTitle": "Liturgia",
   "celebrationOfDay": "Celebração do dia",
   "lectionaryNotice": "As leituras deste dia ainda não estão disponíveis.",
@@ -188,7 +199,6 @@
   "readingTextUnavailable": "Texto da leitura não disponível.",
   "preparingBible": "Preparando a Bíblia…",
   "startupError": "Erro ao iniciar.",
-
   "seasonAdvent": "Advento",
   "seasonChristmas": "Tempo do Natal",
   "seasonOrdinary": "Tempo Comum",
@@ -197,5 +207,19 @@
   "seasonEaster": "Tempo Pascal",
   "rankSolemnity": "Solenidade",
   "rankFeast": "Festa",
-  "rankMemorial": "Memória"
+  "rankMemorial": "Memória",
+  "liturgyResponseWordOfLord": "Palavra do Senhor.",
+  "liturgyResponseThanksToGod": "Graças a Deus.",
+  "liturgyResponseGloryToYou": "Glória a vós, Senhor.",
+  "liturgyResponseWordOfSalvation": "Palavra da Salvação.",
+  "liturgyGospelAccording": "Proclamação do Evangelho de Jesus Cristo segundo {evangelist}",
+  "@liturgyGospelAccording": {
+    "placeholders": {
+      "evangelist": {
+        "type": "String"
+      }
+    }
+  },
+  "licGreekTitle": "Novo Testamento Grego (SBLGNT)",
+  "licGreekBody": "O Novo Testamento Grego SBL (SBLGNT), © Society of Biblical Literature e Logos Bible Software. Usado sob a licença Creative Commons Atribuição 4.0."
 }

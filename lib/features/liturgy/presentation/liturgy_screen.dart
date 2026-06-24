@@ -199,6 +199,7 @@ class _CelebrationCard extends StatelessWidget {
             [
               seasonLabel(l10n, day.season),
               l10n.liturgicalYear(day.sundayCycle),
+              day.color.label, // liturgical colour (directory detail)
               if (rank.isNotEmpty) rank,
             ].join('  ·  '),
             style: TextStyle(color: c.textSecondary),
@@ -220,7 +221,9 @@ class _ReadingsSection extends StatefulWidget {
 }
 
 class _ReadingsSectionState extends State<_ReadingsSection> {
-  final _expanded = {0}; // first reading open by default
+  // Collapsed by default: shows clean reference cards (no wall of text) and
+  // avoids resolving Bible text until the user opens a reading.
+  final _expanded = <int>{};
 
   @override
   Widget build(BuildContext context) {
@@ -302,11 +305,65 @@ class _ReadingCard extends ConsumerWidget {
           ),
           if (expanded)
             Padding(
-              padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
-              child: _ReadingText(reading: reading),
+              padding: const EdgeInsets.fromLTRB(18, 2, 18, 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Before the Gospel: proclamation + acclamation.
+                  if (reading.slot == ReadingSlot.gospel) ...[
+                    _say(context, _gospelProclamation(ref, l10n), people: false),
+                    _say(context, l10n.liturgyResponseGloryToYou, people: true),
+                    const SizedBox(height: 10),
+                  ],
+                  _ReadingText(reading: reading),
+                  // Fixed responses after the reading (Order of Mass).
+                  ..._endingResponses(context, l10n),
+                ],
+              ),
             ),
         ],
       ),
+    );
+  }
+
+  String _gospelProclamation(WidgetRef ref, AppL10n l10n) {
+    final book = ref.watch(bookByIdProvider(reading.bookId ?? ''));
+    final evangelist = book == null ? '' : 'São ${book.name}';
+    return l10n.liturgyGospelAccording(evangelist);
+  }
+
+  /// Standard fixed responses that close each reading; psalm has none.
+  List<Widget> _endingResponses(BuildContext context, AppL10n l10n) {
+    final lines = switch (reading.slot) {
+      ReadingSlot.first || ReadingSlot.second => [
+          (l10n.liturgyResponseWordOfLord, false),
+          (l10n.liturgyResponseThanksToGod, true),
+        ],
+      ReadingSlot.gospel => [
+          (l10n.liturgyResponseWordOfSalvation, false),
+          (l10n.liturgyResponseGloryToYou, true),
+        ],
+      ReadingSlot.psalm => const <(String, bool)>[],
+    };
+    if (lines.isEmpty) return const [];
+    return [
+      const SizedBox(height: 12),
+      for (final (text, people) in lines) _say(context, text, people: people),
+    ];
+  }
+
+  /// A liturgical line — the minister's words (muted) vs the people's response
+  /// (accent), both italic so they read as rubric, not as Scripture.
+  Widget _say(BuildContext context, String text, {required bool people}) {
+    final c = context.bt;
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Text(text,
+          style: TextStyle(
+              color: people ? c.accent : c.textSecondary,
+              fontStyle: FontStyle.italic,
+              fontWeight: people ? FontWeight.w600 : FontWeight.w400,
+              height: 1.4)),
     );
   }
 }
