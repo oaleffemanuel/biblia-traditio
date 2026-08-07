@@ -88,7 +88,14 @@ Everything below assumes 3 tabs and a PD-sourced primary translation, both easil
 - **Six languages built for, two shipped.** `AppLanguage` now carries pt, en, it, es, fr, la, and `supportedLocales` is derived from `implemented` rather than from the generated list — so dropping an ARB in can never put a Spanish phone into a half-translated UI without someone choosing it.
 - **Reading position is remembered.** The reader records the verse actually at the top of the viewport (debounced), so Home → "Continuar" returns to where reading stopped instead of verse 1.
 
-**Pending next:** lectionary beyond 2026 (and psalm refrains, which `build_lectionary.py` does not yet capture), at-rest encryption, Septuagint/Hebrew packs (not shipped — see §16), extending the Saints dataset beyond its first tranche, and translating the four planned languages.
+**Store-readiness polish (done).**
+- **Commentaries group by author.** A catena stacks several excerpts from one Father on one verse; listing them as separate rows made legitimate commentary look duplicated. They now sit under a single header that states how many excerpts wait inside, numbered when opened. Nothing is dropped, corpus order is kept, each excerpt keeps its own share action, and Exibir/Minimizar todos operate on author blocks.
+- **Responsorial refrain — data path built, data still missing.** Verified the bundled source (`cpbjr/catholic-readings-api`) carries citations only: its per-day JSON has exactly `firstReading`/`psalm`/`secondReading`/`gospel`, all strings, with no refrain field anywhere in 365 files. `Reading` now carries `refrain`/`refrainRef`, `build_lectionary.py` emits them through a single `refrain_for()` seam, and the psalm card renders R. before and after the verses when present. **No refrain is invented**: absent one, the card shows the reference, the verses, and says the refrain is in the Lectionary. Asset version 3.
+- **Readings read as proclaimed:** slot → the lector's book title → citation; expanded, the announcement, the text, and the people's response prefixed "R." as the books print it.
+- **Directory refined:** the cards became fields separated by hairline rules — more whitespace, stronger hierarchy, no container chrome. Week now reads "19ª semana do Tempo Comum".
+- **Version 1.1.0+3** for the next iOS archive; bundle id and signing unchanged.
+
+**Pending next:** a Brazilian (CNBB) refrain source to fill `refrain_for()` — a US-lectionary refrain would be wrong on the days where CNBB differs, and the refrain is not derivable from the psalm text; lectionary beyond 2026; at-rest encryption; Septuagint/Hebrew packs (not shipped — see §16); extending the Saints dataset beyond its first tranche; translating the four planned languages; **and the Android upload keystore, which still does not exist.**
 
 ---
 

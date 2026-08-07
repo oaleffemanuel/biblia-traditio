@@ -183,9 +183,9 @@ class _FathersTab extends ConsumerStatefulWidget {
 }
 
 class _FathersTabState extends ConsumerState<_FathersTab> {
-  /// Commentary ids currently open. Ids (not indices) so toggling the quick
-  /// filters can't silently expand a different commentary.
-  final _expanded = <int>{};
+  /// Author names whose block is open. Keyed by author (not by excerpt) so a
+  /// Father with several excerpts on a verse is one row, opened once.
+  final _expanded = <String>{};
 
   /// Set when the reader chooses "show anyway" for this verse, so the
   /// preference notice is a nudge rather than a wall.
@@ -242,8 +242,14 @@ class _FathersTabState extends ConsumerState<_FathersTab> {
     final effective =
         available.contains(widget.filter) ? widget.filter : _Filter.all;
     final shown = visible.where((cm) => _matches(effective, cm)).toList();
+    // One block per author, first-appearance order, excerpts in corpus order.
+    final grouped = <String, List<Commentary>>{};
+    for (final cm in shown) {
+      grouped.putIfAbsent(cm.fatherName, () => []).add(cm);
+    }
+    final authors = grouped.keys.toList();
     final allOpen =
-        shown.isNotEmpty && shown.every((cm) => _expanded.contains(cm.id));
+        authors.isNotEmpty && authors.every(_expanded.contains);
 
     String label(_Filter f) => switch (f) {
           _Filter.all => l10n.filterAll,
@@ -292,9 +298,9 @@ class _FathersTabState extends ConsumerState<_FathersTab> {
                 TextButton(
                   onPressed: () => setState(() {
                     if (allOpen) {
-                      _expanded.removeAll(shown.map((cm) => cm.id));
+                      _expanded.removeAll(authors);
                     } else {
-                      _expanded.addAll(shown.map((cm) => cm.id));
+                      _expanded.addAll(authors);
                     }
                   }),
                   style: TextButton.styleFrom(
@@ -335,17 +341,18 @@ class _FathersTabState extends ConsumerState<_FathersTab> {
           // commentaries: only the rows on screen are ever laid out.
           child: ListView.separated(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-            itemCount: shown.length,
+            itemCount: authors.length,
             separatorBuilder: (_, _) => Divider(height: 1, color: c.divider),
             itemBuilder: (_, i) {
-              final item = shown[i];
-              return _CommentaryCard(
-                item: item,
+              final author = authors[i];
+              return _AuthorBlock(
+                author: author,
+                excerpts: grouped[author]!,
                 reference: widget.reference,
-                expanded: _expanded.contains(item.id),
-                onToggle: () => setState(() => _expanded.contains(item.id)
-                    ? _expanded.remove(item.id)
-                    : _expanded.add(item.id)),
+                expanded: _expanded.contains(author),
+                onToggle: () => setState(() => _expanded.contains(author)
+                    ? _expanded.remove(author)
+                    : _expanded.add(author)),
               );
             },
           ),
@@ -355,22 +362,35 @@ class _FathersTabState extends ConsumerState<_FathersTab> {
   }
 }
 
-class _CommentaryCard extends StatelessWidget {
-  final Commentary item;
+/// One author's contribution to a verse.
+///
+/// A catena routinely stacks several excerpts from the same Father on one
+/// verse — Cyril of Alexandria has five on John 1:1. Listing them as separate
+/// rows made legitimate commentary look duplicated, so they are gathered under
+/// a single header and numbered inside. Nothing is dropped and the corpus order
+/// is kept; only the presentation changed.
+class _AuthorBlock extends StatelessWidget {
+  final String author;
+  final List<Commentary> excerpts;
   final String reference;
   final bool expanded;
   final VoidCallback onToggle;
-  const _CommentaryCard(
-      {required this.item,
-      required this.reference,
-      required this.expanded,
-      required this.onToggle});
+
+  const _AuthorBlock({
+    required this.author,
+    required this.excerpts,
+    required this.reference,
+    required this.expanded,
+    required this.onToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
     final c = context.bt;
     final l10n = context.l10n;
-    final meta = authorMetaLine(l10n, item);
+    final meta = authorMetaLine(l10n, excerpts.first);
+    final many = excerpts.length > 1;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -385,18 +405,26 @@ class _CommentaryCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item.fatherName,
+                      Text(author,
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               color: c.accent, fontWeight: FontWeight.w600)),
                       if (meta != null) ...[
                         const SizedBox(height: 2),
                         Text(meta,
-                            style: TextStyle(
-                                color: c.textSecondary, fontSize: 13)),
+                            style:
+                                TextStyle(color: c.textSecondary, fontSize: 13)),
                       ],
                     ],
                   ),
                 ),
+                // How many excerpts wait inside, so the row is honest about
+                // what opening it will reveal.
+                if (many)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8, top: 2),
+                    child: Text(l10n.commentaryExcerptCount(excerpts.length),
+                        style: TextStyle(color: c.textFaint, fontSize: 12)),
+                  ),
                 Padding(
                   padding: const EdgeInsets.only(left: 8, top: 2),
                   child: Icon(expanded ? Icons.expand_less : Icons.expand_more,
@@ -407,36 +435,19 @@ class _CommentaryCard extends StatelessWidget {
           ),
         ),
         if (expanded) ...[
-          Text(item.text,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge
-                  ?.copyWith(fontSize: 17, height: 1.5)),
-          if (item.isMachineTranslation) ...[
-            const SizedBox(height: 8),
-            Text('${l10n.machineTranslation} · ${item.source ?? ''}',
-                style: TextStyle(color: c.textFaint, fontSize: 11)),
-          ],
+          for (var i = 0; i < excerpts.length; i++)
+            _Excerpt(
+              item: excerpts[i],
+              author: author,
+              authorMeta: meta ?? '',
+              reference: reference,
+              // A single excerpt needs no ordinal; several do.
+              label: many ? l10n.commentaryExcerpt(i + 1) : null,
+            ),
           Row(
             children: [
-              TextButton.icon(
-                onPressed: () => showShareCommentary(
-                  context,
-                  reference: reference,
-                  author: item.fatherName,
-                  authorMeta: meta ?? '',
-                  text: item.text,
-                ),
-                icon: const Icon(Icons.ios_share, size: 17),
-                label: Text(l10n.shareCommentary,
-                    style: const TextStyle(fontSize: 13)),
-                style: TextButton.styleFrom(
-                    foregroundColor: c.textSecondary,
-                    visualDensity: VisualDensity.compact),
-              ),
               const Spacer(),
-              // The "^" that closes a long commentary without scrolling back
-              // up to its header.
+              // The "^" that closes a long block without scrolling back up.
               IconButton(
                 onPressed: onToggle,
                 tooltip: l10n.commentaryCollapse,
@@ -447,6 +458,75 @@ class _CommentaryCard extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// A single excerpt inside an author block — its own text and its own share
+/// action, so one comment can still be shared on its own.
+class _Excerpt extends StatelessWidget {
+  final Commentary item;
+  final String author;
+  final String authorMeta;
+  final String reference;
+  final String? label;
+
+  const _Excerpt({
+    required this.item,
+    required this.author,
+    required this.authorMeta,
+    required this.reference,
+    this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.bt;
+    final l10n = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (label != null) ...[
+            Text(label!.toUpperCase(),
+                style: TextStyle(
+                    color: c.textFaint,
+                    fontSize: 10.5,
+                    letterSpacing: 1.1,
+                    fontWeight: FontWeight.w600)),
+            const SizedBox(height: 6),
+          ],
+          Text(item.text,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyLarge
+                  ?.copyWith(fontSize: 17, height: 1.5)),
+          if (item.isMachineTranslation) ...[
+            const SizedBox(height: 8),
+            Text('${l10n.machineTranslation} · ${item.source ?? ''}',
+                style: TextStyle(color: c.textFaint, fontSize: 11)),
+          ],
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () => showShareCommentary(
+                context,
+                reference: reference,
+                author: author,
+                authorMeta: authorMeta,
+                text: item.text,
+              ),
+              icon: const Icon(Icons.ios_share, size: 17),
+              label: Text(l10n.shareCommentary,
+                  style: const TextStyle(fontSize: 13)),
+              style: TextButton.styleFrom(
+                  foregroundColor: c.textSecondary,
+                  visualDensity: VisualDensity.compact),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

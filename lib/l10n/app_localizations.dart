@@ -1890,6 +1890,18 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Cycle {cycle}'**
   String liturgicalCycle(String cycle);
+
+  /// No description provided for @commentaryExcerpt.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment {number}'**
+  String commentaryExcerpt(int number);
+
+  /// No description provided for @commentaryExcerptCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 excerpt} other{{count} excerpts}}'**
+  String commentaryExcerptCount(int count);
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

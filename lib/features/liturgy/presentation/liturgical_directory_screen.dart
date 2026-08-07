@@ -88,13 +88,12 @@ class _DirectoryBody extends ConsumerWidget {
                       style: Theme.of(context).textTheme.headlineMedium),
                 ),
               ]),
-              const SizedBox(height: 20),
-              for (final card in entry.cards)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _Card(card: card),
-                ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 28),
+              for (var i = 0; i < entry.cards.length; i++) ...[
+                if (i > 0) _Rule(c),
+                _Field(field: entry.cards[i]),
+              ],
+              const SizedBox(height: 24),
               Text(l10n.directorySource,
                   style:
                       TextStyle(color: c.textFaint, fontSize: 11.5, height: 1.4)),
@@ -106,42 +105,49 @@ class _DirectoryBody extends ConsumerWidget {
   }
 }
 
-class _Card extends StatelessWidget {
-  final DirectoryCard card;
-  const _Card({required this.card});
+/// A hairline between fields — the only separator the page uses. Cards were
+/// louder than the content they held.
+class _Rule extends StatelessWidget {
+  final BtColors c;
+  const _Rule(this.c);
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 22),
+        child: Container(height: 1, color: c.divider.withValues(alpha: 0.6)),
+      );
+}
+
+/// One field: a quiet label, the answer set in the serif, and at most a line
+/// of explanation. No container — whitespace and the rule do the separating.
+class _Field extends StatelessWidget {
+  final DirectoryCard field;
+  const _Field({required this.field});
 
   @override
   Widget build(BuildContext context) {
     final c = context.bt;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-          color: c.surfaceHigh.withValues(alpha: 0.45),
-          borderRadius: BorderRadius.circular(14)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(card.label.toUpperCase(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(field.label.toUpperCase(),
+            style: TextStyle(
+                color: c.textFaint,
+                fontSize: 10.5,
+                letterSpacing: 1.4,
+                fontWeight: FontWeight.w600)),
+        const SizedBox(height: 8),
+        Text(field.value,
+            style: Theme.of(context)
+                .textTheme
+                .titleLarge
+                ?.copyWith(height: 1.3)),
+        if (field.note != null) ...[
+          const SizedBox(height: 8),
+          Text(field.note!,
               style: TextStyle(
-                  color: c.textFaint,
-                  fontSize: 10.5,
-                  letterSpacing: 1.2,
-                  fontWeight: FontWeight.w600)),
-          const SizedBox(height: 6),
-          Text(card.value,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w600, height: 1.35)),
-          if (card.note != null) ...[
-            const SizedBox(height: 6),
-            Text(card.note!,
-                style: TextStyle(
-                    color: c.textSecondary, fontSize: 13, height: 1.45)),
-          ],
+                  color: c.textSecondary, fontSize: 13.5, height: 1.5)),
         ],
-      ),
+      ],
     );
   }
 }

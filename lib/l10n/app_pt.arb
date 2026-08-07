@@ -371,5 +371,9 @@
   "directoryCardObservances": "Observações",
   "directoryCardEphemerides": "Efemérides",
   "liturgicalCycle": "Ciclo {cycle}",
-  "@liturgicalCycle": {"placeholders": {"cycle": {"type": "String"}}}
+  "@liturgicalCycle": {"placeholders": {"cycle": {"type": "String"}}},
+  "commentaryExcerpt": "Comentário {number}",
+  "@commentaryExcerpt": {"placeholders": {"number": {"type": "int"}}},
+  "commentaryExcerptCount": "{count, plural, =1{1 excerto} other{{count} excertos}}",
+  "@commentaryExcerptCount": {"placeholders": {"count": {"type": "int"}}}
 }

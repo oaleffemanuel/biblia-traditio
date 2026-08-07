@@ -27,6 +27,33 @@ import tarfile
 import unicodedata
 import urllib.request
 
+# ── Responsorial refrains ────────────────────────────────────────────────────
+# The upstream source carries citations only: its per-day JSON has exactly
+# firstReading / psalm / secondReading / gospel, all strings. There is no
+# refrain field, and the refrain cannot be derived from the psalm text — the
+# Lectionary appoints it, often adapts the wording, and sometimes draws it from
+# outside the psalm. Printing "the verse it points at" would therefore show a
+# line that is not the one sung.
+#
+# The pipeline is ready for refrains: emit `refrain` (the text) and, optionally,
+# `refrainRef` (its citation) on a psalm reading and the app renders them. To
+# fill them in, plug a source that actually carries refrains for the *Brazilian*
+# lectionary into `refrain_for()` below — a US-lectionary refrain would be wrong
+# on the days where CNBB differs.
+REFRAIN_NOTE = (
+    'Nenhuma fonte de refrões está ligada. O app mostra a referência e os '
+    'versículos, e indica que o refrão consta do Lecionário.')
+
+
+def refrain_for(date_iso, psalm_citation):
+    """Return (refrain_text, refrain_ref) for a day, or (None, None).
+
+    No source is wired up yet — see REFRAIN_NOTE. This is the single seam a
+    refrain dataset plugs into; everything downstream already handles it.
+    """
+    return (None, None)
+
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'assets', 'lectionary', 'readings.json')
 BIBLE_DB = os.path.join(ROOT, 'tool', 'importer', 'data', 'bible_vulgata.sqlite')
@@ -232,13 +259,27 @@ def main():
             p['vStart'] = max(1, min(p.pop('vmin'), vmax_ch))
             p['vEnd'] = max(p['vStart'], min(p.pop('vmax'), vmax_ch))
             p['slot'] = slot
+            # Responsorial refrain, when a source supplies one. Omitted (not
+            # blanked) so the asset stays small and the app can tell "absent"
+            # from "empty".
+            if slot == 'psalm':
+                text, ref_cit = refrain_for(dt.isoformat(), p['ref'])
+                if text:
+                    p['refrain'] = text
+                    if ref_cit:
+                        p['refrainRef'] = ref_cit
             readings.append(p)
         if readings:
             iso = dt.isoformat()
             entries[iso] = {'date': iso, 'readings': readings}
 
-    out = {'id': 'lectionary', 'version': 2,
+    refrained = sum(1 for e in entries.values()
+                    for r in e['readings'] if r.get('refrain'))
+    print(f"  refrões: {refrained} (0 = nenhuma fonte ligada; ver REFRAIN_NOTE)")
+
+    out = {'id': 'lectionary', 'version': 3,
            'source': 'cpbjr/catholic-readings-api (MIT) — General Roman Calendar references',
+           'refrainSource': None,  # see REFRAIN_NOTE below
            'scope': 'Full daily lectionary (weekdays, feasts, solemnities, all seasons)',
            'year': args.year, 'days': len(entries), 'entries': entries}
     os.makedirs(os.path.dirname(OUT), exist_ok=True)

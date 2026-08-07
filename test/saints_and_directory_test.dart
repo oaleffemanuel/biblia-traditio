@@ -175,7 +175,7 @@ void main() {
     test('reports the colour, the week and the year', () {
       expect(valueOf(explain(2026, 7, 8), 'Cor Litúrgica'), 'Verde');
       expect(valueOf(explain(2026, 3, 15), 'Cor Litúrgica'), 'Rosa'); // Laetare
-      expect(valueOf(explain(2026, 11, 22), 'Semana'), '34ª semana');
+      expect(valueOf(explain(2026, 11, 22), 'Semana'), '34ª semana do Tempo Comum');
       expect(valueOf(explain(2026, 3, 2), 'Ano Litúrgico'), 'Ano A');
     });
 

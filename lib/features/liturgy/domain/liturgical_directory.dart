@@ -34,7 +34,9 @@ class LiturgicalDirectory {
       DirectoryCard(l.season, _seasonName(day.season, l), _seasonNote(day.season)),
       DirectoryCard(l.celebration, day.celebration, _rankNote(day.rank, l)),
       DirectoryCard(l.color, _colorName(day.color, l), _colorNote(day.color)),
-      if (day.week != null) DirectoryCard(l.week, l.weekOf(day.week!)),
+      // "19ª semana do Tempo Comum" — the number alone doesn't say of what.
+      if (day.week != null)
+        DirectoryCard(l.week, '${l.weekOf(day.week!)} do ${_seasonName(day.season, l)}'),
       DirectoryCard(l.year, l.yearOf(day.sundayCycle),
           _cycleNote(day, l)),
       DirectoryCard(l.cycle, l.cycleOf(day.weekdayCycle),

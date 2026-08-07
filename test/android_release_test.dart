@@ -123,6 +123,30 @@ void main() {
     });
   });
 
+  group('iOS release configuration', () {
+    test('the bundle id is fixed and matches the App Store record', () {
+      final pbx = File('ios/Runner.xcodeproj/project.pbxproj').readAsStringSync();
+      expect(pbx, contains('PRODUCT_BUNDLE_IDENTIFIER = br.com.bibliatraditio.bibliaTraditio;'));
+    });
+
+    test('version and build come from pubspec, not from Xcode', () {
+      final plist = File('ios/Runner/Info.plist').readAsStringSync();
+      expect(plist, contains(r'$(FLUTTER_BUILD_NAME)'));
+      expect(plist, contains(r'$(FLUTTER_BUILD_NUMBER)'));
+    });
+
+    test('signing is configured', () {
+      final pbx = File('ios/Runner.xcodeproj/project.pbxproj').readAsStringSync();
+      expect(pbx, contains('DEVELOPMENT_TEAM = '));
+      expect(pbx, contains('CODE_SIGN_STYLE = Automatic;'));
+    });
+
+    test('the display name is set', () {
+      final plist = File('ios/Runner/Info.plist').readAsStringSync();
+      expect(plist, contains('Biblia Traditio'));
+    });
+  });
+
   group('launcher assets', () {
     test('the adaptive icon and its densities were generated', () {
       expect(

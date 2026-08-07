@@ -1013,4 +1013,20 @@ class AppL10nPt extends AppL10n {
   String liturgicalCycle(String cycle) {
     return 'Ciclo $cycle';
   }
+
+  @override
+  String commentaryExcerpt(int number) {
+    return 'Comentário $number';
+  }
+
+  @override
+  String commentaryExcerptCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count excertos',
+      one: '1 excerto',
+    );
+    return '$_temp0';
+  }
 }

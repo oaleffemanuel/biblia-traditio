@@ -416,12 +416,13 @@ class _ReadingCard extends ConsumerWidget {
   }
 
   /// A liturgical line — the minister's words (muted) vs the people's response
-  /// (accent), both italic so they read as rubric, not as Scripture.
+  /// (accent, prefixed "R." as the books print it), both italic so they read as
+  /// rubric and not as Scripture.
   Widget _say(BuildContext context, String text, {required bool people}) {
     final c = context.bt;
     return Padding(
       padding: const EdgeInsets.only(top: 2),
-      child: Text(text,
+      child: Text(people ? 'R. $text' : text,
           style: TextStyle(
               color: people ? c.accent : c.textSecondary,
               fontStyle: FontStyle.italic,
@@ -728,13 +729,13 @@ class _DirectoryCard extends StatelessWidget {
 }
 
 
-/// The responsorial psalm, laid out as it is sung: the response first, then the
-/// verses.
+/// The responsorial psalm, laid out as it is sung: the response, the verses,
+/// and the response again.
 ///
-/// The refrain is a line the *Lectionary* appoints — it is not derivable from
-/// the psalm text — so when the dataset doesn't carry one the card says where
-/// it lives instead of inventing a line. Extending `tool/build_lectionary.py`
-/// to capture refrains is what would fill this in.
+/// When the dataset carries no refrain the card says where the refrain lives
+/// instead of printing a line that may not be the one sung — the Lectionary
+/// appoints it, sometimes adapts the wording, and sometimes takes it from
+/// outside the psalm, so it is not derivable from the psalm text.
 class _PsalmBody extends StatelessWidget {
   final Reading reading;
   const _PsalmBody({required this.reading});
@@ -743,25 +744,49 @@ class _PsalmBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.bt;
     final l10n = context.l10n;
+    final hasRefrain = reading.hasRefrain;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _label(c, l10n.psalmRefrain),
-        Text(l10n.psalmRefrainUnavailable,
-            style: TextStyle(
-                color: c.textFaint, fontStyle: FontStyle.italic, height: 1.4)),
-        const SizedBox(height: 14),
+        if (hasRefrain)
+          _refrain(context, c)
+        else
+          Text(l10n.psalmRefrainUnavailable,
+              style: TextStyle(
+                  color: c.textFaint, fontStyle: FontStyle.italic, height: 1.4)),
+        const SizedBox(height: 16),
         _label(c, l10n.psalmVerses),
         _ReadingText(reading: reading),
+        // The response returns after the verses, as it does when sung.
+        if (hasRefrain) ...[
+          const SizedBox(height: 14),
+          _refrain(context, c),
+        ],
       ],
     );
   }
+
+  Widget _refrain(BuildContext context, BtColors c) => Padding(
+        padding: const EdgeInsets.only(bottom: 2),
+        child: Text.rich(
+          TextSpan(children: [
+            TextSpan(
+                text: 'R. ',
+                style: TextStyle(
+                    color: c.accent, fontWeight: FontWeight.w700)),
+            TextSpan(text: reading.refrain!),
+          ]),
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: c.accent, fontWeight: FontWeight.w600, height: 1.45),
+        ),
+      );
 
   Widget _label(BtColors c, String text) => Padding(
         padding: const EdgeInsets.only(bottom: 6),
         child: Text(text.toUpperCase(),
             style: TextStyle(
-                color: c.accent,
+                color: c.textFaint,
                 fontSize: 10.5,
                 letterSpacing: 1.2,
                 fontWeight: FontWeight.w600)),

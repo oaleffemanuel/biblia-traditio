@@ -34,8 +34,29 @@ class Reading {
   final int? verse; // first verse of the pericope
   final int? verseStart; // contiguous render span (start)…
   final int? verseEnd; // …and end, both in the target chapter's numbering
+
+  /// The responsorial refrain, exactly as the Lectionary appoints it, and the
+  /// verse it is drawn from ("Sl 22,1").
+  ///
+  /// Both are null today: the bundled source (cpbjr/catholic-readings-api)
+  /// carries citations only — no refrain field exists in it. The refrain is NOT
+  /// derivable from the psalm text: the Lectionary chooses it, sometimes adapts
+  /// the wording, and sometimes takes it from outside the psalm. So the app
+  /// renders it when a source supplies it and says where it lives when not,
+  /// rather than printing a line that may not be the one sung.
+  final String? refrain;
+  final String? refrainRef;
+
   const Reading(this.slot, this.reference,
-      {this.bookId, this.chapter, this.verse, this.verseStart, this.verseEnd});
+      {this.bookId,
+      this.chapter,
+      this.verse,
+      this.verseStart,
+      this.verseEnd,
+      this.refrain,
+      this.refrainRef});
+
+  bool get hasRefrain => (refrain ?? '').trim().isNotEmpty;
 
   bool get canOpen => bookId != null && chapter != null;
 
@@ -47,6 +68,8 @@ class Reading {
         verse: (j['verse'] as num?)?.toInt(),
         verseStart: (j['vStart'] as num?)?.toInt(),
         verseEnd: (j['vEnd'] as num?)?.toInt(),
+        refrain: j['refrain'] as String?,
+        refrainRef: j['refrainRef'] as String?,
       );
 }
 
