@@ -9,6 +9,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../annotations/application/annotation_providers.dart';
 import '../../annotations/domain/entities.dart';
 import '../../annotations/presentation/note_editor.dart';
+import '../../settings/application/settings_providers.dart';
 import '../application/bible_providers.dart';
 import '../domain/entities.dart';
 import 'widgets/share_verse.dart';
@@ -34,6 +35,18 @@ void showCommentaryPanel(BuildContext context, WidgetRef ref, VerseRef vref,
 }
 
 enum _Filter { all, fathers, medieval, augustine, aquinas }
+
+/// "Doutor da Igreja — séc. IV". Falls back to the century alone when the
+/// corpus gave the commentator no function, and to nothing at all when it gave
+/// neither — an author line is never padded with an invented title.
+String? authorMetaLine(AppL10n l, Commentary c) {
+  final role = c.rolePrimary.isEmpty ? null : roleLabel(l, c.rolePrimary);
+  if (role != null && c.century.isNotEmpty) {
+    return l.authorMeta(role, c.century);
+  }
+  if (c.century.isNotEmpty) return l.century(c.century);
+  return role;
+}
 
 class _CommentaryPanel extends ConsumerStatefulWidget {
   final VerseRef vref;
@@ -113,7 +126,10 @@ class _CommentaryPanelState extends ConsumerState<_CommentaryPanel>
           labelColor: c.accent,
           unselectedLabelColor: c.textSecondary,
           indicatorColor: c.accent,
-          tabs: [Tab(text: l10n.churchFathers), Tab(text: l10n.myNotes)],
+          tabs: [
+            Tab(text: l10n.commentaryTabPatristics),
+            Tab(text: l10n.myNotes),
+          ],
         ),
         Expanded(
           child: TabBarView(
@@ -121,6 +137,7 @@ class _CommentaryPanelState extends ConsumerState<_CommentaryPanel>
             children: [
               _FathersTab(
                 commentaries: commentaries,
+                reference: _ref,
                 filter: _filter,
                 onFilter: (f) => setState(() => _filter = f),
                 hasPatristics:
@@ -144,38 +161,39 @@ class _CommentaryPanelState extends ConsumerState<_CommentaryPanel>
   void _closeColors() => setState(() => _showColors = false);
 }
 
-// ── Church Fathers tab ──────────────────────────────────────────────────────
-class _FathersTab extends StatelessWidget {
+// ── Patristics tab ──────────────────────────────────────────────────────────
+/// A verse can carry dozens of commentaries, so the list opens as a scannable
+/// index: commentator name + function/century only. Tapping a row (or its
+/// chevron) opens that commentary; "Exibir todos" opens every one at once.
+class _FathersTab extends ConsumerStatefulWidget {
   final List<Commentary> commentaries;
+  final String reference;
   final _Filter filter;
   final ValueChanged<_Filter> onFilter;
   final bool hasPatristics;
   const _FathersTab(
       {required this.commentaries,
+      required this.reference,
       required this.filter,
       required this.onFilter,
       required this.hasPatristics});
 
-  static int? _centuryInt(String roman) {
-    if (roman.isEmpty) return null;
-    const map = {'I': 1, 'V': 5, 'X': 10, 'L': 50, 'C': 100};
-    var total = 0, prev = 0;
-    for (var i = roman.length - 1; i >= 0; i--) {
-      final v = map[roman[i].toUpperCase()];
-      if (v == null) return null;
-      if (v < prev) {
-        total -= v;
-      } else {
-        total += v;
-        prev = v;
-      }
-    }
-    return total == 0 ? null : total;
-  }
+  @override
+  ConsumerState<_FathersTab> createState() => _FathersTabState();
+}
+
+class _FathersTabState extends ConsumerState<_FathersTab> {
+  /// Commentary ids currently open. Ids (not indices) so toggling the quick
+  /// filters can't silently expand a different commentary.
+  final _expanded = <int>{};
+
+  /// Set when the reader chooses "show anyway" for this verse, so the
+  /// preference notice is a nudge rather than a wall.
+  bool _ignorePrefs = false;
 
   static bool _matches(_Filter f, Commentary c) {
     final name = c.fatherName.toLowerCase();
-    final cent = _centuryInt(c.century);
+    final cent = c.centuryNumber;
     return switch (f) {
       _Filter.all => true,
       _Filter.fathers => cent != null && cent <= 8,
@@ -190,16 +208,27 @@ class _FathersTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.bt;
     final l10n = context.l10n;
+    final all = widget.commentaries;
 
-    if (commentaries.isEmpty) {
+    if (all.isEmpty) {
       return _Empty(
-        icon: hasPatristics ? Icons.auto_stories_outlined : Icons.download,
-        message:
-            hasPatristics ? l10n.noCommentaryForVerse : l10n.patristicsNotInstalled,
+        icon: widget.hasPatristics ? Icons.auto_stories_outlined : Icons.download,
+        message: widget.hasPatristics
+            ? l10n.noCommentaryForVerse
+            : l10n.patristicsNotInstalled,
       );
     }
 
-    // Only offer filters that actually have results for THIS verse.
+    // Settings preferences apply first and automatically. If they'd hide
+    // everything for this verse we keep the full list — a filter should narrow
+    // a reading, never blank it.
+    final prefs = ref.watch(commentaryPrefsProvider);
+    final preferred = all.where(prefs.allows).toList();
+    final prefsApply = !_ignorePrefs && preferred.isNotEmpty;
+    final visible = prefsApply ? preferred : all;
+    final hiddenByPrefs = prefsApply ? all.length - preferred.length : 0;
+
+    // Only offer quick filters that actually have results for THIS verse.
     final available = <_Filter>[
       _Filter.all,
       for (final f in [
@@ -208,11 +237,13 @@ class _FathersTab extends StatelessWidget {
         _Filter.augustine,
         _Filter.aquinas,
       ])
-        if (commentaries.any((cm) => _matches(f, cm))) f,
+        if (visible.any((cm) => _matches(f, cm))) f,
     ];
-    final effective = available.contains(filter) ? filter : _Filter.all;
-    final shown =
-        commentaries.where((cm) => _matches(effective, cm)).toList();
+    final effective =
+        available.contains(widget.filter) ? widget.filter : _Filter.all;
+    final shown = visible.where((cm) => _matches(effective, cm)).toList();
+    final allOpen =
+        shown.isNotEmpty && shown.every((cm) => _expanded.contains(cm.id));
 
     String label(_Filter f) => switch (f) {
           _Filter.all => l10n.filterAll,
@@ -238,7 +269,7 @@ class _FathersTab extends StatelessWidget {
                     child: ChoiceChip(
                       label: Text(label(f)),
                       selected: effective == f,
-                      onSelected: (_) => onFilter(f),
+                      onSelected: (_) => widget.onFilter(f),
                       backgroundColor: c.surfaceHigh,
                       selectedColor: c.accentSoft,
                       side: BorderSide.none,
@@ -250,16 +281,73 @@ class _FathersTab extends StatelessWidget {
             ),
           ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
-          child: Text(l10n.commentaryCount(shown.length),
-              style: TextStyle(color: c.textFaint, fontSize: 12)),
+          padding: const EdgeInsets.fromLTRB(20, 4, 12, 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(l10n.commentaryCount(shown.length),
+                    style: TextStyle(color: c.textFaint, fontSize: 12)),
+              ),
+              if (shown.isNotEmpty)
+                TextButton(
+                  onPressed: () => setState(() {
+                    if (allOpen) {
+                      _expanded.removeAll(shown.map((cm) => cm.id));
+                    } else {
+                      _expanded.addAll(shown.map((cm) => cm.id));
+                    }
+                  }),
+                  style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      foregroundColor: c.accent),
+                  child: Text(
+                      allOpen
+                          ? l10n.commentaryCollapseAll
+                          : l10n.commentaryExpandAll,
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w600)),
+                ),
+            ],
+          ),
         ),
+        if (hiddenByPrefs > 0)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 12, 4),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(l10n.commentaryHiddenByPrefs(hiddenByPrefs),
+                      style: TextStyle(color: c.textFaint, fontSize: 12)),
+                ),
+                TextButton(
+                  onPressed: () => setState(() => _ignorePrefs = true),
+                  style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      foregroundColor: c.textSecondary),
+                  child: Text(l10n.commentaryShowHidden,
+                      style: const TextStyle(fontSize: 12)),
+                ),
+              ],
+            ),
+          ),
         Expanded(
+          // A builder list keeps "expand all" cheap even with dozens of long
+          // commentaries: only the rows on screen are ever laid out.
           child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
             itemCount: shown.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 22),
-            itemBuilder: (_, i) => _CommentaryCard(shown[i]),
+            separatorBuilder: (_, _) => Divider(height: 1, color: c.divider),
+            itemBuilder: (_, i) {
+              final item = shown[i];
+              return _CommentaryCard(
+                item: item,
+                reference: widget.reference,
+                expanded: _expanded.contains(item.id),
+                onToggle: () => setState(() => _expanded.contains(item.id)
+                    ? _expanded.remove(item.id)
+                    : _expanded.add(item.id)),
+              );
+            },
           ),
         ),
       ],
@@ -269,35 +357,94 @@ class _FathersTab extends StatelessWidget {
 
 class _CommentaryCard extends StatelessWidget {
   final Commentary item;
-  const _CommentaryCard(this.item);
+  final String reference;
+  final bool expanded;
+  final VoidCallback onToggle;
+  const _CommentaryCard(
+      {required this.item,
+      required this.reference,
+      required this.expanded,
+      required this.onToggle});
+
   @override
   Widget build(BuildContext context) {
     final c = context.bt;
+    final l10n = context.l10n;
+    final meta = authorMetaLine(l10n, item);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(children: [
-          Expanded(
-            child: Text(item.fatherName,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(color: c.accent, fontWeight: FontWeight.w600)),
+        InkWell(
+          onTap: onToggle,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(item.fatherName,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: c.accent, fontWeight: FontWeight.w600)),
+                      if (meta != null) ...[
+                        const SizedBox(height: 2),
+                        Text(meta,
+                            style: TextStyle(
+                                color: c.textSecondary, fontSize: 13)),
+                      ],
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8, top: 2),
+                  child: Icon(expanded ? Icons.expand_less : Icons.expand_more,
+                      color: c.textFaint),
+                ),
+              ],
+            ),
           ),
-          if (item.century.isNotEmpty)
-            Text(context.l10n.century(item.century),
-                style: TextStyle(color: c.textSecondary, fontSize: 13)),
-        ]),
-        const SizedBox(height: 8),
-        Text(item.text,
-            style: Theme.of(context)
-                .textTheme
-                .bodyLarge
-                ?.copyWith(fontSize: 17, height: 1.5)),
-        if (item.isMachineTranslation) ...[
-          const SizedBox(height: 8),
-          Text('${context.l10n.machineTranslation} · ${item.source ?? ''}',
-              style: TextStyle(color: c.textFaint, fontSize: 11)),
+        ),
+        if (expanded) ...[
+          Text(item.text,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyLarge
+                  ?.copyWith(fontSize: 17, height: 1.5)),
+          if (item.isMachineTranslation) ...[
+            const SizedBox(height: 8),
+            Text('${l10n.machineTranslation} · ${item.source ?? ''}',
+                style: TextStyle(color: c.textFaint, fontSize: 11)),
+          ],
+          Row(
+            children: [
+              TextButton.icon(
+                onPressed: () => showShareCommentary(
+                  context,
+                  reference: reference,
+                  author: item.fatherName,
+                  authorMeta: meta ?? '',
+                  text: item.text,
+                ),
+                icon: const Icon(Icons.ios_share, size: 17),
+                label: Text(l10n.shareCommentary,
+                    style: const TextStyle(fontSize: 13)),
+                style: TextButton.styleFrom(
+                    foregroundColor: c.textSecondary,
+                    visualDensity: VisualDensity.compact),
+              ),
+              const Spacer(),
+              // The "^" that closes a long commentary without scrolling back
+              // up to its header.
+              IconButton(
+                onPressed: onToggle,
+                tooltip: l10n.commentaryCollapse,
+                visualDensity: VisualDensity.compact,
+                icon: Icon(Icons.expand_less, color: c.textSecondary),
+              ),
+            ],
+          ),
         ],
       ],
     );

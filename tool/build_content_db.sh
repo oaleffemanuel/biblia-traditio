@@ -13,15 +13,20 @@ IMP="$ROOT/tool/importer"
 DATA="$IMP/data"
 PKG="$ROOT/assets/packages"
 VUL="$DATA/lat-clementine.usfx.xml"
-# Patristic corpus. PATRISTICS_DIR is the coverage floor (original corpus);
-# PATRISTICS_CORRECTED_DIR (optional) is an overlay of curated/blacklist-fixed
-# books that take precedence per-book. The two are merged before import so a
-# missing corrected book never drops coverage. See the "Patristics" step below.
-PATRISTICS_DIR="${PATRISTICS_DIR:-$HOME/Downloads/Bíblia Católica Tradicional - Comentada/Comentários}"
+# Patristic corpus, two layers:
+#   PATRISTICS_DIR            original corpus (coment-*.json) — the coverage floor.
+#   PATRISTICS_CORRECTED_DIR  legacy per-book corrections, merged into the floor.
+#   PATRISTICS_IMPROVED_DIR   the revised corpus ("Comentários melhorados",
+#                             <book>_pt.json) carrying corrected text plus each
+#                             commentator's `função` and year. It wins PER VERSE;
+#                             verses it doesn't cover keep the original text, so
+#                             an incomplete revision can never shrink coverage.
+PATRISTICS_DIR="${PATRISTICS_DIR:-$ROOT/tool/importer/data/patristics_merged}"
 PATRISTICS_CORRECTED_DIR="${PATRISTICS_CORRECTED_DIR:-$HOME/Downloads/Biblia Catolica Tradicional Comentada/Comentários Corrigidos (GPT)}"
+PATRISTICS_IMPROVED_DIR="${PATRISTICS_IMPROVED_DIR:-$HOME/Downloads/Biblia Traditio/Comentários melhorados (PRONTO!!)/Português (PRONTO!!)}"
 VUL_URL="https://raw.githubusercontent.com/seven1m/open-bibles/master/lat-clementine.usfx.xml"
 
-mkdir -p "$DATA" "$PKG"
+mkdir -p "$DATA" "$DATA/reports" "$PKG"
 [ -f "$VUL" ] || { echo "↓ fetching public-domain Clementine Vulgate…"; curl -fsSL "$VUL_URL" -o "$VUL"; }
 
 cd "$IMP"; dart pub get >/dev/null
@@ -96,9 +101,19 @@ if [ -d "$PATRISTICS_CORRECTED_DIR" ] && [ -d "$PATRISTICS_DIR" ]; then
 fi
 gzip -9 -c "$DATA/bible_vulgata.sqlite" > "$PKG/bible_vulgata.sqlite.gz"
 BV_SHA=$(sha "$DATA/bible_vulgata.sqlite"); BV_SZ=$(sz "$DATA/bible_vulgata.sqlite"); BV_GZ=$(sz "$PKG/bible_vulgata.sqlite.gz")
-if [ -d "$PAT_SRC" ]; then
+PAT_ARGS=()
+[ -d "$PAT_SRC" ] && PAT_ARGS+=(--src "$PAT_SRC")
+if [ -d "$PATRISTICS_IMPROVED_DIR" ]; then
+  PAT_ARGS+=(--overlay "$PATRISTICS_IMPROVED_DIR")
+  echo "  revised corpus overlay → $PATRISTICS_IMPROVED_DIR"
+else
+  echo "  revised corpus not found at $PATRISTICS_IMPROVED_DIR — original only"
+fi
+if [ ${#PAT_ARGS[@]} -gt 0 ]; then
   rm -f "$DATA/patristics.sqlite" "$DATA/patristics.sqlite-wal" "$DATA/patristics.sqlite-shm"
-  dart run bin/import.dart patristics --src "$PAT_SRC" --out "$DATA/patristics.sqlite"
+  dart run bin/import.dart patristics "${PAT_ARGS[@]}" \
+    --report "$DATA/reports/patristics_coverage.json" \
+    --out "$DATA/patristics.sqlite"
   gzip -9 -c "$DATA/patristics.sqlite" > "$PKG/patristics.sqlite.gz"
   PA_SHA=$(sha "$DATA/patristics.sqlite"); PA_SZ=$(sz "$DATA/patristics.sqlite")
 elif [ -f "$PKG/patristics.sqlite.gz" ]; then
@@ -135,8 +150,8 @@ cat > "$PKG/manifest.json" <<JSON
       "title": "Comentário dos Padres da Igreja",
       "language": "pt-BR",
       "type": "patristics",
-      "version": 3,
-      "source": "Catena / Haydock (tradução automática de fontes em domínio público; revisão e curadoria de autoria)",
+      "version": 4,
+      "source": "Catena Aurea / Haydock (tradução automática de fontes em domínio público; revisão e curadoria de autoria, com função e século de cada comentador)",
       "license": "Fontes em domínio público; tradução automática revisada",
       "asset": "assets/packages/patristics.sqlite.gz",
       "url": null,

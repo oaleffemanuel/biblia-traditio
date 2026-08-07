@@ -808,7 +808,7 @@ abstract class AppL10n {
   /// No description provided for @searchHint.
   ///
   /// In en, this message translates to:
-  /// **'Search Scripture, Fathers, notes…'**
+  /// **'Search Scripture, Patristics, notes…'**
   String get searchHint;
 
   /// No description provided for @searchScopeAll.
@@ -826,7 +826,7 @@ abstract class AppL10n {
   /// No description provided for @searchScopeFathers.
   ///
   /// In en, this message translates to:
-  /// **'Fathers'**
+  /// **'Patristics'**
   String get searchScopeFathers;
 
   /// No description provided for @searchScopeNotes.
@@ -1224,6 +1224,438 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'The SBL Greek New Testament (SBLGNT), © Society of Biblical Literature and Logos Bible Software. Used under the Creative Commons Attribution 4.0 license.'**
   String get licGreekBody;
+
+  /// No description provided for @pressBackAgainToExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Press back again to exit.'**
+  String get pressBackAgainToExit;
+
+  /// No description provided for @searchScopeBooks.
+  ///
+  /// In en, this message translates to:
+  /// **'Books'**
+  String get searchScopeBooks;
+
+  /// No description provided for @sectionBooks.
+  ///
+  /// In en, this message translates to:
+  /// **'Books'**
+  String get sectionBooks;
+
+  /// No description provided for @sectionGoTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to'**
+  String get sectionGoTo;
+
+  /// No description provided for @searchOpenBook.
+  ///
+  /// In en, this message translates to:
+  /// **'Open book'**
+  String get searchOpenBook;
+
+  /// No description provided for @commentaryTabPatristics.
+  ///
+  /// In en, this message translates to:
+  /// **'Patristics'**
+  String get commentaryTabPatristics;
+
+  /// No description provided for @commentaryExpandAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all'**
+  String get commentaryExpandAll;
+
+  /// No description provided for @commentaryCollapseAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse all'**
+  String get commentaryCollapseAll;
+
+  /// No description provided for @commentaryCollapse.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse'**
+  String get commentaryCollapse;
+
+  /// No description provided for @shareCommentary.
+  ///
+  /// In en, this message translates to:
+  /// **'Share commentary'**
+  String get shareCommentary;
+
+  /// No description provided for @roleDoctor.
+  ///
+  /// In en, this message translates to:
+  /// **'Doctor of the Church'**
+  String get roleDoctor;
+
+  /// No description provided for @rolePope.
+  ///
+  /// In en, this message translates to:
+  /// **'Pope'**
+  String get rolePope;
+
+  /// No description provided for @roleBishop.
+  ///
+  /// In en, this message translates to:
+  /// **'Bishop'**
+  String get roleBishop;
+
+  /// No description provided for @roleMonk.
+  ///
+  /// In en, this message translates to:
+  /// **'Monk'**
+  String get roleMonk;
+
+  /// No description provided for @rolePriest.
+  ///
+  /// In en, this message translates to:
+  /// **'Priest'**
+  String get rolePriest;
+
+  /// No description provided for @roleDeacon.
+  ///
+  /// In en, this message translates to:
+  /// **'Deacon'**
+  String get roleDeacon;
+
+  /// No description provided for @roleExegete.
+  ///
+  /// In en, this message translates to:
+  /// **'Exegete'**
+  String get roleExegete;
+
+  /// No description provided for @roleTheologian.
+  ///
+  /// In en, this message translates to:
+  /// **'Theologian'**
+  String get roleTheologian;
+
+  /// No description provided for @roleHistorian.
+  ///
+  /// In en, this message translates to:
+  /// **'Historian'**
+  String get roleHistorian;
+
+  /// No description provided for @rolePoet.
+  ///
+  /// In en, this message translates to:
+  /// **'Poet'**
+  String get rolePoet;
+
+  /// No description provided for @rolePatristics.
+  ///
+  /// In en, this message translates to:
+  /// **'Patristics'**
+  String get rolePatristics;
+
+  /// No description provided for @roleMedieval.
+  ///
+  /// In en, this message translates to:
+  /// **'Medieval'**
+  String get roleMedieval;
+
+  /// No description provided for @roleEarlyChristian.
+  ///
+  /// In en, this message translates to:
+  /// **'Early Christian'**
+  String get roleEarlyChristian;
+
+  /// No description provided for @roleSaint.
+  ///
+  /// In en, this message translates to:
+  /// **'Saint'**
+  String get roleSaint;
+
+  /// No description provided for @roleSaintFem.
+  ///
+  /// In en, this message translates to:
+  /// **'Saint'**
+  String get roleSaintFem;
+
+  /// No description provided for @roleLiturgy.
+  ///
+  /// In en, this message translates to:
+  /// **'Liturgy'**
+  String get roleLiturgy;
+
+  /// No description provided for @roleDocPatristic.
+  ///
+  /// In en, this message translates to:
+  /// **'Patristic Document'**
+  String get roleDocPatristic;
+
+  /// No description provided for @roleDocMedieval.
+  ///
+  /// In en, this message translates to:
+  /// **'Medieval Document'**
+  String get roleDocMedieval;
+
+  /// No description provided for @roleDocHistorical.
+  ///
+  /// In en, this message translates to:
+  /// **'Historical Document'**
+  String get roleDocHistorical;
+
+  /// No description provided for @roleDocGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General Document'**
+  String get roleDocGeneral;
+
+  /// No description provided for @authorMeta.
+  ///
+  /// In en, this message translates to:
+  /// **'{role} — {century} cent.'**
+  String authorMeta(String role, String century);
+
+  /// No description provided for @settingsCommentary.
+  ///
+  /// In en, this message translates to:
+  /// **'Commentary'**
+  String get settingsCommentary;
+
+  /// No description provided for @commentaryPreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Commentary preferences'**
+  String get commentaryPreferences;
+
+  /// No description provided for @commentaryPreferencesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which commentators appear when you open a verse.'**
+  String get commentaryPreferencesSubtitle;
+
+  /// No description provided for @commentaryClassification.
+  ///
+  /// In en, this message translates to:
+  /// **'Classification'**
+  String get commentaryClassification;
+
+  /// No description provided for @commentaryCenturies.
+  ///
+  /// In en, this message translates to:
+  /// **'Centuries'**
+  String get commentaryCenturies;
+
+  /// No description provided for @filterScholastic.
+  ///
+  /// In en, this message translates to:
+  /// **'Scholastic'**
+  String get filterScholastic;
+
+  /// No description provided for @filterSaints.
+  ///
+  /// In en, this message translates to:
+  /// **'Saints'**
+  String get filterSaints;
+
+  /// No description provided for @commentaryOnlySaints.
+  ///
+  /// In en, this message translates to:
+  /// **'Saints only'**
+  String get commentaryOnlySaints;
+
+  /// No description provided for @commentaryOnlySaintsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Simplified mode: show only saints.'**
+  String get commentaryOnlySaintsSubtitle;
+
+  /// No description provided for @commentaryResetDefaults.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to default'**
+  String get commentaryResetDefaults;
+
+  /// No description provided for @commentaryPrefsAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All commentators'**
+  String get commentaryPrefsAll;
+
+  /// No description provided for @commentaryPrefsFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 filter active} other{{count} filters active}}'**
+  String commentaryPrefsFilters(int count);
+
+  /// No description provided for @commentaryHiddenByPrefs.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 commentary hidden by your preferences} other{{count} commentaries hidden by your preferences}}'**
+  String commentaryHiddenByPrefs(int count);
+
+  /// No description provided for @commentaryShowHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Show anyway'**
+  String get commentaryShowHidden;
+
+  /// No description provided for @shareSelectVerses.
+  ///
+  /// In en, this message translates to:
+  /// **'Select verses'**
+  String get shareSelectVerses;
+
+  /// No description provided for @shareSelectionTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Selection too long for an image (max {max} characters). Choose fewer verses.'**
+  String shareSelectionTooLong(int max);
+
+  /// No description provided for @selectionCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 verse selected} other{{count} verses selected}}'**
+  String selectionCount(int count);
+
+  /// No description provided for @selectionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap verses to choose a continuous passage.'**
+  String get selectionHint;
+
+  /// No description provided for @selectionClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get selectionClear;
+
+  /// No description provided for @shareSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Share selection'**
+  String get shareSelection;
+
+  /// No description provided for @planSectionBook.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading'**
+  String get planSectionBook;
+
+  /// No description provided for @planSectionWisdom.
+  ///
+  /// In en, this message translates to:
+  /// **'Wisdom'**
+  String get planSectionWisdom;
+
+  /// No description provided for @planCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Read'**
+  String get planCompleted;
+
+  /// No description provided for @onbStyleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Which translation style do you prefer?'**
+  String get onbStyleTitle;
+
+  /// No description provided for @onbStyleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We use this to suggest a translation. All of them stay available.'**
+  String get onbStyleSubtitle;
+
+  /// No description provided for @styleAcademic.
+  ///
+  /// In en, this message translates to:
+  /// **'More academic'**
+  String get styleAcademic;
+
+  /// No description provided for @styleSimple.
+  ///
+  /// In en, this message translates to:
+  /// **'Simpler'**
+  String get styleSimple;
+
+  /// No description provided for @styleBalanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced'**
+  String get styleBalanced;
+
+  /// No description provided for @styleLiturgical.
+  ///
+  /// In en, this message translates to:
+  /// **'Liturgical'**
+  String get styleLiturgical;
+
+  /// No description provided for @onbParallelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Would you like a parallel text?'**
+  String get onbParallelTitle;
+
+  /// No description provided for @onbParallelSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Only texts actually installed are shown.'**
+  String get onbParallelSubtitle;
+
+  /// No description provided for @parallelLatin.
+  ///
+  /// In en, this message translates to:
+  /// **'Latin'**
+  String get parallelLatin;
+
+  /// No description provided for @parallelGreek.
+  ///
+  /// In en, this message translates to:
+  /// **'Greek'**
+  String get parallelGreek;
+
+  /// No description provided for @parallelHebrew.
+  ///
+  /// In en, this message translates to:
+  /// **'Hebrew / original'**
+  String get parallelHebrew;
+
+  /// No description provided for @parallelNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get parallelNone;
+
+  /// No description provided for @langLatin.
+  ///
+  /// In en, this message translates to:
+  /// **'Latin'**
+  String get langLatin;
+
+  /// No description provided for @langGreek.
+  ///
+  /// In en, this message translates to:
+  /// **'Greek'**
+  String get langGreek;
+
+  /// No description provided for @langHebrew.
+  ///
+  /// In en, this message translates to:
+  /// **'Hebrew'**
+  String get langHebrew;
+
+  /// No description provided for @langPortuguese.
+  ///
+  /// In en, this message translates to:
+  /// **'Portuguese'**
+  String get langPortuguese;
+
+  /// No description provided for @langEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get langEnglish;
+
+  /// No description provided for @translationWithLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'{language} — {title}'**
+  String translationWithLanguage(String language, String title);
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

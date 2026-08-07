@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/snack.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../annotations/application/annotation_providers.dart';
 import '../../annotations/domain/entities.dart';
@@ -15,6 +16,8 @@ import '../domain/psalm_numbering.dart';
 import 'commentary_panel.dart';
 import 'widgets/book_emblem.dart';
 import 'widgets/navigation_pickers.dart';
+import 'widgets/scripts.dart';
+import 'widgets/share_verse.dart';
 
 /// Muted gold marking verses that carry Church Fathers commentary.
 const Color _kGold = Color(0xFFCBA45A);
@@ -50,6 +53,47 @@ class ReaderScreen extends ConsumerStatefulWidget {
 
 class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   final _scrollController = ItemScrollController();
+
+  /// Multi-verse selection. Long-pressing a verse sets the anchor; tapping
+  /// another verse moves the far end, so the selection is a continuous span by
+  /// construction — "John 1:1–5" can never come out as a scattered list.
+  int? _selAnchor;
+  int? _selEnd;
+
+  bool get _selecting => _selAnchor != null;
+  int get _selFrom => _selAnchor! <= _selEnd! ? _selAnchor! : _selEnd!;
+  int get _selTo => _selAnchor! <= _selEnd! ? _selEnd! : _selAnchor!;
+  bool _isSelected(int verse) =>
+      _selecting && verse >= _selFrom && verse <= _selTo;
+
+  void _startSelection(int verse) =>
+      setState(() => _selAnchor = _selEnd = verse);
+  void _extendSelection(int verse) => setState(() => _selEnd = verse);
+  void _clearSelection() => setState(() => _selAnchor = _selEnd = null);
+
+  /// Shares the selected span as one card, refusing politely when the passage
+  /// is longer than an image can carry legibly.
+  void _shareSelection(BibleBook? book, List<Verse> verses,
+      List<ParallelVerse> rows, bool parallelActive) {
+    final all = parallelActive
+        ? [
+            for (final r in rows) (number: r.number, text: r.canonicalText),
+          ]
+        : [
+            for (final v in verses) (number: v.number, text: v.text),
+          ];
+    final picked = all.where((v) => _isSelected(v.number)).toList();
+    if (picked.isEmpty) return;
+    if (passageLength(picked) > kMaxShareSelectionChars) {
+      showSnack(context.l10n.shareSelectionTooLong(kMaxShareSelectionChars));
+      return;
+    }
+    final name = book?.name ?? widget.bookId;
+    final span = _selFrom == _selTo ? '$_selFrom' : '$_selFrom-$_selTo';
+    showSharePassage(context,
+        reference: '$name ${widget.chapter},$span', verses: picked);
+    _clearSelection();
+  }
 
   void _maybeRecord() {
     if (!widget.recordProgress) return;
@@ -133,6 +177,17 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         ? ref.watch(parallelChapterProvider((bookId: bookId, chapter: chapter)))
         : null;
 
+    // Language codes drive script handling (Hebrew RTL, Greek/Hebrew font
+    // fallbacks). Empty when a translation isn't installed — then the ambient
+    // left-to-right layout applies, unchanged.
+    final translations = ref.watch(availableTranslationsProvider);
+    String langOf(String? id) => id == null
+        ? ''
+        : translations.where((t) => t.id == id).map((t) => t.lang).firstOrNull ??
+            '';
+    final primaryLang = langOf(ref.watch(resolvedTranslationIdProvider));
+    final secondaryLang = langOf(secondaryId);
+
     final headingByVerse = <int, SectionHeading>{
       for (final h in content?.headings ?? const []) h.beforeVerse: h,
     };
@@ -193,8 +248,17 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                       headingByVerse: headingByVerse,
                       markers: markers,
                       highlights: highlights,
+                      primaryLang: primaryLang,
+                      secondaryLang: secondaryLang,
                     ),
                   ),
+                  if (_selecting)
+                    _SelectionBar(
+                      count: _selTo - _selFrom + 1,
+                      onClear: _clearSelection,
+                      onShare: () => _shareSelection(
+                          book, verses, rows, parallelActive),
+                    ),
                 ],
               ),
       ),
@@ -212,6 +276,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     required Map<int, SectionHeading> headingByVerse,
     required Set<int> markers,
     required Map<int, HighlightColor> highlights,
+    required String primaryLang,
+    required String secondaryLang,
   }) {
     final count = parallelActive ? rows.length : verses.length;
     final sideBySide = parallelActive && _sideBySide(context);
@@ -241,32 +307,45 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                         .titleLarge
                         ?.copyWith(fontWeight: FontWeight.w700)),
               ),
+            // While a selection is open, tapping extends it instead of opening
+            // the commentary panel — one gesture, one meaning at a time.
             if (parallelActive)
               _ParallelVerseTile(
                 row: rows[index - 1],
                 hasCommentary: markers.contains(number),
                 highlight: highlights[number],
+                selected: _isSelected(number),
                 sideBySide: sideBySide,
-                onTap: () => showCommentaryPanel(
-                  context,
-                  ref,
-                  VerseRef(bookId, chapter, number),
-                  bookName: book?.name ?? bookId,
-                  verseText: rows[index - 1].canonicalText,
-                ),
+                primaryLang: primaryLang,
+                secondaryLang: secondaryLang,
+                onLongPress: () => _startSelection(number),
+                onTap: () => _selecting
+                    ? _extendSelection(number)
+                    : showCommentaryPanel(
+                        context,
+                        ref,
+                        VerseRef(bookId, chapter, number),
+                        bookName: book?.name ?? bookId,
+                        verseText: rows[index - 1].canonicalText,
+                      ),
               )
             else
               _VerseTile(
                 verse: verses[index - 1],
                 hasCommentary: markers.contains(number),
                 highlight: highlights[number],
-                onTap: () => showCommentaryPanel(
-                  context,
-                  ref,
-                  VerseRef(bookId, chapter, number),
-                  bookName: book?.name ?? bookId,
-                  verseText: verses[index - 1].text,
-                ),
+                selected: _isSelected(number),
+                lang: primaryLang,
+                onLongPress: () => _startSelection(number),
+                onTap: () => _selecting
+                    ? _extendSelection(number)
+                    : showCommentaryPanel(
+                        context,
+                        ref,
+                        VerseRef(bookId, chapter, number),
+                        bookName: book?.name ?? bookId,
+                        verseText: verses[index - 1].text,
+                      ),
               ),
           ],
         );
@@ -411,40 +490,59 @@ class _VerseTile extends StatelessWidget {
   final Verse verse;
   final bool hasCommentary;
   final HighlightColor? highlight;
+  final bool selected;
+  final String lang;
   final VoidCallback onTap;
+  final VoidCallback onLongPress;
   const _VerseTile(
       {required this.verse,
       required this.hasCommentary,
       required this.highlight,
-      required this.onTap});
+      required this.selected,
+      required this.lang,
+      required this.onTap,
+      required this.onLongPress});
 
   @override
   Widget build(BuildContext context) {
+    final c = context.bt;
     return InkWell(
       onTap: onTap,
+      onLongPress: onLongPress,
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        decoration: highlight == null
-            ? null
-            : BoxDecoration(
-                color: highlight!.color.withValues(alpha: 0.22),
-                borderRadius: BorderRadius.circular(6)),
+        decoration: selected
+            ? BoxDecoration(
+                color: c.accentSoft,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: c.accent.withValues(alpha: 0.5)))
+            : highlight == null
+                ? null
+                : BoxDecoration(
+                    color: highlight!.color.withValues(alpha: 0.22),
+                    borderRadius: BorderRadius.circular(6)),
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         margin: const EdgeInsets.symmetric(vertical: 2),
-        child: Text.rich(
-          TextSpan(children: [
-            WidgetSpan(
-              alignment: PlaceholderAlignment.top,
-              child: Padding(
-                padding: const EdgeInsets.only(right: 8, top: 2),
-                child:
-                    _VerseNumber(number: verse.number, hasCommentary: hasCommentary),
+        // A Hebrew primary text reads right-to-left, verse number and all.
+        child: scriptDirectionality(
+          lang: lang,
+          child: Text.rich(
+            TextSpan(children: [
+              WidgetSpan(
+                alignment: PlaceholderAlignment.top,
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.only(end: 8, top: 2),
+                  child: _VerseNumber(
+                      number: verse.number, hasCommentary: hasCommentary),
+                ),
               ),
-            ),
-            TextSpan(
-                text: verse.text,
-                style: Theme.of(context).textTheme.bodyLarge),
-          ]),
+              TextSpan(
+                  text: verse.text,
+                  style: scriptStyle(
+                      Theme.of(context).textTheme.bodyLarge, lang)),
+            ]),
+            textAlign: scriptAlign(lang),
+          ),
         ),
       ),
     );
@@ -458,14 +556,22 @@ class _ParallelVerseTile extends StatelessWidget {
   final ParallelVerse row;
   final bool hasCommentary;
   final HighlightColor? highlight;
+  final bool selected;
   final bool sideBySide;
+  final String primaryLang;
+  final String secondaryLang;
   final VoidCallback onTap;
+  final VoidCallback onLongPress;
   const _ParallelVerseTile({
     required this.row,
     required this.hasCommentary,
     required this.highlight,
+    required this.selected,
     required this.sideBySide,
+    required this.primaryLang,
+    required this.secondaryLang,
     required this.onTap,
+    required this.onLongPress,
   });
 
   @override
@@ -475,13 +581,19 @@ class _ParallelVerseTile extends StatelessWidget {
         sideBySide ? _sideBySide(context, c) : _stacked(context, c);
     return InkWell(
       onTap: onTap,
+      onLongPress: onLongPress,
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        decoration: highlight == null
-            ? null
-            : BoxDecoration(
-                color: highlight!.color.withValues(alpha: 0.22),
-                borderRadius: BorderRadius.circular(6)),
+        decoration: selected
+            ? BoxDecoration(
+                color: c.accentSoft,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: c.accent.withValues(alpha: 0.5)))
+            : highlight == null
+                ? null
+                : BoxDecoration(
+                    color: highlight!.color.withValues(alpha: 0.22),
+                    borderRadius: BorderRadius.circular(6)),
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         margin: const EdgeInsets.symmetric(vertical: 2),
         child: body,
@@ -499,13 +611,16 @@ class _ParallelVerseTile extends StatelessWidget {
             child:
                 _VerseNumber(number: row.number, hasCommentary: hasCommentary),
           ),
-          Expanded(child: _columnText(context, c, row.primary?.text)),
+          Expanded(
+              child: _columnText(context, c, row.primary?.text, primaryLang)),
           Container(
             width: 1,
             margin: const EdgeInsets.symmetric(horizontal: 12),
             color: c.divider,
           ),
-          Expanded(child: _columnText(context, c, row.secondary?.text)),
+          Expanded(
+              child:
+                  _columnText(context, c, row.secondary?.text, secondaryLang)),
         ],
       ),
     );
@@ -523,22 +638,29 @@ class _ParallelVerseTile extends StatelessWidget {
               child: _VerseNumber(
                   number: row.number, hasCommentary: hasCommentary),
             ),
-            Expanded(child: _columnText(context, c, row.primary?.text)),
+            Expanded(
+                child: _columnText(context, c, row.primary?.text, primaryLang)),
           ],
         ),
         const SizedBox(height: 8),
         Container(
-          margin: const EdgeInsets.only(left: 4),
-          padding: const EdgeInsets.only(left: 12),
+          margin: const EdgeInsetsDirectional.only(start: 4),
+          padding: const EdgeInsetsDirectional.only(start: 12),
           decoration: BoxDecoration(
-              border: Border(left: BorderSide(color: c.divider, width: 2))),
-          child: _columnText(context, c, row.secondary?.text, secondary: true),
+              border: BorderDirectional(
+                  start: BorderSide(color: c.divider, width: 2))),
+          child: _columnText(context, c, row.secondary?.text, secondaryLang,
+              secondary: true),
         ),
       ],
     );
   }
 
-  Widget _columnText(BuildContext context, BtColors c, String? text,
+  /// One translation's column. A Hebrew column lays out right-to-left inside
+  /// its own [Directionality] so it can sit beside a left-to-right one without
+  /// flipping the whole row.
+  Widget _columnText(
+      BuildContext context, BtColors c, String? text, String lang,
       {bool secondary = false}) {
     if (text == null) {
       return Text(context.l10n.verseNotInTranslation,
@@ -546,8 +668,61 @@ class _ParallelVerseTile extends StatelessWidget {
               color: c.textFaint, fontStyle: FontStyle.italic, fontSize: 14));
     }
     final base = Theme.of(context).textTheme.bodyLarge;
-    return Text(text,
-        style: secondary ? base?.copyWith(color: c.textSecondary) : base);
+    final style = scriptStyle(
+        secondary ? base?.copyWith(color: c.textSecondary) : base, lang);
+    return scriptDirectionality(
+      lang: lang,
+      child: Text(text, style: style, textAlign: scriptAlign(lang)),
+    );
+  }
+}
+
+/// The bar that appears while verses are selected: how many are picked, a way
+/// out, and the share action. Deliberately slim — the passage stays readable
+/// underneath while the reader adjusts the span.
+class _SelectionBar extends StatelessWidget {
+  final int count;
+  final VoidCallback onClear;
+  final VoidCallback onShare;
+  const _SelectionBar(
+      {required this.count, required this.onClear, required this.onShare});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.bt;
+    final l10n = context.l10n;
+    return Container(
+      decoration: BoxDecoration(
+          color: c.surface, border: Border(top: BorderSide(color: c.divider))),
+      padding: const EdgeInsets.fromLTRB(20, 8, 8, 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(l10n.selectionCount(count),
+                    style: TextStyle(
+                        color: c.textPrimary, fontWeight: FontWeight.w600)),
+                Text(l10n.selectionHint,
+                    style: TextStyle(color: c.textFaint, fontSize: 12)),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: onClear,
+            style: TextButton.styleFrom(foregroundColor: c.textSecondary),
+            child: Text(l10n.selectionClear),
+          ),
+          IconButton(
+            onPressed: onShare,
+            tooltip: l10n.shareSelection,
+            icon: Icon(Icons.ios_share, color: c.accent),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -635,7 +810,10 @@ class _ParallelOptionsSheet extends ConsumerWidget {
               else
                 for (final t in candidates)
                   ListTile(
-                    title: Text(t.title),
+                    // "Latim — Vulgata Clementina", "Grego — Novo Testamento
+                    // Grego (SBLGNT)": the script is what the reader is
+                    // choosing, so it leads.
+                    title: Text(translationLabel(l10n, t.lang, t.title)),
                     trailing: t.id == secondaryId
                         ? Icon(Icons.check, color: c.accent)
                         : null,

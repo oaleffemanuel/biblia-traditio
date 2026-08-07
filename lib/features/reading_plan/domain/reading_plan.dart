@@ -3,14 +3,41 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 
 /// One openable destination inside a reading: a book + chapter the Reader can
-/// jump to directly.
+/// jump to directly, optionally narrowed to the verses the plan actually
+/// assigns (Proverbs and Psalm 119 are read a few verses at a time).
 class PlanTarget {
   final String bookId;
   final int chapter;
-  const PlanTarget(this.bookId, this.chapter);
+  final int? verseStart;
+  final int? verseEnd;
+  const PlanTarget(this.bookId, this.chapter, {this.verseStart, this.verseEnd});
 
-  factory PlanTarget.fromJson(Map<String, dynamic> j) =>
-      PlanTarget(j['book'] as String, (j['chapter'] as num).toInt());
+  /// Whether this target is a verse span rather than a whole chapter.
+  bool get isPartial => verseStart != null;
+
+  bool includes(int verse) =>
+      verseStart == null ||
+      (verse >= verseStart! && verse <= (verseEnd ?? verseStart!));
+
+  factory PlanTarget.fromJson(Map<String, dynamic> j) => PlanTarget(
+        j['book'] as String,
+        (j['chapter'] as num).toInt(),
+        verseStart: (j['verseStart'] as num?)?.toInt(),
+        verseEnd: (j['verseEnd'] as num?)?.toInt(),
+      );
+}
+
+/// Which strand of the plan a reading belongs to. The schedule runs a narrative
+/// book alongside a wisdom book each day; the labels mirror that.
+enum PlanSection {
+  book('livro'),
+  wisdom('sapiencial');
+
+  final String key;
+  const PlanSection(this.key);
+
+  static PlanSection fromKey(String? k) =>
+      values.firstWhere((s) => s.key == k, orElse: () => book);
 }
 
 /// A single reading line for a day (e.g. "São Marcos 1-2" or "Salmo 11"),
@@ -18,13 +45,16 @@ class PlanTarget {
 class PlanReading {
   final String ref; // human label, exactly as the plan presents it
   final List<PlanTarget> targets;
-  const PlanReading(this.ref, this.targets);
+  final PlanSection section;
+  const PlanReading(this.ref, this.targets,
+      {this.section = PlanSection.book});
 
   factory PlanReading.fromJson(Map<String, dynamic> j) => PlanReading(
         j['ref'] as String,
         (j['targets'] as List)
             .map((e) => PlanTarget.fromJson(e as Map<String, dynamic>))
             .toList(),
+        section: PlanSection.fromKey(j['section'] as String?),
       );
 }
 

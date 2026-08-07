@@ -11,7 +11,7 @@ import '../../bible/application/bible_providers.dart';
 import '../../bible/domain/entities.dart';
 import '../application/search_providers.dart';
 
-enum SearchScope { all, verses, fathers, notes }
+enum SearchScope { all, books, verses, fathers, notes }
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -43,6 +43,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final c = context.bt;
     final results = ref.watch(searchResultsProvider);
     final q = ref.watch(searchQueryProvider).trim();
+    final showBooks = _scope == SearchScope.all || _scope == SearchScope.books;
     final showVerses = _scope == SearchScope.all || _scope == SearchScope.verses;
     final showFathers = _scope == SearchScope.all || _scope == SearchScope.fathers;
     final showNotes = _scope == SearchScope.all || _scope == SearchScope.notes;
@@ -104,6 +105,31 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     ? _hint(c, context.l10n.searchNoResults(q))
                     : ListView(
                         children: [
+                          // A citation the reader typed ("João 3,16") is the
+                          // one thing they almost certainly meant, so it leads.
+                          if (results.reference != null) ...[
+                            _SectionHeader(context.l10n.sectionGoTo, 1, c),
+                            _ResultTile(
+                              refLabel: results.reference!.label,
+                              snippet: results.reference!.book.name,
+                              icon: Icons.my_location,
+                              accent: true,
+                              onTap: () => context.push(
+                                  '/bible/${results.reference!.book.id}/${results.reference!.chapter}'),
+                            ),
+                          ],
+                          if (showBooks && results.books.isNotEmpty) ...[
+                            _SectionHeader(context.l10n.sectionBooks,
+                                results.books.length, c),
+                            for (final b in results.books)
+                              _ResultTile(
+                                refLabel: b.book.name,
+                                snippet: context.l10n.searchOpenBook,
+                                icon: Icons.import_contacts_outlined,
+                                onTap: () =>
+                                    context.push('/bible/${b.book.id}'),
+                              ),
+                          ],
                           if (showVerses && results.verses.isNotEmpty) ...[
                             _SectionHeader(context.l10n.sectionScripture, results.verses.length, c),
                             for (final v in results.verses)
@@ -116,8 +142,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                               ),
                           ],
                           if (showFathers && results.commentaries.isNotEmpty) ...[
-                            _SectionHeader(
-                                context.l10n.churchFathers, results.commentaries.length, c),
+                            _SectionHeader(context.l10n.searchScopeFathers,
+                                results.commentaries.length, c),
                             for (final m in results.commentaries)
                               _ResultTile(
                                 refLabel:
@@ -156,6 +182,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   String _scopeLabel(SearchScope s, SearchResults r) => switch (s) {
         SearchScope.all => '${context.l10n.searchScopeAll} (${r.total})',
+        SearchScope.books =>
+          '${context.l10n.searchScopeBooks} (${r.books.length})',
         SearchScope.verses =>
           '${context.l10n.searchScopeScripture} (${r.verses.length})',
         SearchScope.fathers =>

@@ -43,8 +43,13 @@ class ContentDbBuilder {
         translation_id TEXT NOT NULL, book_id TEXT NOT NULL, chapter INTEGER NOT NULL,
         before_verse INTEGER NOT NULL, kind TEXT NOT NULL, text TEXT NOT NULL
       );
+      -- `role` is the corpus's raw "função" string; `role_primary` the single
+      -- concise title slug shown under the name; `role_tags`/`role_groups` the
+      -- normalised slugs backing the commentary preference filters.
       CREATE TABLE IF NOT EXISTS father (
-        id TEXT PRIMARY KEY, name TEXT NOT NULL, century TEXT, year TEXT
+        id TEXT PRIMARY KEY, name TEXT NOT NULL, century TEXT, year TEXT,
+        role TEXT NOT NULL DEFAULT '', role_primary TEXT NOT NULL DEFAULT '',
+        role_tags TEXT NOT NULL DEFAULT '', role_groups TEXT NOT NULL DEFAULT ''
       );
       CREATE TABLE IF NOT EXISTS commentary (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -126,16 +131,26 @@ class ContentDbBuilder {
 
   /// Insert the patristic corpus.
   void insertPatristics(PatristicsParseResult result) {
-    // Fathers registry (stable id = slug of name).
-    final fa = db.prepare(
-        'INSERT OR REPLACE INTO father(id,name,century,year) VALUES(?,?,?,?)');
-    final firstByName = <String, CommentaryRecord>{};
+    // Fathers registry (stable id = slug of name). The representative row for
+    // an author prefers a record that actually carries função metadata, so a
+    // retained original-corpus entry can't blank out a corrected one.
+    final fa = db.prepare('''INSERT OR REPLACE INTO
+        father(id,name,century,year,role,role_primary,role_tags,role_groups)
+        VALUES(?,?,?,?,?,?,?,?)''');
+    final bestByName = <String, CommentaryRecord>{};
     for (final c in result.commentaries) {
-      firstByName.putIfAbsent(c.fatherName, () => c);
+      final current = bestByName[c.fatherName];
+      if (current == null || (current.role.isEmpty && !c.role.isEmpty)) {
+        bestByName[c.fatherName] = c;
+      }
     }
     db.execute('BEGIN');
-    for (final entry in firstByName.entries) {
-      fa.execute([_slug(entry.key), entry.key, entry.value.century, entry.value.year]);
+    for (final entry in bestByName.entries) {
+      final r = entry.value;
+      fa.execute([
+        _slug(entry.key), entry.key, r.century, r.year,
+        r.role.raw, r.role.primary, r.role.tagsColumn, r.role.groupsColumn,
+      ]);
     }
     db.execute('COMMIT');
     fa.dispose();

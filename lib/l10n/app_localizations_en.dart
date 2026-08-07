@@ -407,7 +407,7 @@ class AppL10nEn extends AppL10n {
   String get layoutSideBySide => 'Side by side';
 
   @override
-  String get searchHint => 'Search Scripture, Fathers, notes…';
+  String get searchHint => 'Search Scripture, Patristics, notes…';
 
   @override
   String get searchScopeAll => 'All';
@@ -416,7 +416,7 @@ class AppL10nEn extends AppL10n {
   String get searchScopeScripture => 'Scripture';
 
   @override
-  String get searchScopeFathers => 'Fathers';
+  String get searchScopeFathers => 'Patristics';
 
   @override
   String get searchScopeNotes => 'Notes';
@@ -630,4 +630,253 @@ class AppL10nEn extends AppL10n {
   @override
   String get licGreekBody =>
       'The SBL Greek New Testament (SBLGNT), © Society of Biblical Literature and Logos Bible Software. Used under the Creative Commons Attribution 4.0 license.';
+
+  @override
+  String get pressBackAgainToExit => 'Press back again to exit.';
+
+  @override
+  String get searchScopeBooks => 'Books';
+
+  @override
+  String get sectionBooks => 'Books';
+
+  @override
+  String get sectionGoTo => 'Go to';
+
+  @override
+  String get searchOpenBook => 'Open book';
+
+  @override
+  String get commentaryTabPatristics => 'Patristics';
+
+  @override
+  String get commentaryExpandAll => 'Show all';
+
+  @override
+  String get commentaryCollapseAll => 'Collapse all';
+
+  @override
+  String get commentaryCollapse => 'Collapse';
+
+  @override
+  String get shareCommentary => 'Share commentary';
+
+  @override
+  String get roleDoctor => 'Doctor of the Church';
+
+  @override
+  String get rolePope => 'Pope';
+
+  @override
+  String get roleBishop => 'Bishop';
+
+  @override
+  String get roleMonk => 'Monk';
+
+  @override
+  String get rolePriest => 'Priest';
+
+  @override
+  String get roleDeacon => 'Deacon';
+
+  @override
+  String get roleExegete => 'Exegete';
+
+  @override
+  String get roleTheologian => 'Theologian';
+
+  @override
+  String get roleHistorian => 'Historian';
+
+  @override
+  String get rolePoet => 'Poet';
+
+  @override
+  String get rolePatristics => 'Patristics';
+
+  @override
+  String get roleMedieval => 'Medieval';
+
+  @override
+  String get roleEarlyChristian => 'Early Christian';
+
+  @override
+  String get roleSaint => 'Saint';
+
+  @override
+  String get roleSaintFem => 'Saint';
+
+  @override
+  String get roleLiturgy => 'Liturgy';
+
+  @override
+  String get roleDocPatristic => 'Patristic Document';
+
+  @override
+  String get roleDocMedieval => 'Medieval Document';
+
+  @override
+  String get roleDocHistorical => 'Historical Document';
+
+  @override
+  String get roleDocGeneral => 'General Document';
+
+  @override
+  String authorMeta(String role, String century) {
+    return '$role — $century cent.';
+  }
+
+  @override
+  String get settingsCommentary => 'Commentary';
+
+  @override
+  String get commentaryPreferences => 'Commentary preferences';
+
+  @override
+  String get commentaryPreferencesSubtitle =>
+      'Choose which commentators appear when you open a verse.';
+
+  @override
+  String get commentaryClassification => 'Classification';
+
+  @override
+  String get commentaryCenturies => 'Centuries';
+
+  @override
+  String get filterScholastic => 'Scholastic';
+
+  @override
+  String get filterSaints => 'Saints';
+
+  @override
+  String get commentaryOnlySaints => 'Saints only';
+
+  @override
+  String get commentaryOnlySaintsSubtitle =>
+      'Simplified mode: show only saints.';
+
+  @override
+  String get commentaryResetDefaults => 'Reset to default';
+
+  @override
+  String get commentaryPrefsAll => 'All commentators';
+
+  @override
+  String commentaryPrefsFilters(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count filters active',
+      one: '1 filter active',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String commentaryHiddenByPrefs(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count commentaries hidden by your preferences',
+      one: '1 commentary hidden by your preferences',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get commentaryShowHidden => 'Show anyway';
+
+  @override
+  String get shareSelectVerses => 'Select verses';
+
+  @override
+  String shareSelectionTooLong(int max) {
+    return 'Selection too long for an image (max $max characters). Choose fewer verses.';
+  }
+
+  @override
+  String selectionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count verses selected',
+      one: '1 verse selected',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get selectionHint => 'Tap verses to choose a continuous passage.';
+
+  @override
+  String get selectionClear => 'Clear';
+
+  @override
+  String get shareSelection => 'Share selection';
+
+  @override
+  String get planSectionBook => 'Reading';
+
+  @override
+  String get planSectionWisdom => 'Wisdom';
+
+  @override
+  String get planCompleted => 'Read';
+
+  @override
+  String get onbStyleTitle => 'Which translation style do you prefer?';
+
+  @override
+  String get onbStyleSubtitle =>
+      'We use this to suggest a translation. All of them stay available.';
+
+  @override
+  String get styleAcademic => 'More academic';
+
+  @override
+  String get styleSimple => 'Simpler';
+
+  @override
+  String get styleBalanced => 'Balanced';
+
+  @override
+  String get styleLiturgical => 'Liturgical';
+
+  @override
+  String get onbParallelTitle => 'Would you like a parallel text?';
+
+  @override
+  String get onbParallelSubtitle => 'Only texts actually installed are shown.';
+
+  @override
+  String get parallelLatin => 'Latin';
+
+  @override
+  String get parallelGreek => 'Greek';
+
+  @override
+  String get parallelHebrew => 'Hebrew / original';
+
+  @override
+  String get parallelNone => 'No';
+
+  @override
+  String get langLatin => 'Latin';
+
+  @override
+  String get langGreek => 'Greek';
+
+  @override
+  String get langHebrew => 'Hebrew';
+
+  @override
+  String get langPortuguese => 'Portuguese';
+
+  @override
+  String get langEnglish => 'English';
+
+  @override
+  String translationWithLanguage(String language, String title) {
+    return '$language — $title';
+  }
 }

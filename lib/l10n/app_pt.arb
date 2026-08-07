@@ -75,7 +75,7 @@
   "readingPsalm": "Salmo",
   "readingSecond": "Segunda Leitura",
   "readingGospel": "Evangelho",
-  "onbNameTitle": "Como devemos chamá-lo?",
+  "onbNameTitle": "Como podemos chamar você?",
   "onbNameSubtitle": "Usaremos o seu nome para saudá-lo.",
   "namePlaceholder": "O seu nome",
   "onbLanguageTitle": "Idioma",
@@ -116,7 +116,7 @@
   "churchFathers": "Padres da Igreja",
   "myNotes": "Minhas Notas",
   "noCommentaryForVerse": "Ainda não há comentário para este versículo.",
-  "patristicsNotInstalled": "Instale o Comentário dos Padres em Ajustes para ler este versículo com a Igreja.",
+  "patristicsNotInstalled": "Instale o Comentário dos Padres da Igreja em Ajustes para ler este versículo com a Igreja.",
   "noNotesForVerse": "Ainda não há notas para este versículo.",
   "writeReflection": "Escrever uma reflexão",
   "commentaryCount": "{count, plural, =1{1 comentário} other{{count} comentários}}",
@@ -145,10 +145,10 @@
   "layoutAuto": "Automático",
   "layoutStacked": "Empilhado",
   "layoutSideBySide": "Lado a lado",
-  "searchHint": "Pesquisar Escritura, Padres, notas…",
+  "searchHint": "Pesquisar Escritura, Patrística, notas…",
   "searchScopeAll": "Tudo",
   "searchScopeScripture": "Escritura",
-  "searchScopeFathers": "Padres",
+  "searchScopeFathers": "Patrística",
   "searchScopeNotes": "Notas",
   "searchTypeMore": "Escreva ao menos 2 letras para pesquisar.",
   "searchNoResults": "Nenhum resultado para “{query}”.",
@@ -221,5 +221,110 @@
     }
   },
   "licGreekTitle": "Novo Testamento Grego (SBLGNT)",
-  "licGreekBody": "O Novo Testamento Grego SBL (SBLGNT), © Society of Biblical Literature e Logos Bible Software. Usado sob a licença Creative Commons Atribuição 4.0."
+  "licGreekBody": "O Novo Testamento Grego SBL (SBLGNT), © Society of Biblical Literature e Logos Bible Software. Usado sob a licença Creative Commons Atribuição 4.0.",
+
+  "pressBackAgainToExit": "Pressione novamente para sair.",
+
+  "searchScopeBooks": "Livros",
+  "sectionBooks": "Livros",
+  "sectionGoTo": "Ir para",
+  "searchOpenBook": "Abrir livro",
+
+  "commentaryTabPatristics": "Patrística",
+  "commentaryExpandAll": "Exibir todos",
+  "commentaryCollapseAll": "Minimizar todos",
+  "commentaryCollapse": "Recolher",
+  "shareCommentary": "Partilhar comentário",
+
+  "roleDoctor": "Doutor da Igreja",
+  "rolePope": "Papa",
+  "roleBishop": "Bispo",
+  "roleMonk": "Monge",
+  "rolePriest": "Sacerdote",
+  "roleDeacon": "Diácono",
+  "roleExegete": "Exegeta",
+  "roleTheologian": "Teólogo",
+  "roleHistorian": "Historiador",
+  "rolePoet": "Poeta",
+  "rolePatristics": "Patrística",
+  "roleMedieval": "Medieval",
+  "roleEarlyChristian": "Cristão Primitivo",
+  "roleSaint": "Santo",
+  "roleSaintFem": "Santa",
+  "roleLiturgy": "Liturgia",
+  "roleDocPatristic": "Documento Patrístico",
+  "roleDocMedieval": "Documento Medieval",
+  "roleDocHistorical": "Documento Histórico",
+  "roleDocGeneral": "Documento Geral",
+  "authorMeta": "{role} — séc. {century}",
+  "@authorMeta": {
+    "placeholders": {
+      "role": { "type": "String" },
+      "century": { "type": "String" }
+    }
+  },
+
+  "settingsCommentary": "Comentários",
+  "commentaryPreferences": "Preferências de comentário",
+  "commentaryPreferencesSubtitle": "Escolha quais comentadores aparecem ao abrir um versículo.",
+  "commentaryClassification": "Classificação",
+  "commentaryCenturies": "Séculos",
+  "filterScholastic": "Escolástica",
+  "filterSaints": "Santos",
+  "commentaryOnlySaints": "Somente santos",
+  "commentaryOnlySaintsSubtitle": "Modo simplificado: mostra apenas santos e santas.",
+  "commentaryResetDefaults": "Restaurar padrão",
+  "commentaryPrefsAll": "Todos os comentadores",
+  "commentaryPrefsFilters": "{count, plural, =1{1 filtro ativo} other{{count} filtros ativos}}",
+  "@commentaryPrefsFilters": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "commentaryHiddenByPrefs": "{count, plural, =1{1 comentário oculto pelas suas preferências} other{{count} comentários ocultos pelas suas preferências}}",
+  "@commentaryHiddenByPrefs": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "commentaryShowHidden": "Mostrar mesmo assim",
+
+  "shareSelectVerses": "Selecionar versículos",
+  "shareSelectionTooLong": "Seleção longa demais para uma imagem (máx. {max} caracteres). Escolha menos versículos.",
+  "@shareSelectionTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "selectionCount": "{count, plural, =1{1 versículo selecionado} other{{count} versículos selecionados}}",
+  "@selectionCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "selectionHint": "Toque nos versículos para escolher uma passagem contínua.",
+  "selectionClear": "Limpar",
+  "shareSelection": "Partilhar seleção",
+
+  "planSectionBook": "Leitura",
+  "planSectionWisdom": "Sapiencial",
+  "planCompleted": "Lido",
+
+  "onbStyleTitle": "Qual estilo de tradução você prefere?",
+  "onbStyleSubtitle": "Usaremos isto para sugerir uma tradução. Todas continuam disponíveis.",
+  "styleAcademic": "Mais acadêmica",
+  "styleSimple": "Mais simples",
+  "styleBalanced": "Equilibrada",
+  "styleLiturgical": "Litúrgica",
+  "onbParallelTitle": "Deseja utilizar um texto paralelo?",
+  "onbParallelSubtitle": "Mostramos apenas os textos realmente instalados.",
+  "parallelLatin": "Latim",
+  "parallelGreek": "Grego",
+  "parallelHebrew": "Hebraico / Original",
+  "parallelNone": "Não",
+
+  "langLatin": "Latim",
+  "langGreek": "Grego",
+  "langHebrew": "Hebraico",
+  "langPortuguese": "Português",
+  "langEnglish": "Inglês",
+  "translationWithLanguage": "{language} — {title}",
+  "@translationWithLanguage": {
+    "placeholders": {
+      "language": { "type": "String" },
+      "title": { "type": "String" }
+    }
+  }
 }

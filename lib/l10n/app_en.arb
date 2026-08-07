@@ -201,10 +201,10 @@
   "layoutAuto": "Automatic",
   "layoutStacked": "Stacked",
   "layoutSideBySide": "Side by side",
-  "searchHint": "Search Scripture, Fathers, notes…",
+  "searchHint": "Search Scripture, Patristics, notes…",
   "searchScopeAll": "All",
   "searchScopeScripture": "Scripture",
-  "searchScopeFathers": "Fathers",
+  "searchScopeFathers": "Patristics",
   "searchScopeNotes": "Notes",
   "searchTypeMore": "Type at least 2 letters to search.",
   "searchNoResults": "No results for “{query}”.",
@@ -308,5 +308,110 @@
     }
   },
   "licGreekTitle": "Greek New Testament (SBLGNT)",
-  "licGreekBody": "The SBL Greek New Testament (SBLGNT), © Society of Biblical Literature and Logos Bible Software. Used under the Creative Commons Attribution 4.0 license."
+  "licGreekBody": "The SBL Greek New Testament (SBLGNT), © Society of Biblical Literature and Logos Bible Software. Used under the Creative Commons Attribution 4.0 license.",
+
+  "pressBackAgainToExit": "Press back again to exit.",
+
+  "searchScopeBooks": "Books",
+  "sectionBooks": "Books",
+  "sectionGoTo": "Go to",
+  "searchOpenBook": "Open book",
+
+  "commentaryTabPatristics": "Patristics",
+  "commentaryExpandAll": "Show all",
+  "commentaryCollapseAll": "Collapse all",
+  "commentaryCollapse": "Collapse",
+  "shareCommentary": "Share commentary",
+
+  "roleDoctor": "Doctor of the Church",
+  "rolePope": "Pope",
+  "roleBishop": "Bishop",
+  "roleMonk": "Monk",
+  "rolePriest": "Priest",
+  "roleDeacon": "Deacon",
+  "roleExegete": "Exegete",
+  "roleTheologian": "Theologian",
+  "roleHistorian": "Historian",
+  "rolePoet": "Poet",
+  "rolePatristics": "Patristics",
+  "roleMedieval": "Medieval",
+  "roleEarlyChristian": "Early Christian",
+  "roleSaint": "Saint",
+  "roleSaintFem": "Saint",
+  "roleLiturgy": "Liturgy",
+  "roleDocPatristic": "Patristic Document",
+  "roleDocMedieval": "Medieval Document",
+  "roleDocHistorical": "Historical Document",
+  "roleDocGeneral": "General Document",
+  "authorMeta": "{role} — {century} cent.",
+  "@authorMeta": {
+    "placeholders": {
+      "role": { "type": "String" },
+      "century": { "type": "String" }
+    }
+  },
+
+  "settingsCommentary": "Commentary",
+  "commentaryPreferences": "Commentary preferences",
+  "commentaryPreferencesSubtitle": "Choose which commentators appear when you open a verse.",
+  "commentaryClassification": "Classification",
+  "commentaryCenturies": "Centuries",
+  "filterScholastic": "Scholastic",
+  "filterSaints": "Saints",
+  "commentaryOnlySaints": "Saints only",
+  "commentaryOnlySaintsSubtitle": "Simplified mode: show only saints.",
+  "commentaryResetDefaults": "Reset to default",
+  "commentaryPrefsAll": "All commentators",
+  "commentaryPrefsFilters": "{count, plural, =1{1 filter active} other{{count} filters active}}",
+  "@commentaryPrefsFilters": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "commentaryHiddenByPrefs": "{count, plural, =1{1 commentary hidden by your preferences} other{{count} commentaries hidden by your preferences}}",
+  "@commentaryHiddenByPrefs": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "commentaryShowHidden": "Show anyway",
+
+  "shareSelectVerses": "Select verses",
+  "shareSelectionTooLong": "Selection too long for an image (max {max} characters). Choose fewer verses.",
+  "@shareSelectionTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "selectionCount": "{count, plural, =1{1 verse selected} other{{count} verses selected}}",
+  "@selectionCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "selectionHint": "Tap verses to choose a continuous passage.",
+  "selectionClear": "Clear",
+  "shareSelection": "Share selection",
+
+  "planSectionBook": "Reading",
+  "planSectionWisdom": "Wisdom",
+  "planCompleted": "Read",
+
+  "onbStyleTitle": "Which translation style do you prefer?",
+  "onbStyleSubtitle": "We use this to suggest a translation. All of them stay available.",
+  "styleAcademic": "More academic",
+  "styleSimple": "Simpler",
+  "styleBalanced": "Balanced",
+  "styleLiturgical": "Liturgical",
+  "onbParallelTitle": "Would you like a parallel text?",
+  "onbParallelSubtitle": "Only texts actually installed are shown.",
+  "parallelLatin": "Latin",
+  "parallelGreek": "Greek",
+  "parallelHebrew": "Hebrew / original",
+  "parallelNone": "No",
+
+  "langLatin": "Latin",
+  "langGreek": "Greek",
+  "langHebrew": "Hebrew",
+  "langPortuguese": "Portuguese",
+  "langEnglish": "English",
+  "translationWithLanguage": "{language} — {title}",
+  "@translationWithLanguage": {
+    "placeholders": {
+      "language": { "type": "String" },
+      "title": { "type": "String" }
+    }
+  }
 }

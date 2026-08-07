@@ -157,6 +157,16 @@ class Commentary {
   final bool isMachineTranslation;
   final String text;
 
+  /// The commentator's function/title as a slug (`doutor-da-igreja`, `papa`,
+  /// `patristica`, …), taken from the corpus's own `função` vocabulary and
+  /// localised in the UI. Empty when the corpus gave none — then only the
+  /// century is shown, never an invented title.
+  final String rolePrimary;
+
+  /// Coarse classification slugs backing the commentary filters:
+  /// `patristica`, `escolastica`, `santos`.
+  final Set<String> roleGroups;
+
   const Commentary({
     required this.id,
     required this.ref,
@@ -165,5 +175,45 @@ class Commentary {
     required this.source,
     required this.isMachineTranslation,
     required this.text,
+    this.rolePrimary = '',
+    this.roleGroups = const {},
   });
+
+  /// Century as an integer (1–21), or null when the corpus has no century.
+  int? get centuryNumber => romanToInt(century);
+
+  /// 4 → "IV". The inverse of [romanToInt], for century filter labels.
+  static String romanNumeral(int n) {
+    if (n <= 0) return '';
+    const vals = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+    const syms = [
+      'M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I'
+    ];
+    final sb = StringBuffer();
+    var x = n;
+    for (var i = 0; i < vals.length; i++) {
+      while (x >= vals[i]) {
+        sb.write(syms[i]);
+        x -= vals[i];
+      }
+    }
+    return sb.toString();
+  }
+
+  static int? romanToInt(String roman) {
+    if (roman.isEmpty) return null;
+    const map = {'I': 1, 'V': 5, 'X': 10, 'L': 50, 'C': 100, 'D': 500, 'M': 1000};
+    var total = 0, prev = 0;
+    for (var i = roman.length - 1; i >= 0; i--) {
+      final v = map[roman[i].toUpperCase()];
+      if (v == null) return null;
+      if (v < prev) {
+        total -= v;
+      } else {
+        total += v;
+        prev = v;
+      }
+    }
+    return total == 0 ? null : total;
+  }
 }

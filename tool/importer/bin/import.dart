@@ -5,6 +5,7 @@ import 'package:args/args.dart';
 import 'package:biblia_traditio_importer/builders/sqlite_builder.dart';
 import 'package:biblia_traditio_importer/models/blocks.dart';
 import 'package:biblia_traditio_importer/parsers/bible_json_parser.dart';
+import 'package:biblia_traditio_importer/parsers/patristics_merge.dart';
 import 'package:biblia_traditio_importer/parsers/patristics_parser.dart';
 import 'package:biblia_traditio_importer/parsers/usfx_parser.dart';
 import 'package:biblia_traditio_importer/parsers/scripture_parser.dart';
@@ -46,30 +47,120 @@ Future<void> main(List<String> argv) async {
 
 Future<void> _patristics(List<String> argv) async {
   final a = (ArgParser()
-        ..addOption('src', help: 'Comentários dir with coment-*.json')
+        ..addOption('src', help: 'Original corpus dir with coment-*.json')
+        ..addOption('overlay',
+            help: 'Corrected corpus dir with <book>_pt.json (wins per verse)')
+        ..addOption('overlay-suffix', defaultsTo: '_pt.json')
+        ..addOption('report', help: 'Write the coverage report as JSON here')
         ..addOption('out', defaultsTo: 'biblia_traditio.sqlite'))
       .parse(argv);
   final src = a['src'] as String?;
-  if (src == null) _fail('patristics: --src <dir> required');
+  final overlayDir = a['overlay'] as String?;
+  if (src == null && overlayDir == null) {
+    _fail('patristics: --src <dir> and/or --overlay <dir> required');
+  }
 
-  stdout.writeln('▶ Ingesting patristics from: $src');
-  final parser = await PatristicsParser.fromDir(src!);
-  final res = await parser.parseDir(src);
+  PatristicsParseResult? base;
+  if (src != null) {
+    stdout.writeln('▶ Ingesting patristics (original) from: $src');
+    final parser = await PatristicsParser.fromDir(src);
+    base = await parser.parseDir(src);
+    _summarise('original', base);
+  }
 
-  stdout.writeln('  files: ${res.filesProcessed}'
-      ' · commentaries: ${res.commentaries.length}'
-      ' · fathers: ${res.fathers.length}'
-      ' · unresolved books: ${res.orphans}');
+  PatristicsParseResult? overlay;
+  if (overlayDir != null) {
+    stdout.writeln('▶ Ingesting patristics (corrected) from: $overlayDir');
+    final parser = await PatristicsParser.fromDir(overlayDir);
+    overlay = await parser.parseCorrectedDir(overlayDir,
+        suffix: a['overlay-suffix'] as String);
+    _summarise('corrected', overlay);
+  }
+
+  PatristicsParseResult res;
+  Map<String, Object?> report;
+  if (base != null && overlay != null) {
+    final r = overlayPatristics(base, overlay);
+    res = r.merged;
+    report = {
+      'original': {
+        'commentaries': r.baseCommentaries,
+        'verses': r.baseVerses,
+        'authors': base.fathers.length,
+      },
+      'corrected': {
+        'commentaries': r.overlayCommentaries,
+        'verses': r.overlayVerses,
+        'authors': overlay.fathers.length,
+      },
+      'merged': {
+        'commentaries': res.commentaries.length,
+        'verses': res.coveredVerses.length,
+        'authors': res.fathers.length,
+      },
+      'retainedFromOriginal': {
+        'verses': r.retainedVerses,
+        'commentaries': r.retainedCommentaries,
+      },
+      'unifiedAuthors': r.unifiedAuthors,
+      'booksWhereCorrectedCoversLess': r.regressedBooks,
+    };
+    stdout.writeln('▶ Overlay merge');
+    stdout.writeln('  corrected wins on ${r.overlayVerses} verses;'
+        ' ${r.retainedVerses} verses (${r.retainedCommentaries} entries)'
+        ' retained from the original so coverage never drops');
+    stdout.writeln('  authors unified: ${r.unifiedAuthors.length}');
+    for (final e in r.unifiedAuthors.entries) {
+      stdout.writeln('    ${e.key} → ${e.value}');
+    }
+    if (r.regressedBooks.isNotEmpty) {
+      stdout.writeln('  ⚠ corrected corpus covers less in:'
+          ' ${r.regressedBooks.join(', ')} (original retained there)');
+    }
+    _summarise('merged', res);
+  } else {
+    res = base ?? overlay!;
+    report = {
+      'merged': {
+        'commentaries': res.commentaries.length,
+        'verses': res.coveredVerses.length,
+        'authors': res.fathers.length,
+      },
+    };
+  }
+
   for (final w in res.warnings.take(20)) {
     stdout.writeln('  ⚠ $w');
   }
 
+  final withRole =
+      res.commentaries.where((c) => c.role.primary.isNotEmpty).length;
   final builder = ContentDbBuilder.open(a['out'] as String);
   builder.insertPatristics(res);
   builder.setMeta('patristics_count', '${res.commentaries.length}');
+  builder.setMeta('patristics_verses', '${res.coveredVerses.length}');
+  builder.setMeta('patristics_authors', '${res.fathers.length}');
+  builder.setMeta('patristics_with_role', '$withRole');
   builder.setMeta('built_patristics_at_files', '${res.filesProcessed}');
   builder.finish();
+
+  final reportPath = a['report'] as String?;
+  if (reportPath != null) {
+    File(reportPath).writeAsStringSync(
+        const JsonEncoder.withIndent('  ').convert(report));
+    stdout.writeln('  coverage report → $reportPath');
+  }
   stdout.writeln('✓ Patristics written to ${a['out']}');
+}
+
+void _summarise(String label, PatristicsParseResult r) {
+  final withRole = r.commentaries.where((c) => c.role.primary.isNotEmpty).length;
+  stdout.writeln('  [$label] files: ${r.filesProcessed}'
+      ' · commentaries: ${r.commentaries.length}'
+      ' · verses: ${r.coveredVerses.length}'
+      ' · authors: ${r.fathers.length}'
+      ' · with função: $withRole'
+      ' · unresolved books: ${r.orphans}');
 }
 
 Future<void> _scripture(List<String> argv) async {
@@ -307,9 +398,14 @@ Never _fail(String msg) {
 Never _usageAndExit() {
   stderr.writeln('''
 Biblia Traditio importer
-  dart run bin/import.dart patristics --src <Comentários dir> --out <db>
+  dart run bin/import.dart patristics --src <original corpus dir>
+                                      [--overlay <corrected corpus dir>]
+                                      [--report <coverage.json>] --out <db>
   dart run bin/import.dart scripture  --book gn --translation matos1932 --src book.txt --out <db>
   dart run bin/import.dart stats      --out <db>
+
+The corrected corpus wins per verse; verses it does not cover keep the original
+commentary, so an incomplete revision can never shrink coverage.
 ''');
   exit(64);
 }

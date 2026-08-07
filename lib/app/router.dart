@@ -15,6 +15,7 @@ import '../features/reading_plan/presentation/reading_plan_screen.dart';
 import '../features/search/presentation/search_screen.dart';
 import '../features/settings/presentation/attributions_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
+import 'back_navigation.dart';
 
 /// The router, keyed on whether onboarding is complete. `Provider.family`
 /// caches per value, so the instance is stable across unrelated rebuilds and
@@ -82,30 +83,33 @@ class _Scaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.bt;
-    return Scaffold(
-      body: navShell,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: c.divider)),
-        ),
-        child: BottomNavigationBar(
-          currentIndex: navShell.currentIndex,
-          onTap: (i) => navShell.goBranch(i,
-              initialLocation: i == navShell.currentIndex),
-          items: [
-            BottomNavigationBarItem(
-                icon: const Icon(Icons.home_outlined),
-                activeIcon: const Icon(Icons.home),
-                label: context.l10n.navHome),
-            BottomNavigationBarItem(
-                icon: const Icon(Icons.calendar_month_outlined),
-                activeIcon: const Icon(Icons.calendar_month),
-                label: context.l10n.navLiturgy),
-            BottomNavigationBarItem(
-                icon: const Icon(Icons.menu_book_outlined),
-                activeIcon: const Icon(Icons.menu_book),
-                label: context.l10n.navBible),
-          ],
+    return BackNavigationScope(
+      navShell: navShell,
+      child: Scaffold(
+        body: navShell,
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: c.divider)),
+          ),
+          child: BottomNavigationBar(
+            currentIndex: navShell.currentIndex,
+            onTap: (i) => navShell.goBranch(i,
+                initialLocation: i == navShell.currentIndex),
+            items: [
+              BottomNavigationBarItem(
+                  icon: const Icon(Icons.home_outlined),
+                  activeIcon: const Icon(Icons.home),
+                  label: context.l10n.navHome),
+              BottomNavigationBarItem(
+                  icon: const Icon(Icons.calendar_month_outlined),
+                  activeIcon: const Icon(Icons.calendar_month),
+                  label: context.l10n.navLiturgy),
+              BottomNavigationBarItem(
+                  icon: const Icon(Icons.menu_book_outlined),
+                  activeIcon: const Icon(Icons.menu_book),
+                  label: context.l10n.navBible),
+            ],
+          ),
         ),
       ),
     );

@@ -10,12 +10,79 @@ import '../../../../core/l10n_ext.dart';
 import '../../../../core/snack.dart';
 import '../../../../core/theme/app_theme.dart';
 
+/// How much text a share image may carry before it stops being readable.
+/// A 320pt card at 19px EB Garamond fits roughly this much without the type
+/// shrinking to nothing — past it we ask the reader to narrow the selection
+/// rather than silently rendering a chapter-sized wall.
+const int kMaxShareSelectionChars = 900;
+
+/// Commentaries run to thousands of words; the card carries an excerpt and
+/// trims on a word boundary so the image stays a quotation, not a document.
+const int kMaxShareCommentaryChars = 700;
+
 /// Opens the share sheet for a verse: copy, share text, or share a beautiful
 /// card image. Deliberately understated — the shared text is just the verse and
 /// its reference (no "sent from app" line); only the card carries a small,
 /// elegant wordmark so people naturally ask where it came from.
 void showShareVerse(BuildContext context,
     {required String reference, required String text}) {
+  _showShareSheet(
+    context,
+    plainText: '“$text”\n— $reference',
+    card: _ShareCard(reference: reference, body: '“$text”'),
+  );
+}
+
+/// Shares a continuous span of verses as one card — "John 1:1–5" — keeping the
+/// verse numbers so the passage still reads as Scripture. Callers must check
+/// [kMaxShareSelectionChars] first (see [passageLength]).
+void showSharePassage(BuildContext context,
+    {required String reference,
+    required List<({int number, String text})> verses}) {
+  final plain = verses.map((v) => '${v.number} ${v.text}').join(' ');
+  _showShareSheet(
+    context,
+    plainText: '“$plain”\n— $reference',
+    card: _ShareCard(reference: reference, verses: verses),
+  );
+}
+
+/// Shares a single commentary as a card: the commentator, their function and
+/// century, the excerpt, and the verse it comments on.
+void showShareCommentary(BuildContext context,
+    {required String reference,
+    required String author,
+    required String authorMeta,
+    required String text}) {
+  final excerpt = excerptFor(text, kMaxShareCommentaryChars);
+  _showShareSheet(
+    context,
+    plainText: '“$excerpt”\n— $author, $reference',
+    card: _ShareCard(
+      reference: reference,
+      body: '“$excerpt”',
+      author: author,
+      authorMeta: authorMeta,
+    ),
+  );
+}
+
+/// Character length of a passage as the card will render it.
+int passageLength(List<({int number, String text})> verses) =>
+    verses.fold(0, (sum, v) => sum + v.text.length + 3);
+
+/// Trims [text] to at most [max] characters on a word boundary, appending an
+/// ellipsis when anything was dropped.
+String excerptFor(String text, int max) {
+  final t = text.trim();
+  if (t.length <= max) return t;
+  final cut = t.substring(0, max);
+  final lastSpace = cut.lastIndexOf(' ');
+  return '${(lastSpace > max * 0.6 ? cut.substring(0, lastSpace) : cut).trimRight()}…';
+}
+
+void _showShareSheet(BuildContext context,
+    {required String plainText, required Widget card}) {
   final c = context.bt;
   final cardKey = GlobalKey();
   showModalBottomSheet(
@@ -37,9 +104,12 @@ void showShareVerse(BuildContext context,
                     color: c.divider, borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 20),
             // Live preview = the exact thing we rasterise for the image share.
-            RepaintBoundary(
-              key: cardKey,
-              child: _ShareCard(reference: reference, text: text),
+            // Long cards scroll here; the rasterised image is never clipped
+            // because RepaintBoundary captures the full laid-out card.
+            Flexible(
+              child: SingleChildScrollView(
+                child: RepaintBoundary(key: cardKey, child: card),
+              ),
             ),
             const SizedBox(height: 20),
             Row(
@@ -49,8 +119,7 @@ void showShareVerse(BuildContext context,
                     icon: Icons.copy,
                     label: sheetCtx.l10n.shareCopy,
                     onTap: () {
-                      Clipboard.setData(
-                          ClipboardData(text: '“$text”\n— $reference'));
+                      Clipboard.setData(ClipboardData(text: plainText));
                       final copied = sheetCtx.l10n.copied;
                       Navigator.pop(sheetCtx);
                       showSnack(copied);
@@ -64,8 +133,7 @@ void showShareVerse(BuildContext context,
                     label: sheetCtx.l10n.shareText,
                     onTap: () {
                       Navigator.pop(sheetCtx);
-                      SharePlus.instance
-                          .share(ShareParams(text: '“$text”\n— $reference'));
+                      SharePlus.instance.share(ShareParams(text: plainText));
                     },
                   ),
                 ),
@@ -75,7 +143,7 @@ void showShareVerse(BuildContext context,
                     icon: Icons.image_outlined,
                     label: sheetCtx.l10n.shareImage,
                     onTap: () async {
-                      await _shareCardImage(cardKey, reference);
+                      await _shareCardImage(cardKey);
                       if (sheetCtx.mounted) Navigator.pop(sheetCtx);
                     },
                   ),
@@ -89,7 +157,7 @@ void showShareVerse(BuildContext context,
   );
 }
 
-Future<void> _shareCardImage(GlobalKey key, String reference) async {
+Future<void> _shareCardImage(GlobalKey key) async {
   final boundary =
       key.currentContext?.findRenderObject() as RenderRepaintBoundary?;
   if (boundary == null) return;
@@ -105,10 +173,22 @@ Future<void> _shareCardImage(GlobalKey key, String reference) async {
 }
 
 /// The share card — dark, serif, reverent; a small wordmark, never an ad.
+/// One frame serves all three shapes: a single verse, a numbered passage, and
+/// a commentary (which adds the commentator above the text).
 class _ShareCard extends StatelessWidget {
   final String reference;
-  final String text;
-  const _ShareCard({required this.reference, required this.text});
+  final String? body;
+  final List<({int number, String text})>? verses;
+  final String? author;
+  final String? authorMeta;
+
+  const _ShareCard({
+    required this.reference,
+    this.body,
+    this.verses,
+    this.author,
+    this.authorMeta,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -116,6 +196,8 @@ class _ShareCard extends StatelessWidget {
     const accent = Color(0xFFC2492E);
     const ivory = Color(0xFFEDE9E3);
     final serif = GoogleFonts.ebGaramond();
+    final rows = verses;
+
     return Container(
       width: 320,
       padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 36),
@@ -127,16 +209,54 @@ class _ShareCard extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.auto_stories, color: accent.withValues(alpha: 0.8), size: 22),
+          Icon(author == null ? Icons.auto_stories : Icons.format_quote,
+              color: accent.withValues(alpha: 0.8), size: 22),
           const SizedBox(height: 20),
-          Text(
-            '“$text”',
-            textAlign: TextAlign.center,
-            style: serif.copyWith(
-                color: ivory, fontSize: 19, height: 1.5),
-          ),
+          if (author != null) ...[
+            Text(author!,
+                textAlign: TextAlign.center,
+                style: serif.copyWith(
+                    color: ivory, fontSize: 17, fontWeight: FontWeight.w600)),
+            if ((authorMeta ?? '').isNotEmpty) ...[
+              const SizedBox(height: 3),
+              Text(authorMeta!,
+                  textAlign: TextAlign.center,
+                  style: serif.copyWith(
+                      color: ivory.withValues(alpha: 0.6),
+                      fontSize: 12,
+                      letterSpacing: 0.4)),
+            ],
+            const SizedBox(height: 18),
+          ],
+          if (rows != null)
+            // Numbered passage: verse numbers stay, in accent, so "John 1:1–5"
+            // still reads as Scripture rather than a paragraph.
+            Text.rich(
+              TextSpan(children: [
+                const TextSpan(text: '“'),
+                for (var i = 0; i < rows.length; i++) ...[
+                  TextSpan(
+                    text: '${rows[i].number} ',
+                    style: serif.copyWith(
+                        color: accent, fontSize: 13, height: 1.5),
+                  ),
+                  TextSpan(
+                      text: rows[i].text + (i == rows.length - 1 ? '' : ' ')),
+                ],
+                const TextSpan(text: '”'),
+              ]),
+              textAlign: TextAlign.center,
+              style: serif.copyWith(color: ivory, fontSize: 19, height: 1.5),
+            )
+          else
+            Text(
+              body ?? '',
+              textAlign: TextAlign.center,
+              style: serif.copyWith(color: ivory, fontSize: 19, height: 1.5),
+            ),
           const SizedBox(height: 18),
           Text(reference.toUpperCase(),
+              textAlign: TextAlign.center,
               style: serif.copyWith(
                   color: accent,
                   fontSize: 12,

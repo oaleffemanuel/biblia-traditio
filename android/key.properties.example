@@ -1,0 +1,20 @@
+# Release signing for Biblia Traditio — TEMPLATE.
+#
+# Copy to android/key.properties (gitignored) and fill in real values, or set
+# the equivalent BT_* environment variables instead (see android/app/build.gradle.kts).
+# NEVER commit the filled-in file or the keystore itself.
+#
+# Create the keystore once, and back it up somewhere safe — Google Play cannot
+# reissue an upload key you have lost:
+#
+#   keytool -genkey -v -keystore ~/keys/biblia-traditio.jks -storetype JKS \
+#           -keyalg RSA -keysize 2048 -validity 10000 -alias bibliatraditio
+#
+# Then build:
+#   flutter build appbundle --release   # Play Console upload
+#   flutter build apk --release         # direct beta distribution
+
+storeFile=/absolute/path/to/biblia-traditio.jks
+storePassword=CHANGE_ME
+keyAlias=bibliatraditio
+keyPassword=CHANGE_ME

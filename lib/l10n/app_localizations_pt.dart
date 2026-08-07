@@ -170,7 +170,7 @@ class AppL10nPt extends AppL10n {
   String get readingGospel => 'Evangelho';
 
   @override
-  String get onbNameTitle => 'Como devemos chamá-lo?';
+  String get onbNameTitle => 'Como podemos chamar você?';
 
   @override
   String get onbNameSubtitle => 'Usaremos o seu nome para saudá-lo.';
@@ -306,7 +306,7 @@ class AppL10nPt extends AppL10n {
 
   @override
   String get patristicsNotInstalled =>
-      'Instale o Comentário dos Padres em Ajustes para ler este versículo com a Igreja.';
+      'Instale o Comentário dos Padres da Igreja em Ajustes para ler este versículo com a Igreja.';
 
   @override
   String get noNotesForVerse => 'Ainda não há notas para este versículo.';
@@ -407,7 +407,7 @@ class AppL10nPt extends AppL10n {
   String get layoutSideBySide => 'Lado a lado';
 
   @override
-  String get searchHint => 'Pesquisar Escritura, Padres, notas…';
+  String get searchHint => 'Pesquisar Escritura, Patrística, notas…';
 
   @override
   String get searchScopeAll => 'Tudo';
@@ -416,7 +416,7 @@ class AppL10nPt extends AppL10n {
   String get searchScopeScripture => 'Escritura';
 
   @override
-  String get searchScopeFathers => 'Padres';
+  String get searchScopeFathers => 'Patrística';
 
   @override
   String get searchScopeNotes => 'Notas';
@@ -631,4 +631,255 @@ class AppL10nPt extends AppL10n {
   @override
   String get licGreekBody =>
       'O Novo Testamento Grego SBL (SBLGNT), © Society of Biblical Literature e Logos Bible Software. Usado sob a licença Creative Commons Atribuição 4.0.';
+
+  @override
+  String get pressBackAgainToExit => 'Pressione novamente para sair.';
+
+  @override
+  String get searchScopeBooks => 'Livros';
+
+  @override
+  String get sectionBooks => 'Livros';
+
+  @override
+  String get sectionGoTo => 'Ir para';
+
+  @override
+  String get searchOpenBook => 'Abrir livro';
+
+  @override
+  String get commentaryTabPatristics => 'Patrística';
+
+  @override
+  String get commentaryExpandAll => 'Exibir todos';
+
+  @override
+  String get commentaryCollapseAll => 'Minimizar todos';
+
+  @override
+  String get commentaryCollapse => 'Recolher';
+
+  @override
+  String get shareCommentary => 'Partilhar comentário';
+
+  @override
+  String get roleDoctor => 'Doutor da Igreja';
+
+  @override
+  String get rolePope => 'Papa';
+
+  @override
+  String get roleBishop => 'Bispo';
+
+  @override
+  String get roleMonk => 'Monge';
+
+  @override
+  String get rolePriest => 'Sacerdote';
+
+  @override
+  String get roleDeacon => 'Diácono';
+
+  @override
+  String get roleExegete => 'Exegeta';
+
+  @override
+  String get roleTheologian => 'Teólogo';
+
+  @override
+  String get roleHistorian => 'Historiador';
+
+  @override
+  String get rolePoet => 'Poeta';
+
+  @override
+  String get rolePatristics => 'Patrística';
+
+  @override
+  String get roleMedieval => 'Medieval';
+
+  @override
+  String get roleEarlyChristian => 'Cristão Primitivo';
+
+  @override
+  String get roleSaint => 'Santo';
+
+  @override
+  String get roleSaintFem => 'Santa';
+
+  @override
+  String get roleLiturgy => 'Liturgia';
+
+  @override
+  String get roleDocPatristic => 'Documento Patrístico';
+
+  @override
+  String get roleDocMedieval => 'Documento Medieval';
+
+  @override
+  String get roleDocHistorical => 'Documento Histórico';
+
+  @override
+  String get roleDocGeneral => 'Documento Geral';
+
+  @override
+  String authorMeta(String role, String century) {
+    return '$role — séc. $century';
+  }
+
+  @override
+  String get settingsCommentary => 'Comentários';
+
+  @override
+  String get commentaryPreferences => 'Preferências de comentário';
+
+  @override
+  String get commentaryPreferencesSubtitle =>
+      'Escolha quais comentadores aparecem ao abrir um versículo.';
+
+  @override
+  String get commentaryClassification => 'Classificação';
+
+  @override
+  String get commentaryCenturies => 'Séculos';
+
+  @override
+  String get filterScholastic => 'Escolástica';
+
+  @override
+  String get filterSaints => 'Santos';
+
+  @override
+  String get commentaryOnlySaints => 'Somente santos';
+
+  @override
+  String get commentaryOnlySaintsSubtitle =>
+      'Modo simplificado: mostra apenas santos e santas.';
+
+  @override
+  String get commentaryResetDefaults => 'Restaurar padrão';
+
+  @override
+  String get commentaryPrefsAll => 'Todos os comentadores';
+
+  @override
+  String commentaryPrefsFilters(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count filtros ativos',
+      one: '1 filtro ativo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String commentaryHiddenByPrefs(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count comentários ocultos pelas suas preferências',
+      one: '1 comentário oculto pelas suas preferências',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get commentaryShowHidden => 'Mostrar mesmo assim';
+
+  @override
+  String get shareSelectVerses => 'Selecionar versículos';
+
+  @override
+  String shareSelectionTooLong(int max) {
+    return 'Seleção longa demais para uma imagem (máx. $max caracteres). Escolha menos versículos.';
+  }
+
+  @override
+  String selectionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count versículos selecionados',
+      one: '1 versículo selecionado',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get selectionHint =>
+      'Toque nos versículos para escolher uma passagem contínua.';
+
+  @override
+  String get selectionClear => 'Limpar';
+
+  @override
+  String get shareSelection => 'Partilhar seleção';
+
+  @override
+  String get planSectionBook => 'Leitura';
+
+  @override
+  String get planSectionWisdom => 'Sapiencial';
+
+  @override
+  String get planCompleted => 'Lido';
+
+  @override
+  String get onbStyleTitle => 'Qual estilo de tradução você prefere?';
+
+  @override
+  String get onbStyleSubtitle =>
+      'Usaremos isto para sugerir uma tradução. Todas continuam disponíveis.';
+
+  @override
+  String get styleAcademic => 'Mais acadêmica';
+
+  @override
+  String get styleSimple => 'Mais simples';
+
+  @override
+  String get styleBalanced => 'Equilibrada';
+
+  @override
+  String get styleLiturgical => 'Litúrgica';
+
+  @override
+  String get onbParallelTitle => 'Deseja utilizar um texto paralelo?';
+
+  @override
+  String get onbParallelSubtitle =>
+      'Mostramos apenas os textos realmente instalados.';
+
+  @override
+  String get parallelLatin => 'Latim';
+
+  @override
+  String get parallelGreek => 'Grego';
+
+  @override
+  String get parallelHebrew => 'Hebraico / Original';
+
+  @override
+  String get parallelNone => 'Não';
+
+  @override
+  String get langLatin => 'Latim';
+
+  @override
+  String get langGreek => 'Grego';
+
+  @override
+  String get langHebrew => 'Hebraico';
+
+  @override
+  String get langPortuguese => 'Português';
+
+  @override
+  String get langEnglish => 'Inglês';
+
+  @override
+  String translationWithLanguage(String language, String title) {
+    return '$language — $title';
+  }
 }

@@ -10,18 +10,29 @@ import '../../../features/bible/domain/entities.dart';
 class ContentDatabase {
   final Database _bible;
   final Database? _patristics;
-  ContentDatabase._(this._bible, this._patristics);
+
+  /// Whether the installed patristics pack carries commentator função metadata
+  /// (`father.role_primary`, added in pack v4). An older pack still on disk
+  /// keeps working — commentaries simply come back with no role, and the UI
+  /// falls back to showing the century alone.
+  final bool _hasRoles;
+
+  ContentDatabase._(this._bible, this._patristics, this._hasRoles);
 
   static ContentDatabase open(
       {required String biblePath, String? patristicsPath}) {
     final bible = sqlite3.open(biblePath, mode: OpenMode.readOnly);
     bible.execute('PRAGMA query_only = ON;');
     Database? patr;
+    var hasRoles = false;
     if (patristicsPath != null && File(patristicsPath).existsSync()) {
       patr = sqlite3.open(patristicsPath, mode: OpenMode.readOnly);
       patr.execute('PRAGMA query_only = ON;');
+      hasRoles = patr
+          .select("PRAGMA table_info('father')")
+          .any((r) => r['name'] == 'role_primary');
     }
-    return ContentDatabase._(bible, patr);
+    return ContentDatabase._(bible, patr, hasRoles);
   }
 
   bool get hasPatristics => _patristics != null;
@@ -134,17 +145,38 @@ class ContentDatabase {
       _patristics == null ? null : _metaOf(_patristics, key);
 
   // ── Patristics (optional DB) ─────────────────────────────────────────────
+  /// Extra `father` columns, selected only when the installed pack has them.
+  String get _roleCols => _hasRoles
+      ? ', f.role_primary AS role_primary, f.role_groups AS role_groups'
+      : '';
+
   List<Commentary> commentariesFor(VerseRef ref) {
     final db = _patristics;
     if (db == null) return const [];
     final rows = db.select('''
       SELECT c.id, c.book_id, c.chapter, c.verse, c.source, c.is_machine_translation,
-             c.text, f.name AS father, f.century
+             c.text, f.name AS father, f.century$_roleCols
       FROM commentary c JOIN father f ON f.id = c.father_id
       WHERE c.book_id = ? AND c.chapter = ? AND c.verse = ?
       ORDER BY f.century, f.name
     ''', [ref.bookId, ref.chapter, ref.verse]);
     return rows.map(_toCommentary).toList();
+  }
+
+  /// Centuries (as integers) actually represented in the installed patristics
+  /// pack, ascending. Backs the century filter chips so the UI never offers a
+  /// century that would return nothing.
+  List<int> commentaryCenturies() {
+    final db = _patristics;
+    if (db == null) return const [];
+    final rows =
+        db.select("SELECT DISTINCT century FROM father WHERE century <> ''");
+    final out = <int>{};
+    for (final r in rows) {
+      final n = Commentary.romanToInt(r['century'] as String);
+      if (n != null) out.add(n);
+    }
+    return out.toList()..sort();
   }
 
   Set<int> versesWithCommentary(String bookId, int chapter) {
@@ -161,7 +193,7 @@ class ContentDatabase {
     if (db == null || query.trim().isEmpty) return const [];
     final rows = db.select('''
       SELECT c.id, c.book_id, c.chapter, c.verse, c.source, c.is_machine_translation,
-             c.text, f.name AS father, f.century
+             c.text, f.name AS father, f.century$_roleCols
       FROM commentary_fts ft
       JOIN commentary c ON c.id = ft.rowid
       JOIN father f ON f.id = c.father_id
@@ -203,6 +235,14 @@ class ContentDatabase {
         source: r['source'] as String?,
         isMachineTranslation: (r['is_machine_translation'] as int) == 1,
         text: r['text'] as String,
+        rolePrimary:
+            _hasRoles ? ((r['role_primary'] as String?) ?? '') : '',
+        roleGroups: _hasRoles
+            ? ((r['role_groups'] as String?) ?? '')
+                .split(';')
+                .where((s) => s.isNotEmpty)
+                .toSet()
+            : const {},
       );
 
   static String? _metaOf(Database db, String key) {

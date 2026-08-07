@@ -14,64 +14,106 @@ class BibleLibraryScreen extends ConsumerStatefulWidget {
   ConsumerState<BibleLibraryScreen> createState() => _BibleLibraryScreenState();
 }
 
+/// Testaments in page order: swiping left moves forward through the canon
+/// (Old → New), swiping right moves back.
+const _kTestamentPages = [Testament.ot, Testament.nt];
+
 class _BibleLibraryScreenState extends ConsumerState<BibleLibraryScreen> {
+  final _pages = PageController();
   Testament _testament = Testament.ot;
   String _query = '';
 
   @override
-  Widget build(BuildContext context) {
-    final c = context.bt;
-    final all = ref.watch(booksByTestamentProvider(_testament));
-    final books = _query.isEmpty
-        ? all
-        : all
-            .where((b) => b.name.toLowerCase().contains(_query.toLowerCase()))
-            .toList();
+  void dispose() {
+    _pages.dispose();
+    super.dispose();
+  }
 
+  /// Tapping the selector animates the pages, so tap and swipe end in the same
+  /// place — the toggle can never disagree with what's on screen.
+  void _selectTestament(Testament t) {
+    setState(() => _testament = t);
+    _pages.animateToPage(
+      _kTestamentPages.indexOf(t),
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Settings lives on Home; the Bible screen no longer carries
-                    // a redundant overflow menu.
-                    Text(context.l10n.bibleTitle,
-                        style: Theme.of(context)
-                            .textTheme
-                            .displaySmall
-                            ?.copyWith(fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 8),
-                    _SearchField(onChanged: (v) => setState(() => _query = v)),
-                    const SizedBox(height: 16),
-                    _TestamentToggle(
-                      value: _testament,
-                      onChanged: (t) => setState(() => _testament = t),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Settings lives on Home; the Bible screen no longer carries
+                  // a redundant overflow menu.
+                  Text(context.l10n.bibleTitle,
+                      style: Theme.of(context)
+                          .textTheme
+                          .displaySmall
+                          ?.copyWith(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 8),
+                  _SearchField(onChanged: (v) => setState(() => _query = v)),
+                  const SizedBox(height: 16),
+                  _TestamentToggle(
+                    value: _testament,
+                    onChanged: _selectTestament,
+                  ),
+                  const SizedBox(height: 8),
+                ],
               ),
             ),
-            if (books.isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: _EmptyLibrary(installed: all.isNotEmpty),
-              )
-            else
-              SliverList.separated(
-                itemCount: books.length,
-                separatorBuilder: (_, _) =>
-                    Divider(height: 1, color: c.divider, indent: 80),
-                itemBuilder: (_, i) => _BookRow(book: books[i]),
+            Expanded(
+              child: PageView(
+                controller: _pages,
+                onPageChanged: (i) =>
+                    setState(() => _testament = _kTestamentPages[i]),
+                children: [
+                  for (final t in _kTestamentPages)
+                    _TestamentList(testament: t, query: _query),
+                ],
               ),
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// One testament's books. The PageStorageKey keeps each testament's scroll
+/// offset across swipes, so returning to the Old Testament lands where the
+/// reader left it rather than back at Genesis.
+class _TestamentList extends ConsumerWidget {
+  final Testament testament;
+  final String query;
+  const _TestamentList({required this.testament, required this.query});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.bt;
+    final all = ref.watch(booksByTestamentProvider(testament));
+    final books = query.isEmpty
+        ? all
+        : all
+            .where((b) => b.name.toLowerCase().contains(query.toLowerCase()))
+            .toList();
+
+    if (books.isEmpty) return _EmptyLibrary(installed: all.isNotEmpty);
+
+    return ListView.separated(
+      key: PageStorageKey('books-${testament.name}'),
+      itemCount: books.length,
+      separatorBuilder: (_, _) =>
+          Divider(height: 1, color: c.divider, indent: 80),
+      itemBuilder: (_, i) => _BookRow(book: books[i]),
     );
   }
 }
@@ -122,20 +164,27 @@ class _TestamentToggle extends StatelessWidget {
     Widget seg(String label, Testament t) {
       final on = value == t;
       return Expanded(
-        child: GestureDetector(
-          onTap: () => onChanged(t),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: on ? c.surfaceHigh : Colors.transparent,
-              borderRadius: BorderRadius.circular(24),
+        // Swiping is the shortcut, not the only way in: the segments stay
+        // real, tappable, selectable controls for screen readers.
+        child: Semantics(
+          button: true,
+          selected: on,
+          label: label,
+          child: GestureDetector(
+            onTap: () => onChanged(t),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: on ? c.surfaceHigh : Colors.transparent,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              alignment: Alignment.center,
+              child: Text(label,
+                  style: TextStyle(
+                      color: on ? c.textPrimary : c.textSecondary,
+                      fontWeight: FontWeight.w600)),
             ),
-            alignment: Alignment.center,
-            child: Text(label,
-                style: TextStyle(
-                    color: on ? c.textPrimary : c.textSecondary,
-                    fontWeight: FontWeight.w600)),
           ),
         ),
       );

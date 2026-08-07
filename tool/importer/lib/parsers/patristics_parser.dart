@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import '../models/canon.dart';
+import 'patristics_roles.dart';
 
 class CommentaryRecord {
   final String bookId;
@@ -17,6 +18,9 @@ class CommentaryRecord {
   final bool isMachineTranslation;
   final String text;
 
+  /// Function/title metadata, present only in the corrected corpus.
+  final RoleInfo role;
+
   CommentaryRecord({
     required this.bookId,
     required this.chapter,
@@ -28,7 +32,26 @@ class CommentaryRecord {
     required this.lang,
     required this.isMachineTranslation,
     required this.text,
+    this.role = RoleInfo.empty,
   });
+
+  ({String bookId, int chapter, int verse}) get key =>
+      (bookId: bookId, chapter: chapter, verse: verse);
+
+  CommentaryRecord withFather(String name, RoleInfo newRole, String newYear) =>
+      CommentaryRecord(
+        bookId: bookId,
+        chapter: chapter,
+        verse: verse,
+        fatherName: name,
+        year: newYear,
+        century: PatristicsParser.centuryFromYear(newYear),
+        source: source,
+        lang: lang,
+        isMachineTranslation: isMachineTranslation,
+        text: text,
+        role: newRole,
+      );
 }
 
 class PatristicsParseResult {
@@ -37,6 +60,9 @@ class PatristicsParseResult {
   final List<String> warnings = [];
   int filesProcessed = 0;
   int orphans = 0; // refs whose book id could not be resolved
+
+  Set<({String bookId, int chapter, int verse})> get coveredVerses =>
+      {for (final c in commentaries) c.key};
 }
 
 /// Maps a Hebrew/Masoretic psalm (chapter, verse) to the Vulgate/Septuagint
@@ -60,7 +86,7 @@ class PatristicsParseResult {
 
 /// Ingests the verse-keyed patristic corpus:
 ///   { id, name, language, translation_engine, format,
-///     chapters: { "<ch>": { "<verse>": [ {author, year, text}, ... ] } } }
+///     chapters: { `"<ch>"`: { `"<verse>"`: [ {author, year, text}, ... ] } } }
 class PatristicsParser {
   final Map<String, String> aliases; // source-code variant -> canonical
   PatristicsParser(this.aliases);
@@ -78,10 +104,16 @@ class PatristicsParser {
   String? _resolveBookId(String rawId) {
     final id = rawId.toLowerCase().trim();
     if (kCanonById.containsKey(id)) return id;
-    final aliased = aliases[id];
+    final aliased = aliases[id] ?? _builtinAliases[id];
     if (aliased != null && kCanonById.containsKey(aliased)) return aliased;
     return null;
   }
+
+  /// Source-code variants both corpora use, so a directory without its own
+  /// `aliases_normalizados.json` (the corrected corpus) still resolves.
+  static const _builtinAliases = {
+    'ru': 'rt', '1mc': '1mac', '2mc': '2mac', 'ti': 'tit', 'jude': 'jud',
+  };
 
   Future<PatristicsParseResult> parseDir(String dir) async {
     final result = PatristicsParseResult();
@@ -158,7 +190,83 @@ class PatristicsParser {
     return result;
   }
 
+  /// Ingests the *corrected* corpus ("Comentários melhorados"), whose layout
+  /// differs from the original: one file per book named `«book»_pt.json`, the
+  /// book id living in the filename, and every entry carrying the commentator's
+  /// `função` (function/title) alongside the year:
+  ///   { `"<ch>"`: { `"<verse>"`: [ {commentator, função, year, comment}, … ] } }
+  /// Verses with no commentary are present as `null` and are skipped.
+  ///
+  /// Psalms are Hebrew/Masoretic-numbered here exactly as in the original
+  /// corpus (Ps 23 is the Good Shepherd), so the same Vulgate remap applies.
+  Future<PatristicsParseResult> parseCorrectedDir(String dir,
+      {String suffix = '_pt.json', String lang = 'pt-BR'}) async {
+    final result = PatristicsParseResult();
+    final files = Directory(dir)
+        .listSync()
+        .whereType<File>()
+        .where((f) => p.basename(f.path).endsWith(suffix))
+        .toList()
+      ..sort((a, b) => a.path.compareTo(b.path));
+
+    for (final file in files) {
+      final base = p.basename(file.path);
+      final rawId = base.substring(0, base.length - suffix.length);
+      final bookId = _resolveBookId(rawId);
+      if (bookId == null) {
+        result.warnings.add('Unresolved book id "$rawId" in $base — skipped.');
+        result.orphans++;
+        continue;
+      }
+      Map<String, dynamic> data;
+      try {
+        data = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+      } catch (e) {
+        result.warnings.add('Skipped $base: parse error $e');
+        continue;
+      }
+      result.filesProcessed++;
+
+      for (final chEntry in data.entries) {
+        final ch = int.tryParse(chEntry.key);
+        final verses = chEntry.value;
+        if (ch == null || verses is! Map) continue;
+        for (final vEntry in verses.entries) {
+          final vs = int.tryParse('${vEntry.key}');
+          final list = vEntry.value;
+          if (vs == null || list is! List) continue; // null ⇒ no commentary
+          final (rch, rvs) =
+              bookId == 'ps' ? psalmHebrewToVulgate(ch, vs) : (ch, vs);
+          for (final item in list) {
+            if (item is! Map) continue;
+            final author = (item['commentator'] ?? '').toString().trim();
+            final text = (item['comment'] ?? '').toString().trim();
+            if (author.isEmpty || text.isEmpty) continue;
+            final year = (item['year'] ?? '').toString().trim();
+            result.fathers.add(author);
+            result.commentaries.add(CommentaryRecord(
+              bookId: bookId,
+              chapter: rch,
+              verse: rvs,
+              fatherName: author,
+              year: year,
+              century: centuryFromYear(year),
+              source: 'Catena Aurea / Haydock',
+              lang: lang,
+              isMachineTranslation: true,
+              text: text,
+              role: RoleInfo.parse((item['função'] ?? '').toString()),
+            ));
+          }
+        }
+      }
+    }
+    return result;
+  }
+
   /// Derives a roman-numeral century from a year string (e.g. "430" -> "V").
+  static String centuryFromYear(String year) => _centuryFromYear(year);
+
   static String _centuryFromYear(String year) {
     final m = RegExp(r'(\d{1,4})').firstMatch(year);
     if (m == null) return '';

@@ -10,6 +10,7 @@ import '../../packages/application/package_providers.dart';
 import '../../packages/domain/content_package.dart';
 import '../application/settings_providers.dart';
 import '../domain/settings.dart';
+import 'commentary_preferences.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -24,9 +25,9 @@ class SettingsScreen extends ConsumerWidget {
     final resolvedId = ref.watch(resolvedTranslationIdProvider);
     final l10n = context.l10n;
     final translationTitle = available
-        .where((t) => t.id == resolvedId)
-        .map((t) => t.title)
-        .firstOrNull ??
+            .where((t) => t.id == resolvedId)
+            .map((t) => translationLabel(l10n, t.lang, t.title))
+            .firstOrNull ??
         l10n.noTranslationInstalled;
     String themeLabel(ThemeMode m) => switch (m) {
           ThemeMode.light => l10n.themeLight,
@@ -58,7 +59,7 @@ class SettingsScreen extends ConsumerWidget {
                       context,
                       l10n.settingsTranslation,
                       available,
-                      (t) => t.title,
+                      (t) => translationLabel(l10n, t.lang, t.title),
                       available.firstWhere((t) => t.id == resolvedId,
                           orElse: () => available.first),
                       (t) => ctrl.setTranslation(t.id),
@@ -95,6 +96,17 @@ class SettingsScreen extends ConsumerWidget {
             title: Text(l10n.settingsReminders),
             value: s.notificationsEnabled,
             onChanged: ctrl.setNotifications,
+          ),
+          _section(c, l10n.settingsCommentary),
+          ListTile(
+            leading: const Icon(Icons.auto_stories_outlined),
+            title: Text(l10n.commentaryPreferences),
+            subtitle: Text(s.commentaryPrefs.isDefault
+                ? l10n.commentaryPrefsAll
+                : l10n.commentaryPrefsFilters(
+                    s.commentaryPrefs.activeFilterCount)),
+            trailing: Icon(Icons.chevron_right, color: c.textFaint),
+            onTap: () => showCommentaryPreferences(context),
           ),
           _section(c, l10n.settingsOfflineResources),
           for (final entry in packages)

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'commentary_prefs.dart';
+
+export 'commentary_prefs.dart';
+
 /// UI languages. `values` keeps codes the parser may encounter; [implemented]
 /// is the subset with real ARB/localization files and is the ONLY list exposed
 /// in onboarding/Settings. Add a language to [implemented] once its ARB ships
@@ -26,6 +30,45 @@ enum AppLanguage {
 /// side-by-side on wide layouts (tablets) and stacked on phones.
 enum ParallelLayout { auto, stacked, sideBySide }
 
+/// The reader's preferred register, asked once in onboarding. It only ever
+/// *suggests* a primary translation — every installed translation stays
+/// selectable in Settings.
+enum TranslationStyle {
+  academic('academic'),
+  simple('simple'),
+  balanced('balanced'),
+  liturgical('liturgical'),
+  unset('');
+
+  final String key;
+  const TranslationStyle(this.key);
+
+  static const List<TranslationStyle> choices = [
+    academic, simple, balanced, liturgical
+  ];
+
+  static TranslationStyle fromKey(String? k) =>
+      values.firstWhere((s) => s.key == k, orElse: () => unset);
+}
+
+/// The original-language column the reader asked for in onboarding. Options are
+/// offered only when a matching translation is actually installed — the app
+/// never advertises a text it doesn't ship.
+enum ParallelPreference {
+  none('none'),
+  latin('la'),
+  greek('grc'),
+  hebrew('he');
+
+  /// The BCP-47-ish language code a translation must carry to satisfy this
+  /// preference. Empty for [none].
+  final String langCode;
+  const ParallelPreference(this.langCode);
+
+  static ParallelPreference fromKey(String? k) =>
+      values.firstWhere((p) => p.langCode == k, orElse: () => none);
+}
+
 @immutable
 class Settings {
   final bool onboardingCompleted;
@@ -38,6 +81,9 @@ class Settings {
   final bool parallelReadingEnabled;
   final String secondaryTranslationId;
   final ParallelLayout parallelLayout;
+  final TranslationStyle translationStyle;
+  final ParallelPreference parallelPreference;
+  final CommentaryPrefs commentaryPrefs;
 
   const Settings({
     this.onboardingCompleted = false,
@@ -50,6 +96,9 @@ class Settings {
     this.parallelReadingEnabled = false,
     this.secondaryTranslationId = '',
     this.parallelLayout = ParallelLayout.auto,
+    this.translationStyle = TranslationStyle.unset,
+    this.parallelPreference = ParallelPreference.none,
+    this.commentaryPrefs = CommentaryPrefs.defaults,
   });
 
   factory Settings.fromMap(Map<String, String> m) => Settings(
@@ -71,6 +120,9 @@ class Settings {
           'sideBySide' => ParallelLayout.sideBySide,
           _ => ParallelLayout.auto,
         },
+        translationStyle: TranslationStyle.fromKey(m['translationStyle']),
+        parallelPreference: ParallelPreference.fromKey(m['parallelPreference']),
+        commentaryPrefs: CommentaryPrefs.fromMap(m),
       );
 
   static String themeModeKey(ThemeMode m) => switch (m) {

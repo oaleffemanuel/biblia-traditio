@@ -72,7 +72,7 @@ void main() {
         await tester.enterText(find.byType(TextField).first, 'Teste');
         await tester.pump(const Duration(milliseconds: 300));
       }
-      for (var i = 0; i < 6; i++) {
+      for (var i = 0; i < 8; i++) {
         final next = find.text('Continuar').evaluate().isNotEmpty
             ? find.text('Continuar')
             : find.text('Entrar');
@@ -89,7 +89,12 @@ void main() {
     await tap(tester, find.text('Novo testamento'));
     expect(await until(tester, find.text('Mateus')), isTrue);
     debugPrint('RESULT ot_nt_toggle=ok');
-    await tap(tester, find.text('Antigo testamento'));
+    // Swiping right comes back to the Old Testament; the selector follows.
+    await tester.fling(find.byType(PageView), const Offset(400, 0), 1000);
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(await until(tester, find.text('Gênesis')), isTrue,
+        reason: 'swipe right did not return to the Old Testament');
+    debugPrint('RESULT ot_nt_swipe=ok');
     await until(tester, find.text('Gênesis'));
     await tap(tester, find.text('Gênesis'));
     await until(tester, find.text('1'));
@@ -154,13 +159,19 @@ void main() {
     await openGenesis1(tester);
     await tester.pump(const Duration(seconds: 1));
     await tap(tester, find.textContaining('No princípio'));
-    expect(await until(tester, find.text('Padres da Igreja')), isTrue);
-    await tap(tester, find.text('Padres da Igreja'));
-    // every commentary card shows a "séc." century label (first one is visible;
-    // specific author names may be off-screen in the lazy list).
+    expect(await until(tester, find.text('Patrística')), isTrue);
+    // The panel opens as an index of commentators: each row carries the
+    // author's function and century, and no commentary body is expanded yet.
     expect(await until(tester, find.textContaining('séc.')), isTrue,
-        reason: 'commentary did not load');
-    debugPrint('RESULT commentary_shown=ok');
+        reason: 'commentary index did not load');
+    debugPrint('RESULT commentary_index_shown=ok');
+    // "Exibir todos" opens them all and flips to "Minimizar todos".
+    await tap(tester, find.text('Exibir todos'));
+    expect(await until(tester, find.text('Minimizar todos')), isTrue,
+        reason: 'expand all did not toggle');
+    await tap(tester, find.text('Minimizar todos'));
+    expect(await until(tester, find.text('Exibir todos')), isTrue);
+    debugPrint('RESULT commentary_expand_all=ok');
     await tester.tapAt(const Offset(20, 40)); // dismiss sheet
     await tester.pump(const Duration(milliseconds: 400));
 
@@ -185,9 +196,9 @@ void main() {
     // Open the commentary panel (Fathers tab is primary). Favorite + share are
     // action-bar icons; notes are the secondary tab.
     await tap(tester, find.textContaining('No princípio'));
-    expect(await until(tester, find.text('Padres da Igreja')), isTrue,
-        reason: 'commentary panel did not open (Fathers tab)');
-    debugPrint('RESULT panel_fathers_first=ok');
+    expect(await until(tester, find.text('Patrística')), isTrue,
+        reason: 'commentary panel did not open (Patrística tab)');
+    debugPrint('RESULT panel_patristics_first=ok');
 
     // favorite via the slim action bar
     await tap(tester, find.byIcon(Icons.favorite_border));
@@ -237,9 +248,12 @@ void main() {
     // Enable parallel reading. Portuguese is now the primary, so the Vulgate is
     // offered as the secondary column.
     await tap(tester, find.byType(Switch));
-    expect(await until(tester, find.text('Vulgata Clementina')), isTrue,
+    expect(await until(tester, find.textContaining('Vulgata Clementina')), isTrue,
         reason: 'Latin secondary translation not offered');
-    await tap(tester, find.text('Vulgata Clementina'));
+    // Labelled by script first: "Latim — Vulgata Clementina".
+    expect(find.textContaining('Latim —'), findsWidgets,
+        reason: 'secondary translation not labelled by language');
+    await tap(tester, find.textContaining('Vulgata Clementina'));
     debugPrint('RESULT parallel_secondary_selected=ok');
 
     // Dismiss the sheet; reader now shows Portuguese + Latin, verse-aligned.
@@ -254,7 +268,7 @@ void main() {
     // Verse tap STILL opens the commentary-first panel; notes/favorites attach
     // to the canonical verse ref, unaffected by the column shown.
     await tap(tester, find.textContaining('No princípio'));
-    expect(await until(tester, find.text('Padres da Igreja')), isTrue,
+    expect(await until(tester, find.text('Patrística')), isTrue,
         reason: 'verse tap did not open commentary panel in parallel mode');
     debugPrint('RESULT parallel_verse_tap_panel=ok');
     await tester.tapAt(const Offset(20, 40));

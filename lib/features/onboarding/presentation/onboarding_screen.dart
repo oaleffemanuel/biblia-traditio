@@ -14,12 +14,14 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int _step = 0;
-  static const _steps = 6;
+  static const _steps = 8;
 
   // collected choices
   final _nameController = TextEditingController();
   AppLanguage _language = AppLanguage.pt;
+  TranslationStyle _style = TranslationStyle.balanced;
   String _translationId = 'pt_matos_soares';
+  ParallelPreference _parallel = ParallelPreference.none;
   bool _notifications = false;
   bool _readingPlan = false;
 
@@ -41,13 +43,36 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (_step > 0) setState(() => _step--);
   }
 
+  /// The style answer only *preselects* the translation shown on the next step,
+  /// which the reader still confirms — nothing is switched behind their back.
+  void _chooseStyle(TranslationStyle style) {
+    final suggested =
+        suggestedTranslationId(style, ref.read(availableTranslationsProvider));
+    setState(() {
+      _style = style;
+      if (suggested != null) _translationId = suggested;
+    });
+  }
+
   void _finish() {
     final s = ref.read(settingsControllerProvider);
     s.setDisplayName(_nameController.text.trim());
     s.setLanguage(_language);
+    s.setTranslationStyle(_style);
     s.setTranslation(_translationId);
     s.setNotifications(_notifications);
     s.setWantsReadingPlan(_readingPlan);
+
+    // A parallel answer configures the initial reader; it stays editable in
+    // Settings. Only a text that is genuinely installed can be selected here,
+    // so this can never enable a column with nothing to show.
+    s.setParallelPreference(_parallel);
+    final secondary = translationForParallel(
+        ref.read(availableTranslationsProvider), _parallel);
+    s.setParallelReading(secondary != null && secondary.id != _translationId);
+    s.setSecondaryTranslation(
+        secondary != null && secondary.id != _translationId ? secondary.id : '');
+
     s.completeOnboarding(); // flips initial route to /home
   }
 
@@ -141,9 +166,33 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       title: l10n.onbTranslationTitle,
       subtitle: l10n.onbTranslationSubtitle,
       options: available,
-      labelOf: (t) => t.title,
+      labelOf: (t) => translationLabel(l10n, t.lang, t.title),
       selected: selected,
       onSelect: (t) => setState(() => _translationId = t.id),
+    );
+  }
+
+  /// Parallel-text step. The options are built from what is installed, so Greek
+  /// and Hebrew appear exactly when their text ships and are otherwise absent —
+  /// never listed as a promise. When nothing but the primary is installed the
+  /// step has nothing to ask and is skipped.
+  Widget _parallelStep(BtColors c) {
+    final l10n = context.l10n;
+    final options = ref.watch(availableParallelPreferencesProvider);
+    String label(ParallelPreference p) => switch (p) {
+          ParallelPreference.none => l10n.parallelNone,
+          ParallelPreference.latin => l10n.parallelLatin,
+          ParallelPreference.greek => l10n.parallelGreek,
+          ParallelPreference.hebrew => l10n.parallelHebrew,
+        };
+    return _ChoiceStep<ParallelPreference>(
+      c,
+      title: l10n.onbParallelTitle,
+      subtitle: l10n.onbParallelSubtitle,
+      options: options,
+      labelOf: label,
+      selected: options.contains(_parallel) ? _parallel : ParallelPreference.none,
+      onSelect: (p) => setState(() => _parallel = p),
     );
   }
 
@@ -163,8 +212,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               : AppLanguage.pt,
           onSelect: (l) => setState(() => _language = l),
         ),
-      3 => _translationStep(c),
-      4 => _ToggleStep(
+      3 => _ChoiceStep<TranslationStyle>(
+          c,
+          title: l10n.onbStyleTitle,
+          subtitle: l10n.onbStyleSubtitle,
+          options: TranslationStyle.choices,
+          labelOf: (s) => switch (s) {
+            TranslationStyle.academic => l10n.styleAcademic,
+            TranslationStyle.simple => l10n.styleSimple,
+            TranslationStyle.balanced => l10n.styleBalanced,
+            TranslationStyle.liturgical => l10n.styleLiturgical,
+            TranslationStyle.unset => l10n.styleBalanced,
+          },
+          selected: _style,
+          onSelect: _chooseStyle,
+        ),
+      4 => _translationStep(c),
+      5 => _parallelStep(c),
+      6 => _ToggleStep(
           c,
           icon: Icons.notifications_none,
           title: l10n.onbNotificationsTitle,

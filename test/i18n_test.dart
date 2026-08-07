@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:biblia_traditio/features/settings/domain/settings.dart';
 import 'package:biblia_traditio/l10n/app_localizations_pt.dart';
 import 'package:biblia_traditio/l10n/app_localizations_en.dart';
@@ -22,6 +25,46 @@ void main() {
     expect(AppL10nPt().filterFathers, 'Patrística');
     expect(AppL10nPt().filterFathers, isNot('Padres'));
     expect(AppL10nEn().filterFathers, 'Patristics');
+  });
+
+  test('every category/filter/scope label reads "Patrística"', () {
+    final pt = AppL10nPt();
+    for (final label in [
+      pt.filterFathers,
+      pt.searchScopeFathers,
+      pt.commentaryTabPatristics,
+      pt.rolePatristics,
+    ]) {
+      expect(label, 'Patrística');
+    }
+    final en = AppL10nEn();
+    for (final label in [
+      en.filterFathers,
+      en.searchScopeFathers,
+      en.commentaryTabPatristics,
+      en.rolePatristics,
+    ]) {
+      expect(label, 'Patristics');
+    }
+  });
+
+  test('"Padres" survives only where it names the Fathers as people', () {
+    // Audit every Portuguese string: any mention of "Padres" must be part of
+    // "Padres da Igreja" (the men) or "Padre Matos Soares" (a translator's
+    // title) — never a category, filter or scope label.
+    final arb = jsonDecode(File('lib/l10n/app_pt.arb').readAsStringSync())
+        as Map<String, dynamic>;
+    final offenders = <String>[];
+    arb.forEach((key, value) {
+      if (key.startsWith('@') || value is! String) return;
+      if (!value.contains('Padre')) return;
+      final ok = RegExp(r'Padres da Igreja|Padre Matos Soares|Pe\. Matos Soares')
+          .allMatches(value)
+          .fold<String>(value, (acc, m) => acc.replaceFirst(m.group(0)!, ''));
+      if (ok.contains('Padre')) offenders.add('$key: $value');
+    });
+    expect(offenders, isEmpty,
+        reason: 'these strings still use "Padres" outside the allowed phrases');
   });
 
   test('liturgy slot titles use the full Brazilian wording', () {

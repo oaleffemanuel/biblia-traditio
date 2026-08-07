@@ -92,5 +92,48 @@ else
   ok "no content artifacts tracked in git"
 fi
 
+# 8: Android release configuration. Signing itself is only *warned* about here —
+# a developer machine legitimately has no keystore — but everything that must be
+# true of a publishable build is checked.
+GRADLE="$ROOT/android/app/build.gradle.kts"
+MANIFEST="$ROOT/android/app/src/main/AndroidManifest.xml"
+if [ ! -f "$GRADLE" ]; then
+  err "android/app/build.gradle.kts missing"
+else
+  grep -q 'applicationId = "br.com.bibliatraditio' "$GRADLE" \
+    && ok "applicationId set" || err "applicationId not set to the published id"
+  grep -qE 'targetSdk = 3[5-9]' "$GRADLE" \
+    && ok "targetSdk meets the Play requirement" \
+    || err "targetSdk must be pinned to 35+ for Play"
+  grep -qE 'minSdk = 2[1-9]' "$GRADLE" && ok "minSdk pinned" || err "minSdk not pinned"
+  grep -q 'signingConfigs.getByName("release")' "$GRADLE" \
+    && ok "release signing config wired" || err "no release signing config"
+  # Secrets must never be inline.
+  if grep -qE '(storePassword|keyPassword)\s*=\s*"' "$GRADLE"; then
+    err "a signing password is hardcoded in build.gradle.kts"
+  else
+    ok "no signing secrets in build.gradle.kts"
+  fi
+fi
+if [ -f "$ROOT/android/key.properties" ]; then
+  git -C "$ROOT" ls-files --error-unmatch android/key.properties >/dev/null 2>&1 \
+    && err "android/key.properties is tracked in git — remove it from the index" \
+    || ok "android/key.properties present and untracked"
+else
+  echo "  ⚠ android/key.properties absent — release builds fall back to the debug key (not publishable)"
+fi
+if [ -f "$MANIFEST" ]; then
+  grep -q 'uses-permission' "$MANIFEST" \
+    && err "release manifest requests permissions (Data Safety declares none)" \
+    || ok "release manifest requests no permissions"
+  grep -q 'android:label="Biblia Traditio"' "$MANIFEST" \
+    && ok "app display name set" || err "app display name missing"
+fi
+if git -C "$ROOT" ls-files | grep -qE '\.(jks|keystore)$'; then
+  err "a keystore is tracked in git"
+else
+  ok "no keystore tracked in git"
+fi
+
 echo
 if [ "$fail" = 0 ]; then echo "RELEASE CHECK PASSED"; else echo "RELEASE CHECK FAILED"; exit 1; fi

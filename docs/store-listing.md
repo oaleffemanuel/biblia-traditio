@@ -114,8 +114,18 @@ Doutores da Igreja, calendário litúrgico.
   translator's death + 70 years, not the digitiser. Full 73-book Catholic canon,
   35,816 verses, chapter counts validated against the canon. **Beta-gated** until
   provenance (and the specific edition) is formally signed off.
-- **Comentário dos Padres da Igreja** (patristics) — Catena/Haydock, public-domain
-  sources; machine translation reviewed/curated; flagged as machine translation.
+- **Comentário dos Padres da Igreja** (patristics, pack v4) — Catena Aurea /
+  Haydock, public-domain sources; machine translation reviewed and curated;
+  flagged as machine translation in the app. 54,531 commentaries over 23,427
+  verses from 190 commentators, each carrying the commentator's function
+  (`função`) and century as given by the curated corpus. Built as a per-verse
+  overlay of the revised corpus on the original, so a partial revision never
+  reduces coverage (`tool/build_content_db.sh`; report at
+  `tool/importer/data/reports/patristics_coverage.json`).
+- **Septuaginta / Texto Massorético** — **not shipped.** The app has the layout,
+  RTL and font handling for Greek and Hebrew, but offers a parallel column only
+  for texts that are actually installed; no placeholder or fabricated text is
+  ever shown.
 
 ---
 

@@ -1,27 +1,36 @@
 #!/usr/bin/env python3
-"""Build the bundled "Bible in a Year" plan asset from the source schedule.
+"""Build the bundled "Bible in a Year" plan asset from the structured schedule.
 
-Source (external): a JSON array of {Dia, "Leitura Livro", "Leitura Sapienciais"}.
+Source (external): CronogramaDeLeituraBiblia_estruturado_app.json — a JSON array
+of {dia, leituras: [{secao, livro, capitulo, tipo, capitulo_inteiro,
+versiculos}]}. Unlike the earlier free-text schedule, it carries the exact verse
+range for the 187 readings that are not whole chapters (Proverbs and Psalm 119),
+which is what lets the Reading Plan screen render the assigned passage inline
+instead of dumping the surrounding chapter.
+
 Output (committed): assets/plans/bible_in_a_year.json — each day's readings with
-their human label plus resolved {book, chapter} targets the Reader can open.
+their human label, the section they belong to, and resolved {book, chapter,
+verseStart?, verseEnd?} targets the Reader can open.
 
 Usage:
   python3 tool/build_reading_plan.py [SOURCE_JSON]
 
-SOURCE_JSON defaults to the Victor Sales Pinheiro schedule in ~/Downloads.
-Navigation is chapter-level, so verse suffixes (e.g. "Salmo 119:1-25") collapse
-to their chapter. Validates that every day resolves and all 73 books appear.
+Validates that every day resolves and all 73 books appear, then (when the built
+Bible DB is available) reconciles every emitted verse range against the app's
+own Scripture — so a Psalm mapped from Hebrew to Vulgate numbering can never
+cite a verse the reader doesn't have.
 """
 import json
 import os
-import re
+import sqlite3
 import sys
 
 DEFAULT_SRC = os.path.expanduser(
-    "~/Downloads/Biblia Catolica Tradicional Comentada/"
-    "Cronograma Bíblia em um ano!/CronogramaDeLeituraBiblia_victor salles.json")
-OUT = os.path.join(os.path.dirname(__file__), "..", "assets", "plans",
-                   "bible_in_a_year.json")
+    "~/Downloads/Biblia Traditio/Cronograma Bíblia em um ano! (PRONTO!!)/"
+    "CronogramaDeLeituraBiblia_estruturado_app.json")
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = os.path.join(HERE, "..", "assets", "plans", "bible_in_a_year.json")
+BIBLE_DB = os.path.join(HERE, "importer", "data", "bible_vulgata.sqlite")
 
 # Portuguese book names (incl. plan spelling variants) → canonical book id.
 NAME2ID = {
@@ -49,13 +58,9 @@ NAME2ID = {
     'III São João': '3jn', 'S. Judas': 'jud', 'São Judas': 'jud',
     'Judas': 'jud', 'Apocalipse': 'rv',
 }
-NAMES_SORTED = sorted(NAME2ID, key=len, reverse=True)
 
-# Compound/irregular book-readings that the generic scanner can't split cleanly.
-OVERRIDES = {
-    'Tito e Filêmon 1-3,1': [('tit', [1, 2, 3]), ('phlm', [1])],
-    'II e III São João, S. Judas 1': [('2jn', [1]), ('3jn', [1]), ('jud', [1])],
-}
+CANON73 = set(NAME2ID.values())
+
 
 def heb_to_vulgate_ps(h):
     """The source schedule uses Hebrew/modern Psalm numbers (e.g. 'Salmo 119' is
@@ -78,79 +83,133 @@ def heb_to_vulgate_ps(h):
     return h
 
 
-CANON73 = {
-    'gn', 'ex', 'lv', 'nm', 'dt', 'jo', 'jgs', 'rt', '1sm', '2sm', '1kgs',
-    '2kgs', '1chr', '2chr', 'ezr', 'neh', 'tb', 'jdt', 'est', '1mac', '2mac',
-    'jb', 'ps', 'prv', 'eccl', 'sg', 'ws', 'sir', 'is', 'jer', 'lam', 'bar',
-    'ez', 'dn', 'hos', 'jl', 'am', 'ob', 'jon', 'mi', 'na', 'hb', 'zep', 'hg',
-    'zec', 'mal', 'mt', 'mk', 'lk', 'jn', 'acts', 'rom', '1cor', '2cor', 'gal',
-    'eph', 'phil', 'col', '1thes', '2thes', '1tm', '2tm', 'tit', 'phlm', 'heb',
-    'jas', '1pt', '2pt', '1jn', '2jn', '3jn', 'jud', 'rv',
-}
+def chapter_span(chapters):
+    """[1,2,3] → '1-3'; [4] → '4'; [1,2,5] → '1-2,5'."""
+    out, start, prev = [], chapters[0], chapters[0]
+    for c in chapters[1:]:
+        if c == prev + 1:
+            prev = c
+            continue
+        out.append(str(start) if start == prev else f'{start}-{prev}')
+        start = prev = c
+    out.append(str(start) if start == prev else f'{start}-{prev}')
+    return ','.join(out)
 
 
-def parse_chapters(spec):
-    out = []
-    for part in spec.split(','):
-        part = part.strip()
-        m = re.match(r'^(\d+)\s*-\s*(\d+)$', part)
-        if m:
-            out.extend(range(int(m.group(1)), int(m.group(2)) + 1))
-        elif re.match(r'^\d+$', part):
-            out.append(int(part))
-    return out
+def group(readings):
+    """Collapses the source's one-entry-per-chapter listing into the readings a
+    reader recognises: consecutive entries from the same book and section become
+    a single card ("São Marcos 1-2"). Verse-specific entries never merge — their
+    range is the whole point."""
+    groups = []
+    for r in readings:
+        book = NAME2ID[r['livro']]
+        verses = r.get('versiculos') or None
+        key = (r['secao'], book, bool(verses))
+        if groups and groups[-1]['key'] == key and not verses:
+            groups[-1]['chapters'].append(r['capitulo'])
+        else:
+            groups.append({
+                'key': key,
+                'section': r['secao'],
+                'name': r['livro'],
+                'book': book,
+                'chapters': [r['capitulo']],
+                'verses': verses,
+            })
+    return groups
 
 
-def parse(text):
-    s = text.strip()
-    if s in OVERRIDES:
-        return OVERRIDES[s], []
-    rest, segs, unresolved, guard = s, [], [], 0
-    while rest.strip() and guard < 20:
-        guard += 1
-        rest = re.sub(r'^e\s+', '', rest.strip().lstrip(',').strip())
-        matched = next((nm for nm in NAMES_SORTED if rest.startswith(nm)), None)
-        if not matched:
-            unresolved.append(rest)
-            break
-        rest = rest[len(matched):].strip()
-        m = re.match(r'^([\d,\s-]*)', rest)
-        chspec = m.group(1) if m else ''
-        rest = rest[len(chspec):]
-        rest = re.sub(r'^:\s*[\d,\s-]+', '', rest)  # drop verse range (chapter-level nav)
-        segs.append((NAME2ID[matched], parse_chapters(chspec) or [1]))
-    return segs, unresolved
+def to_reading(g):
+    book, chapters, verses = g['book'], g['chapters'], g['verses']
+    if verses:
+        ch = chapters[0]
+        target_ch = heb_to_vulgate_ps(ch) if book == 'ps' else ch
+        ref = f"{g['name']} {ch},{verses[0]}-{verses[-1]}"
+        targets = [{'book': book, 'chapter': target_ch,
+                    'verseStart': verses[0], 'verseEnd': verses[-1]}]
+    else:
+        ref = f"{g['name']} {chapter_span(chapters)}"
+        targets = [
+            {'book': book,
+             'chapter': heb_to_vulgate_ps(c) if book == 'ps' else c}
+            for c in chapters
+        ]
+    return {'section': g['section'], 'ref': ref, 'targets': targets}
+
+
+def reconcile_verse_ranges(entries):
+    """Reconciles every emitted verse range against the app's own Scripture.
+
+    The schedule was written against a versification that occasionally runs a
+    verse past the Vulgate's (Proverbs 19 ends at 29, the schedule cites 30), so
+    a range is clamped to the chapter's real last verse and its label rewritten
+    to match. A range that starts past the end of the chapter is dropped
+    entirely and the reading falls back to the whole chapter — better a wider
+    reading than a citation the reader cannot open. Skipped, with a notice, when
+    the Bible DB hasn't been built on this machine."""
+    if not os.path.exists(BIBLE_DB):
+        print("  ! bible DB not found — verse ranges not reconciled")
+        return
+    db = sqlite3.connect(f'file:{BIBLE_DB}?mode=ro', uri=True)
+    cur = db.cursor()
+    last_verse = {}
+
+    def chapter_end(book, chapter):
+        key = (book, chapter)
+        if key not in last_verse:
+            row = cur.execute(
+                "SELECT MAX(verse) FROM verse WHERE translation_id='vulgata'"
+                " AND book_id=? AND chapter=?", key).fetchone()
+            last_verse[key] = row[0] or 0
+        return last_verse[key]
+
+    checked = clamped = dropped = 0
+    for e in entries:
+        for r in e['readings']:
+            for t in r['targets']:
+                if 'verseStart' not in t:
+                    continue
+                checked += 1
+                end = chapter_end(t['book'], t['chapter'])
+                if end == 0 or t['verseStart'] > end:
+                    print(f"  ! day {e['day']}: {r['ref']} starts past the end of"
+                          f" the chapter — reading the whole chapter instead")
+                    t.pop('verseStart'), t.pop('verseEnd')
+                    r['ref'] = r['ref'].split(',')[0]
+                    dropped += 1
+                elif t['verseEnd'] > end:
+                    t['verseEnd'] = end
+                    r['ref'] = f"{r['ref'].split(',')[0]},{t['verseStart']}-{end}"
+                    clamped += 1
+    db.close()
+    print(f"  ✓ {checked} verse ranges reconciled with the Vulgate"
+          f" ({clamped} clamped, {dropped} widened to the chapter)")
 
 
 def main():
     src = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_SRC
     plan = json.load(open(src))
-    entries, problems = [], []
+    entries = []
     for e in plan:
-        readings = []
-        for txt in (e.get('Leitura Livro', ''), e.get('Leitura Sapienciais', '')):
-            txt = txt.strip()
-            segs, unres = parse(txt)
-            if unres:
-                problems.append((e['Dia'], txt, unres))
-            targets = [
-                {'book': b,
-                 'chapter': heb_to_vulgate_ps(c) if b == 'ps' else c}
-                for (b, chs) in segs for c in chs
-            ]
-            if targets:
-                readings.append({'ref': txt, 'targets': targets})
-        entries.append({'day': e['Dia'], 'readings': readings})
+        unknown = [r['livro'] for r in e['leituras'] if r['livro'] not in NAME2ID]
+        assert not unknown, f"day {e['dia']}: unknown book(s) {unknown}"
+        entries.append({
+            'day': e['dia'],
+            'readings': [to_reading(g) for g in group(e['leituras'])],
+        })
 
     books = {t['book'] for e in entries for r in e['readings'] for t in r['targets']}
-    assert not problems, f"unresolved references: {problems[:5]}"
     assert all(e['readings'] for e in entries), "a day has no resolvable reading"
     missing = CANON73 - books
     assert not missing, f"books missing from plan: {sorted(missing)}"
+    reconcile_verse_ranges(entries)
 
+    ranged = sum(1 for e in entries for r in e['readings']
+                 for t in r['targets'] if 'verseStart' in t)
     out = {
         'id': 'bible_in_a_year',
-        'version': 2,
+        'version': 3,
         'days': len(entries),
         'title': {'pt': 'Bíblia em um ano', 'en': 'Bible in a Year'},
         'source': 'Cronograma de leitura — Victor Sales Pinheiro',
@@ -158,7 +217,8 @@ def main():
     }
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     json.dump(out, open(OUT, 'w'), ensure_ascii=False, separators=(',', ':'))
-    print(f"✓ {len(entries)} days · {len(books)}/73 books · {os.path.getsize(OUT)} bytes → {OUT}")
+    print(f"✓ {len(entries)} days · {len(books)}/73 books · {ranged} verse-ranged"
+          f" readings · {os.path.getsize(OUT)} bytes → {OUT}")
 
 
 if __name__ == '__main__':
