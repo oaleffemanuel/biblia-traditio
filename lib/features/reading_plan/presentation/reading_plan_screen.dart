@@ -152,7 +152,9 @@ class _DayStripState extends State<_DayStrip> {
           child: Text(l10n.planDayProgress(widget.selected, widget.totalDays),
               style: TextStyle(color: c.textSecondary)),
         ),
-        SizedBox(
+        MediaQuery.withClampedTextScaling(
+          maxScaleFactor: 1.2,
+          child: SizedBox(
           height: 84,
           child: ListView.builder(
             controller: _controller,
@@ -163,7 +165,10 @@ class _DayStripState extends State<_DayStrip> {
               final d = i + 1;
               final on = d == widget.selected;
               final read = widget.completed.contains(d);
-              return GestureDetector(
+              return Semantics(
+                button: true,
+                selected: on,
+                child: GestureDetector(
                 onTap: () => widget.onSelect(d),
                 child: Container(
                   width: 60,
@@ -207,9 +212,11 @@ class _DayStripState extends State<_DayStrip> {
                     ],
                   ),
                 ),
+                ),
               );
             },
           ),
+        ),
         ),
       ],
     );

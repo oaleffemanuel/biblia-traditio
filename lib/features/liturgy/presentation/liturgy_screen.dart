@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,17 +10,30 @@ import '../../bible/domain/entities.dart';
 import '../application/liturgy_providers.dart';
 import '../domain/lectionary.dart';
 import '../domain/liturgical_day.dart';
-
-const _monthsPt = [
-  '', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-];
-const _weekdaysShort = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+import 'liturgical_directory_screen.dart';
+import 'saint_screen.dart';
 
 DateTime _today() {
   final n = DateTime.now();
   return DateTime(n.year, n.month, n.day);
 }
+
+/// Calendar-day arithmetic. `add(Duration(days:))` shifts off midnight across a
+/// daylight-saving change, which would break the `==` comparisons the strip and
+/// the day providers rely on.
+DateTime _shift(DateTime d, int days) => DateTime(d.year, d.month, d.day + days);
+
+String _monthYear(BuildContext context, DateTime d) =>
+    toBeginningOfSentenceCase(
+        DateFormat.yMMMM(Localizations.localeOf(context).toLanguageTag())
+            .format(d)) ??
+    '';
+
+String _weekdayShort(BuildContext context, DateTime d) =>
+    toBeginningOfSentenceCase(
+        DateFormat.E(Localizations.localeOf(context).toLanguageTag())
+            .format(d)) ??
+    '';
 
 String seasonLabel(AppL10n l, LiturgicalSeason s) => switch (s) {
       LiturgicalSeason.advent => l.seasonAdvent,
@@ -28,6 +42,23 @@ String seasonLabel(AppL10n l, LiturgicalSeason s) => switch (s) {
       LiturgicalSeason.lent => l.seasonLent,
       LiturgicalSeason.triduum => l.seasonTriduum,
       LiturgicalSeason.easter => l.seasonEaster,
+    };
+
+String rankLabel(AppL10n l, LiturgicalRank r) => switch (r) {
+      LiturgicalRank.solemnity => l.rankSolemnity,
+      LiturgicalRank.feast => l.rankFeast,
+      LiturgicalRank.memorial => l.rankMemorial,
+      LiturgicalRank.optionalMemorial => l.rankOptionalMemorial,
+      LiturgicalRank.commemoration => l.rankCommemoration,
+      LiturgicalRank.weekday => '',
+    };
+
+String colorLabel(AppL10n l, LiturgicalColor c) => switch (c) {
+      LiturgicalColor.green => l.colorGreen,
+      LiturgicalColor.red => l.colorRed,
+      LiturgicalColor.white => l.colorWhite,
+      LiturgicalColor.purple => l.colorPurple,
+      LiturgicalColor.rose => l.colorRose,
     };
 
 String slotLabel(AppL10n l, ReadingSlot s) => switch (s) {
@@ -52,8 +83,7 @@ class _LiturgyScreenState extends ConsumerState<LiturgyScreen> {
     final light = Theme.of(context).brightness == Brightness.light;
     final day = ref.watch(liturgicalDayProvider(_selected));
     final readings = ref.watch(readingsForProvider(_selected));
-    final strip =
-        List.generate(15, (i) => _selected.add(Duration(days: i - 4)));
+    final strip = List.generate(15, (i) => _shift(_selected, i - 4));
 
     return Scaffold(
       body: SafeArea(
@@ -77,10 +107,14 @@ class _LiturgyScreenState extends ConsumerState<LiturgyScreen> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-              child: Text('${_monthsPt[_selected.month]} ${_selected.year}',
+              child: Text(_monthYear(context, _selected),
                   style: TextStyle(color: c.textSecondary)),
             ),
-            SizedBox(
+            // Fixed-height strip: clamp scaling so large text shrinks the label
+            // rather than overflowing the cell.
+            MediaQuery.withClampedTextScaling(
+              maxScaleFactor: 1.2,
+              child: SizedBox(
               height: 84,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
@@ -90,7 +124,10 @@ class _LiturgyScreenState extends ConsumerState<LiturgyScreen> {
                   final d = strip[i];
                   final on = d == _selected;
                   final dayColor = ref.watch(liturgicalDayProvider(d)).color;
-                  return GestureDetector(
+                  return Semantics(
+                    button: true,
+                    selected: on,
+                    child: GestureDetector(
                     onTap: () => setState(() => _selected = d),
                     child: Container(
                       width: 60,
@@ -102,7 +139,7 @@ class _LiturgyScreenState extends ConsumerState<LiturgyScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(_weekdaysShort[(d.weekday - 1) % 7],
+                          Text(_weekdayShort(context, d),
                               style: TextStyle(
                                   color: on ? c.background : c.textSecondary,
                                   fontSize: 12)),
@@ -122,9 +159,11 @@ class _LiturgyScreenState extends ConsumerState<LiturgyScreen> {
                         ],
                       ),
                     ),
+                  ),
                   );
                 },
               ),
+            ),
             ),
             const SizedBox(height: 16),
             Padding(
@@ -141,6 +180,9 @@ class _LiturgyScreenState extends ConsumerState<LiturgyScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: _LectionaryNotice(c),
               ),
+            // Optional, and silent when the dataset has nothing for the day.
+            _SaintOfTheDay(date: _selected),
+            _DirectoryCard(date: _selected),
           ],
         ),
       ),
@@ -168,12 +210,7 @@ class _CelebrationCard extends StatelessWidget {
     final c = context.bt;
     final l10n = context.l10n;
     final light = Theme.of(context).brightness == Brightness.light;
-    final rank = switch (day.rank) {
-      LiturgicalRank.solemnity => l10n.rankSolemnity,
-      LiturgicalRank.feast => l10n.rankFeast,
-      LiturgicalRank.memorial => l10n.rankMemorial,
-      LiturgicalRank.weekday => '',
-    };
+    final rank = rankLabel(l10n, day.rank);
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -198,8 +235,9 @@ class _CelebrationCard extends StatelessWidget {
           Text(
             [
               seasonLabel(l10n, day.season),
+              if (day.week != null) l10n.liturgyWeekOf(day.week!),
               l10n.liturgicalYear(day.sundayCycle),
-              day.color.label, // liturgical colour (directory detail)
+              colorLabel(l10n, day.color),
               if (rank.isNotEmpty) rank,
             ].join('  ·  '),
             style: TextStyle(color: c.textSecondary),
@@ -467,7 +505,7 @@ class _CalendarModalState extends ConsumerState<_CalendarModal> {
           children: [
             Row(
               children: [
-                Text('${_monthsPt[_month.month]} ${_month.year}',
+                Text(_monthYear(context, _month),
                     style: Theme.of(context).textTheme.titleLarge),
                 const Spacer(),
                 IconButton(
@@ -485,10 +523,12 @@ class _CalendarModalState extends ConsumerState<_CalendarModal> {
             const SizedBox(height: 8),
             Row(
               children: [
-                for (final w in const ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'])
+                for (var i = 0; i < 7; i++)
                   Expanded(
                     child: Center(
-                      child: Text(w,
+                      child: Text(
+                          // Week starts on Sunday; 2024-01-07 was a Sunday.
+                          _weekdayShort(context, DateTime(2024, 1, 7 + i)),
                           style: TextStyle(color: c.textSecondary, fontSize: 12)),
                     ),
                   ),
@@ -551,6 +591,119 @@ class _CalendarModalState extends ConsumerState<_CalendarModal> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+
+/// "Santo do Dia" — shown only when the bundled dataset actually has a life for
+/// this day. No entry means no section: the screen is unchanged, not padded
+/// with a placeholder.
+class _SaintOfTheDay extends ConsumerWidget {
+  final DateTime date;
+  const _SaintOfTheDay({required this.date});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final saints = ref.watch(saintsForProvider(date));
+    if (saints.isEmpty) return const SizedBox.shrink();
+    final c = context.bt;
+    final l10n = context.l10n;
+    final saint = saints.first;
+    final meta = [
+      if (saint.title.isNotEmpty) saint.title,
+      if (saint.century.isNotEmpty) l10n.century(saint.century),
+    ].join('  ·  ');
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+      child: Container(
+        decoration: BoxDecoration(
+            color: c.surface, borderRadius: BorderRadius.circular(18)),
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Icon(Icons.auto_awesome_outlined, size: 16, color: c.accent),
+              const SizedBox(width: 8),
+              Text(l10n.saintOfTheDay.toUpperCase(),
+                  style: TextStyle(
+                      color: c.accent,
+                      fontSize: 11,
+                      letterSpacing: 1,
+                      fontWeight: FontWeight.w600)),
+            ]),
+            const SizedBox(height: 10),
+            Text(saint.name, style: Theme.of(context).textTheme.titleLarge),
+            if (meta.isNotEmpty) ...[
+              const SizedBox(height: 3),
+              Text(meta, style: TextStyle(color: c.textSecondary, fontSize: 13)),
+            ],
+            const SizedBox(height: 12),
+            Text(saint.biography.first,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyLarge
+                    ?.copyWith(height: 1.5)),
+            if (saint.biography.length > 1)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () => showSaint(context, saint),
+                  style: TextButton.styleFrom(
+                      foregroundColor: c.accent,
+                      padding: const EdgeInsets.symmetric(vertical: 4)),
+                  child: Text(l10n.saintReadMore),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Entry point to the Liturgical Directory — one quiet row under the day, not a
+/// new destination in the navigation.
+class _DirectoryCard extends StatelessWidget {
+  final DateTime date;
+  const _DirectoryCard({required this.date});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.bt;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      child: InkWell(
+        onTap: () => showLiturgicalDirectory(context, date),
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          decoration: BoxDecoration(
+              color: c.surface, borderRadius: BorderRadius.circular(18)),
+          padding: const EdgeInsets.all(18),
+          child: Row(children: [
+            Icon(Icons.menu_book_outlined, size: 20, color: c.accent),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(context.l10n.liturgicalDirectory,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 2),
+                  Text(context.l10n.directoryOpen,
+                      style: TextStyle(color: c.textSecondary, fontSize: 13)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: c.textFaint),
+          ]),
         ),
       ),
     );

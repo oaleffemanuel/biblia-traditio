@@ -114,8 +114,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                               snippet: results.reference!.book.name,
                               icon: Icons.my_location,
                               accent: true,
-                              onTap: () => context.push(
-                                  '/bible/${results.reference!.book.id}/${results.reference!.chapter}'),
+                              onTap: () {
+                                final r = results.reference!;
+                                context.push('/bible/${r.book.id}/${r.chapter}'
+                                    '${r.verse == null ? '' : '?v=${r.verse}'}');
+                              },
                             ),
                           ],
                           if (showBooks && results.books.isNotEmpty) ...[
@@ -137,8 +140,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                 refLabel: _label(v.ref),
                                 snippet: v.snippet,
                                 icon: Icons.menu_book_outlined,
-                                onTap: () => context
-                                    .push('/bible/${v.ref.bookId}/${v.ref.chapter}'),
+                                onTap: () => context.push(
+                                    '/bible/${v.ref.bookId}/${v.ref.chapter}?v=${v.ref.verse}'),
                               ),
                           ],
                           if (showFathers && results.commentaries.isNotEmpty) ...[
@@ -151,8 +154,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                 snippet: m.snippet,
                                 icon: Icons.auto_stories,
                                 accent: true,
-                                onTap: () => context
-                                    .push('/bible/${m.ref.bookId}/${m.ref.chapter}'),
+                                onTap: () => context.push(
+                                    '/bible/${m.ref.bookId}/${m.ref.chapter}?v=${m.ref.verse}'),
                               ),
                           ],
                           if (showNotes && results.notes.isNotEmpty) ...[
@@ -162,8 +165,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                 refLabel: _label(n.ref),
                                 snippet: n.body,
                                 icon: Icons.note_outlined,
-                                onTap: () => context
-                                    .push('/bible/${n.ref.bookId}/${n.ref.chapter}'),
+                                onTap: () => context.push(
+                                    '/bible/${n.ref.bookId}/${n.ref.chapter}?v=${n.ref.verse}'),
                               ),
                           ],
                           const SizedBox(height: 32),

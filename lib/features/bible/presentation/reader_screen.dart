@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -41,11 +44,17 @@ class ReaderScreen extends ConsumerStatefulWidget {
   /// personal Bible browsing; false when opened from a separate context
   /// (Liturgy, Reading Plan) so those never overwrite the user's own position.
   final bool recordProgress;
+
+  /// Verse to open at, from `?v=`. The reader scrolls to it and marks it
+  /// briefly so the eye lands where the tap promised.
+  final int? focusVerse;
+
   const ReaderScreen(
       {super.key,
       required this.bookId,
       required this.chapter,
-      this.recordProgress = true});
+      this.recordProgress = true,
+      this.focusVerse});
 
   @override
   ConsumerState<ReaderScreen> createState() => _ReaderScreenState();
@@ -60,16 +69,27 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   int? _selAnchor;
   int? _selEnd;
 
+  /// The verse arrived at via `?v=`, highlighted until the reader moves on.
+  int? _focused;
+  Timer? _focusTimer;
+
   bool get _selecting => _selAnchor != null;
   int get _selFrom => _selAnchor! <= _selEnd! ? _selAnchor! : _selEnd!;
   int get _selTo => _selAnchor! <= _selEnd! ? _selEnd! : _selAnchor!;
   bool _isSelected(int verse) =>
       _selecting && verse >= _selFrom && verse <= _selTo;
 
-  void _startSelection(int verse) =>
-      setState(() => _selAnchor = _selEnd = verse);
+  void _startSelection(int verse) {
+    // The long-press changes what a tap means, so it earns a tick of feedback.
+    HapticFeedback.selectionClick();
+    setState(() => _selAnchor = _selEnd = verse);
+  }
   void _extendSelection(int verse) => setState(() => _selEnd = verse);
   void _clearSelection() => setState(() => _selAnchor = _selEnd = null);
+
+  /// Used when the chapter changes underneath a live selection — the verses it
+  /// pointed at are gone, so it must not survive into the new chapter.
+  void _clearSelectionSilently() => _selAnchor = _selEnd = null;
 
   /// Shares the selected span as one card, refusing politely when the passage
   /// is longer than an image can carry legibly.
@@ -108,6 +128,33 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   void initState() {
     super.initState();
     _maybeRecord();
+    _focusRequestedVerse();
+  }
+
+  /// Scrolls to `?v=` once the list is attached, and marks the verse for a few
+  /// seconds. Verse n sits at list index n (index 0 is the chapter header).
+  void _focusRequestedVerse() {
+    final v = widget.focusVerse;
+    if (v == null || v < 1) return;
+    setState(() => _focused = v);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.isAttached) {
+        _scrollController.scrollTo(
+            index: v,
+            duration: const Duration(milliseconds: 420),
+            curve: Curves.easeOutCubic);
+      }
+    });
+    _focusTimer?.cancel();
+    _focusTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _focused = null);
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -118,6 +165,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     if (old.bookId != widget.bookId || old.chapter != widget.chapter) {
       if (_scrollController.isAttached) _scrollController.jumpTo(index: 0);
       _maybeRecord();
+      _clearSelectionSilently();
+      _focusRequestedVerse();
+    } else if (old.focusVerse != widget.focusVerse) {
+      _focusRequestedVerse();
     }
   }
 
@@ -315,6 +366,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 hasCommentary: markers.contains(number),
                 highlight: highlights[number],
                 selected: _isSelected(number),
+                focused: number == _focused,
                 sideBySide: sideBySide,
                 primaryLang: primaryLang,
                 secondaryLang: secondaryLang,
@@ -335,6 +387,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 hasCommentary: markers.contains(number),
                 highlight: highlights[number],
                 selected: _isSelected(number),
+                focused: number == _focused,
                 lang: primaryLang,
                 onLongPress: () => _startSelection(number),
                 onTap: () => _selecting
@@ -491,6 +544,7 @@ class _VerseTile extends StatelessWidget {
   final bool hasCommentary;
   final HighlightColor? highlight;
   final bool selected;
+  final bool focused;
   final String lang;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
@@ -499,6 +553,7 @@ class _VerseTile extends StatelessWidget {
       required this.hasCommentary,
       required this.highlight,
       required this.selected,
+      required this.focused,
       required this.lang,
       required this.onTap,
       required this.onLongPress});
@@ -511,11 +566,12 @@ class _VerseTile extends StatelessWidget {
       onLongPress: onLongPress,
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        decoration: selected
+        decoration: selected || focused
             ? BoxDecoration(
                 color: c.accentSoft,
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: c.accent.withValues(alpha: 0.5)))
+                border: Border.all(
+                    color: c.accent.withValues(alpha: selected ? 0.5 : 0.3)))
             : highlight == null
                 ? null
                 : BoxDecoration(
@@ -557,6 +613,7 @@ class _ParallelVerseTile extends StatelessWidget {
   final bool hasCommentary;
   final HighlightColor? highlight;
   final bool selected;
+  final bool focused;
   final bool sideBySide;
   final String primaryLang;
   final String secondaryLang;
@@ -567,6 +624,7 @@ class _ParallelVerseTile extends StatelessWidget {
     required this.hasCommentary,
     required this.highlight,
     required this.selected,
+    required this.focused,
     required this.sideBySide,
     required this.primaryLang,
     required this.secondaryLang,
@@ -584,11 +642,12 @@ class _ParallelVerseTile extends StatelessWidget {
       onLongPress: onLongPress,
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        decoration: selected
+        decoration: selected || focused
             ? BoxDecoration(
                 color: c.accentSoft,
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: c.accent.withValues(alpha: 0.5)))
+                border: Border.all(
+                    color: c.accent.withValues(alpha: selected ? 0.5 : 0.3)))
             : highlight == null
                 ? null
                 : BoxDecoration(

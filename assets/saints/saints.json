@@ -1,0 +1,277 @@
+{
+  "version": 1,
+  "language": "pt-BR",
+  "note": "Vidas dos santos redigidas a partir de fontes de referência em domínio público (Butler, Lives of the Saints, ed. 1866; Catholic Encyclopedia, 1913). Cada entrada indica a sua fonte. Dias não cobertos não exibem seção — nada aqui é gerado ou inferido.",
+  "entries": [
+    {
+      "day": "01-28",
+      "name": "São Tomás de Aquino",
+      "title": "Presbítero e doutor da Igreja",
+      "century": "XIII",
+      "died": "1274",
+      "source": "Butler, Lives of the Saints (1866); Catholic Encyclopedia (1913)",
+      "biography": [
+        "Nasceu por volta de 1225 no castelo de Roccasecca, no reino de Nápoles, filho do conde Landolfo de Aquino. Foi enviado ainda menino à abadia de Monte Cassino e, mais tarde, à universidade de Nápoles, onde conheceu a recém-fundada Ordem dos Pregadores.",
+        "A decisão de entrar entre os dominicanos, mendicantes e pobres, escandalizou a família: seus irmãos o sequestraram e o mantiveram detido cerca de um ano. Tomás não cedeu, e ao ser libertado seguiu para Paris e Colônia, onde estudou sob Santo Alberto Magno. Os condiscípulos, enganados pelo seu silêncio e pela sua corpulência, chamavam-no «o boi mudo»; Alberto respondeu que um dia o mugido daquele boi se ouviria no mundo inteiro.",
+        "Ensinou em Paris, em Roma, em Orvieto, em Viterbo e em Nápoles. Escreveu comentários a toda a Escritura e a Aristóteles, a Suma contra os Gentios e, sobretudo, a Suma Teológica, deixada inacabada. A ele se atribuem também os textos litúrgicos da festa do Corpo de Deus, entre eles o Pange lingua e o Adoro te devote.",
+        "No fim da vida, depois de uma experiência durante a Missa em Nápoles, interrompeu a escrita: «Tudo o que escrevi parece-me palha, comparado com o que vi». Morreu a caminho do Concílio de Lião, na abadia de Fossanova, a 7 de março de 1274. Foi canonizado em 1323 e declarado doutor da Igreja em 1567."
+      ]
+    },
+    {
+      "day": "03-19",
+      "name": "São José",
+      "title": "Esposo da Virgem Maria",
+      "century": "I",
+      "source": "Butler, Lives of the Saints (1866); Catholic Encyclopedia (1913)",
+      "biography": [
+        "Os Evangelhos falam de José com extrema economia: não lhe conservam uma única palavra. Mateus e Lucas dizem que era da casa de David, que vivia em Nazaré e que era carpinteiro — o termo grego, tekton, designa o artesão que trabalha a madeira e a pedra.",
+        "Desposado com Maria, descobriu que ela esperava um filho e, sendo justo e não querendo difamá-la, resolveu deixá-la em segredo. Foi então advertido em sonho e recebeu-a em sua casa. É a ele que compete dar o nome ao menino, gesto que no direito judaico significa reconhecê-lo como filho.",
+        "Levou a família ao Egito para escapar de Herodes e regressou a Nazaré depois da sua morte. A última cena em que aparece é a do menino perdido e reencontrado no Templo, aos doze anos. Depois disso, os Evangelhos calam-se a seu respeito.",
+        "A tradição vê nesse silêncio a sua grandeza. Foi proclamado padroeiro da Igreja universal por Pio IX em 1870. Celebra-se a 19 de março e, como José Operário, a 1 de maio."
+      ]
+    },
+    {
+      "day": "04-25",
+      "name": "São Marcos",
+      "title": "Evangelista",
+      "century": "I",
+      "source": "Catholic Encyclopedia (1913); Butler, Lives of the Saints (1866)",
+      "biography": [
+        "João Marcos aparece nos Atos dos Apóstolos como filho de uma Maria de Jerusalém em cuja casa a comunidade se reunia para orar. Era primo de Barnabé e acompanhou-o, com Paulo, na primeira viagem missionária, que deixou a meio, em Perge.",
+        "A separação causou depois um desentendimento entre Paulo e Barnabé; mas as cartas posteriores de Paulo mencionam Marcos com afeto, e a Primeira Carta de Pedro chama-lhe «meu filho».",
+        "A tradição antiga, atestada por Pápias já no início do século II, faz dele o intérprete de Pedro, e vê no seu Evangelho a pregação do apóstolo posta por escrito em Roma. É o mais breve e o mais direto dos quatro.",
+        "A tradição posterior liga-o à fundação da Igreja de Alexandria, onde teria sofrido o martírio. As suas relíquias foram trasladadas para Veneza no século IX, e o leão alado que o simboliza tornou-se o emblema da cidade."
+      ]
+    },
+    {
+      "day": "06-24",
+      "name": "Natividade de São João Batista",
+      "title": "Precursor do Senhor",
+      "century": "I",
+      "source": "Catholic Encyclopedia (1913); Butler, Lives of the Saints (1866)",
+      "biography": [
+        "João nasceu de Zacarias, sacerdote da classe de Abias, e de Isabel, ambos idosos e sem filhos. O anúncio do seu nascimento foi feito a Zacarias no Templo, e a sua incredulidade deixou-o mudo até ao dia em que escreveu numa tabuinha: «João é o seu nome».",
+        "A Igreja celebra o seu nascimento — privilégio que, além de Cristo, só a ele e a Nossa Senhora reconhece — a 24 de junho, seis meses antes do Natal, seguindo a indicação de Lucas de que Isabel estava no sexto mês quando o anjo visitou Maria.",
+        "Viveu no deserto e pregou um batismo de conversão junto ao Jordão. Ao ver Jesus, apontou-o: «Eis o Cordeiro de Deus». Definiu-se apenas como voz, e resumiu a sua missão numa frase: «É preciso que ele cresça e que eu diminua».",
+        "Foi preso por Herodes Antipas, a quem censurara a união com Herodíades, e decapitado na fortaleza de Maqueronte. O seu martírio é recordado a 29 de agosto."
+      ]
+    },
+    {
+      "day": "06-29",
+      "name": "São Pedro e São Paulo",
+      "title": "Apóstolos",
+      "century": "I",
+      "source": "Catholic Encyclopedia (1913); Butler, Lives of the Saints (1866)",
+      "biography": [
+        "Simão, pescador de Betsaida, recebeu de Jesus o nome de Pedro — Kefas, rocha — e com ele a missão de confirmar os irmãos na fé. Os Evangelhos não escondem as suas quedas: negou o Mestre três vezes na noite da Paixão e chorou amargamente.",
+        "Saulo de Tarso, fariseu formado aos pés de Gamaliel, perseguiu a Igreja até ao caminho de Damasco. Tornou-se o apóstolo dos gentios, percorreu o Mediterrâneo oriental e deixou as cartas que estão na origem de boa parte da teologia cristã.",
+        "Os dois discordaram publicamente em Antioquia sobre a observância da Lei pelos convertidos do paganismo — episódio que o próprio Paulo relata na Carta aos Gálatas — e a questão foi resolvida na assembleia de Jerusalém.",
+        "A tradição mais antiga situa a morte de ambos em Roma, sob Nero: Pedro crucificado, segundo se diz, de cabeça para baixo; Paulo decapitado, por ser cidadão romano. A Igreja celebra-os no mesmo dia porque a mesma cidade e a mesma fé os uniram no fim."
+      ]
+    },
+    {
+      "day": "07-11",
+      "name": "São Bento",
+      "title": "Abade",
+      "century": "VI",
+      "died": "c. 547",
+      "source": "São Gregório Magno, Diálogos, Livro II; Butler, Lives of the Saints (1866)",
+      "biography": [
+        "Nasceu em Núrsia, na Úmbria, por volta de 480. Enviado a Roma para estudar, afastou-se da cidade, cuja vida moral o repugnava, e retirou-se para uma gruta em Subiaco, onde viveu três anos em solidão.",
+        "A fama da sua santidade atraiu discípulos. Organizou-os primeiro em doze pequenos mosteiros e, mais tarde, fundou o mosteiro de Monte Cassino, onde escreveu a Regra que leva o seu nome.",
+        "A Regra é breve e notavelmente sóbria: distribui o dia entre a oração comum, a leitura e o trabalho, e pede ao abade que governe com discrição, «de modo que os fortes desejem mais e os fracos não fujam». Chama à casa monástica «escola do serviço do Senhor».",
+        "Praticamente tudo o que se sabe da sua vida vem do segundo livro dos Diálogos de São Gregório Magno, escrito cerca de meio século depois. Morreu em Monte Cassino por volta de 547. Paulo VI proclamou-o padroeiro da Europa em 1964."
+      ]
+    },
+    {
+      "day": "07-22",
+      "name": "Santa Maria Madalena",
+      "title": "Discípula do Senhor",
+      "century": "I",
+      "source": "Catholic Encyclopedia (1913)",
+      "biography": [
+        "Maria de Magdala, povoação da margem do lago de Genesaré, é apresentada por Lucas entre as mulheres que seguiam Jesus e o serviam com os seus bens, e de quem tinham saído sete demónios.",
+        "Os quatro Evangelhos põem-na junto à cruz e, depois, junto ao sepulcro. É a ela que o Ressuscitado se manifesta primeiro, no jardim, e é ela quem recebe a ordem de anunciá-lo aos Apóstolos — por isso a tradição latina lhe chama «apóstola dos apóstolos».",
+        "A identificação de Maria Madalena com a pecadora anónima de Lucas 7 e com Maria de Betânia foi comum no Ocidente desde São Gregório Magno, mas nunca foi aceite pela tradição oriental e a exegese moderna distingue as três figuras.",
+        "A sua memória foi elevada ao grau de festa em 2016, equiparando-a à dos Apóstolos."
+      ]
+    },
+    {
+      "day": "08-15",
+      "name": "Assunção de Nossa Senhora",
+      "title": "Solenidade da Virgem Maria",
+      "century": "I",
+      "source": "Pio XII, Munificentissimus Deus (1950); Catholic Encyclopedia (1913)",
+      "biography": [
+        "A festa celebra que Maria, terminado o curso da vida terrena, foi elevada em corpo e alma à glória do céu. É a mais antiga das festas marianas: em Jerusalém celebrava-se já no século V, e em Roma foi introduzida no século VII.",
+        "O Oriente chama-lhe Dormição — koimesis — e representa-a como um adormecer sereno rodeado dos Apóstolos. O Ocidente acentuou antes a glorificação.",
+        "A Escritura não narra o fim da vida de Maria. A doutrina desenvolveu-se a partir da convicção antiquíssima de que aquela que gerou o Autor da vida não podia conhecer a corrupção do sepulcro.",
+        "Pio XII definiu a Assunção como dogma de fé a 1 de novembro de 1950, na constituição Munificentissimus Deus. É solenidade e, no direito universal, dia de preceito."
+      ]
+    },
+    {
+      "day": "08-28",
+      "name": "Santo Agostinho",
+      "title": "Bispo e doutor da Igreja",
+      "century": "V",
+      "died": "430",
+      "source": "Confissões; Possídio, Vida de Agostinho; Catholic Encyclopedia (1913)",
+      "biography": [
+        "Nasceu em Tagaste, na Numídia, em 354, filho de Patrício, pagão, e de Mónica, cristã. Estudou retórica em Cartago e ensinou-a depois em Roma e em Milão. Durante nove anos aderiu ao maniqueísmo e viveu longamente com uma companheira, de quem teve um filho, Adeodato.",
+        "Em Milão ouviu a pregação de Santo Ambrósio, que lhe abriu uma leitura das Escrituras que a sua formação desprezava. A crise resolveu-se num jardim, ao ouvir uma voz de criança repetir «toma e lê»; abriu a Carta aos Romanos e leu. Foi batizado por Ambrósio na noite pascal de 387.",
+        "Regressado a África, foi ordenado presbítero e, em 395, bispo de Hipona, onde permaneceu até à morte. Pregou quase diariamente e escreveu sem interrupção: as Confissões, a Cidade de Deus, o tratado sobre a Trindade, os comentários aos Salmos e a São João, e a vasta polémica contra maniqueus, donatistas e pelagianos.",
+        "Morreu a 28 de agosto de 430, enquanto os vândalos cercavam Hipona, recitando os salmos penitenciais que mandara afixar junto ao leito. É doutor da Igreja e um dos autores mais lidos da tradição ocidental."
+      ]
+    },
+    {
+      "day": "08-27",
+      "name": "Santa Mónica",
+      "title": "Mãe de Santo Agostinho",
+      "century": "IV",
+      "died": "387",
+      "source": "Confissões, Livro IX; Butler, Lives of the Saints (1866)",
+      "biography": [
+        "Quase tudo o que se sabe de Mónica vem do nono livro das Confissões, onde o filho lhe traça o retrato. Nasceu em Tagaste, no norte de África, por volta de 332, de família cristã, e foi dada em casamento a Patrício, homem de temperamento difícil e pagão, que se converteu pouco antes de morrer.",
+        "Acompanhou de longe e de perto os desvios de Agostinho: seguiu-o a Roma e a Milão, insistiu, chorou e rezou por ele durante anos. Agostinho recorda a resposta de um bispo a quem ela pedira que discutisse com o filho: «É impossível que pereça o filho de tantas lágrimas».",
+        "Viu-o batizado por Ambrósio em 387. Na viagem de regresso a África, em Óstia, teve com ele a conversa que as Confissões relatam — sobre a vida eterna — e adoeceu poucos dias depois.",
+        "Morreu em Óstia, aos cinquenta e seis anos, pedindo apenas que se lembrassem dela ao altar do Senhor, onde quer que estivessem."
+      ]
+    },
+    {
+      "day": "09-13",
+      "name": "São João Crisóstomo",
+      "title": "Bispo e doutor da Igreja",
+      "century": "V",
+      "died": "407",
+      "source": "Paládio, Diálogo sobre a vida de João Crisóstomo; Catholic Encyclopedia (1913)",
+      "biography": [
+        "Nasceu em Antioquia por volta de 349 e estudou retórica com Libânio, o maior mestre pagão do seu tempo, que teria dito que o quereria por sucessor «se os cristãos no-lo não tivessem roubado».",
+        "Viveu alguns anos como monge nas montanhas vizinhas, até que a saúde arruinada o obrigou a regressar. Ordenado presbítero em Antioquia, pregou ali doze anos: dele nos ficaram séries inteiras de homilias sobre Génesis, os Salmos, São Mateus, São João e as cartas de São Paulo. A eloquência valeu-lhe, séculos depois, o apelido de Crisóstomo, «boca de ouro».",
+        "Em 398 foi levado quase à força para a sé de Constantinopla. Reformou o clero, reduziu as despesas da casa episcopal e denunciou sem rodeios o luxo da corte, o que lhe granjeou a inimizade da imperatriz Eudóxia.",
+        "Deposto por um sínodo irregular e desterrado duas vezes, morreu na estrada, em Comana do Ponto, a 14 de setembro de 407, dizendo: «Glória a Deus por tudo». As suas obras são das mais extensas que a antiguidade cristã nos deixou."
+      ]
+    },
+    {
+      "day": "09-30",
+      "name": "São Jerónimo",
+      "title": "Presbítero e doutor da Igreja",
+      "century": "V",
+      "died": "420",
+      "source": "Catholic Encyclopedia (1913); Butler, Lives of the Saints (1866)",
+      "biography": [
+        "Nasceu em Estridão, na Dalmácia, por volta de 347, e estudou em Roma, onde foi batizado. Viveu depois como eremita no deserto da Cálcide, na Síria, e ali aprendeu hebraico com um judeu convertido — coisa rara entre os cristãos do seu tempo.",
+        "Chamado a Roma pelo papa Dâmaso, tornou-se seu secretário e recebeu o encargo de rever as versões latinas dos Evangelhos. Foi o início do trabalho que o ocuparia o resto da vida.",
+        "Depois da morte de Dâmaso instalou-se em Belém, junto a um mosteiro que Santa Paula fundara, e traduziu para latim quase toda a Escritura, servindo-se do original hebraico em vez da versão grega — decisão discutida na época, e que São Agostinho chegou a criticar. Dessa obra nasceu a Vulgata.",
+        "Escreveu ainda comentários bíblicos, cartas de rara vivacidade e polémicas de rara aspereza. Morreu em Belém em 420. É dele a frase que o Concílio Vaticano II retomou: «Ignorar as Escrituras é ignorar Cristo»."
+      ]
+    },
+    {
+      "day": "10-01",
+      "name": "Santa Teresa do Menino Jesus",
+      "title": "Virgem e doutora da Igreja",
+      "century": "XIX",
+      "died": "1897",
+      "source": "História de uma alma; Catholic Encyclopedia (1913)",
+      "biography": [
+        "Thérèse Martin nasceu em Alençon, na Normandia, em 1873, a mais nova de nove irmãos, dos quais sobreviveram cinco — todas raparigas, e todas religiosas. Perdeu a mãe aos quatro anos.",
+        "Pediu para entrar no Carmelo de Lisieux com quinze anos e obteve autorização depois de o pedir pessoalmente ao papa Leão XIII, numa peregrinação a Roma. Entrou em 1888 e ali viveu nove anos.",
+        "Não fez nada de extraordinário, e é essa a sua doutrina: aquilo a que chamou «o pequeno caminho» — a santidade ao alcance dos pequenos, feita de confiança e de amor nas coisas comuns, e não de proezas ascéticas.",
+        "Escreveu por obediência os cadernos autobiográficos que seriam publicados como História de uma alma. Morreu de tuberculose a 30 de setembro de 1897, aos vinte e quatro anos. Foi canonizada em 1925, declarada padroeira das missões e, em 1997, doutora da Igreja."
+      ]
+    },
+    {
+      "day": "10-04",
+      "name": "São Francisco de Assis",
+      "title": "Fundador da Ordem dos Frades Menores",
+      "century": "XIII",
+      "died": "1226",
+      "source": "Tomás de Celano, Vida primeira; São Boaventura, Legenda maior",
+      "biography": [
+        "Filho de um rico comerciante de tecidos de Assis, Francisco passou a juventude entre festas e sonhos de cavalaria. Uma expedição militar contra Perúgia terminou com um ano de prisão e uma doença longa, que o deixou outro.",
+        "Depois de ouvir, na igrejinha de São Damião, a ordem de «reparar a minha casa», vendeu fazendas do pai para custear as obras. O conflito acabou diante do bispo de Assis, onde devolveu ao pai as roupas que trazia e escolheu a pobreza.",
+        "Reuniram-se-lhe companheiros e, em 1209, obteve do papa Inocêncio III a aprovação de uma regra brevíssima, feita quase só de citações do Evangelho. Pregou pelas cidades da Itália e chegou ao Egito, onde se apresentou ao sultão al-Malik al-Kamil durante a Quinta Cruzada.",
+        "No monte Alverne recebeu, dois anos antes da morte, as chagas da Paixão. Cego e doente, ditou o Cântico das Criaturas. Morreu em Assis a 3 de outubro de 1226 e foi canonizado menos de dois anos depois."
+      ]
+    },
+    {
+      "day": "10-15",
+      "name": "Santa Teresa de Jesus",
+      "title": "Virgem e doutora da Igreja",
+      "century": "XVI",
+      "died": "1582",
+      "source": "Libro de la Vida; Catholic Encyclopedia (1913)",
+      "biography": [
+        "Teresa de Ahumada nasceu em Ávila em 1515. Entrou aos vinte anos no Carmelo da Encarnação, mosteiro grande e pouco observante, onde passou quase três décadas de saúde frágil e de vida espiritual, como ela própria diz, dividida.",
+        "A conversão veio por volta dos quarenta anos, diante de uma imagem de Cristo chagado. Começaram então as experiências místicas que descreveu com uma clareza rara — e com desconfiança quanto a si mesma, submetendo tudo ao juízo dos confessores.",
+        "Em 1562 fundou em Ávila o convento de São José, primeiro da reforma descalça, e nos vinte anos seguintes percorreu Espanha fundando outros, entre litígios, doenças e estradas más. Teve em São João da Cruz o colaborador da reforma masculina.",
+        "Escreveu o Livro da Vida, o Caminho de Perfeição, as Moradas e as Fundações. Morreu em Alba de Tormes em 1582. Foi a primeira mulher declarada doutora da Igreja, em 1970."
+      ]
+    },
+    {
+      "day": "11-01",
+      "name": "Todos os Santos",
+      "title": "Solenidade",
+      "century": "—",
+      "source": "Catholic Encyclopedia (1913)",
+      "biography": [
+        "A solenidade celebra em conjunto todos os santos do céu: os que têm dia próprio no calendário e a multidão sem número dos que não têm — «uma multidão imensa que ninguém podia contar, de todas as nações, tribos, povos e línguas».",
+        "A origem está na comemoração dos mártires. No Oriente celebrava-se já no século IV um dia de todos os mártires, no domingo depois de Pentecostes. Em Roma, o papa Bonifácio IV dedicou o Panteão a Santa Maria e a todos os mártires no ano 609.",
+        "A data de 1 de novembro fixou-se no século VIII e estendeu-se a toda a Igreja latina no século IX, sob Gregório IV.",
+        "O Evangelho do dia é o das Bem-aventuranças. É solenidade e, no direito universal, dia de preceito; no dia seguinte a Igreja reza pelos fiéis defuntos."
+      ]
+    },
+    {
+      "day": "12-08",
+      "name": "Imaculada Conceição de Nossa Senhora",
+      "title": "Solenidade da Virgem Maria",
+      "century": "—",
+      "source": "Pio IX, Ineffabilis Deus (1854); Catholic Encyclopedia (1913)",
+      "biography": [
+        "A solenidade celebra que Maria foi preservada de toda a mancha do pecado original desde o primeiro instante da sua conceição, em previsão dos méritos de Cristo. Não se trata da conceição virginal de Jesus, mas da própria conceição de Maria.",
+        "A festa é antiga no Oriente, onde se celebrava a Conceição de Santa Ana já no século VII, e passou ao Ocidente pela Itália meridional e pela Inglaterra.",
+        "A doutrina foi longamente discutida na escolástica: São Tomás de Aquino levantou objeções, e foi Duns Escoto quem formulou a distinção decisiva — uma redenção preservativa é redenção mais perfeita, não menor.",
+        "Pio IX definiu o dogma a 8 de dezembro de 1854, na bula Ineffabilis Deus. Quatro anos depois, em Lourdes, a jovem que aparecia a Bernadette Soubirous identificou-se dizendo: «Eu sou a Imaculada Conceição»."
+      ]
+    },
+    {
+      "day": "12-14",
+      "name": "São João da Cruz",
+      "title": "Presbítero e doutor da Igreja",
+      "century": "XVI",
+      "died": "1591",
+      "source": "Catholic Encyclopedia (1913); Butler, Lives of the Saints (1866)",
+      "biography": [
+        "Juan de Yepes nasceu em Fontiveros, perto de Ávila, em 1542, numa família muito pobre; o pai morreu cedo e a mãe criou os filhos com o trabalho de tecelã. Estudou em Medina del Campo e entrou no Carmelo, seguindo depois para a universidade de Salamanca.",
+        "Pensava passar aos cartuxos quando encontrou Santa Teresa de Jesus, que o convenceu a ficar e a começar a reforma na ramo masculino. Em 1568 fundou com outros o primeiro convento de descalços, em Duruelo.",
+        "A reforma dividiu a Ordem. Em 1577 foi preso pelos próprios frades e mantido nove meses numa cela estreita em Toledo, de onde acabou por fugir. Foi ali que compôs boa parte do Cântico Espiritual.",
+        "Deixou uma obra breve e densa — a Subida do Monte Carmelo, a Noite Escura, o Cântico Espiritual, a Chama Viva de Amor — em que a poesia e o comentário caminham juntos. Morreu em Úbeda a 14 de dezembro de 1591. Foi declarado doutor da Igreja em 1926."
+      ]
+    },
+    {
+      "day": "12-26",
+      "name": "Santo Estêvão",
+      "title": "Primeiro mártir",
+      "century": "I",
+      "source": "Atos dos Apóstolos 6–7; Catholic Encyclopedia (1913)",
+      "biography": [
+        "Estêvão aparece nos Atos dos Apóstolos como o primeiro dos sete escolhidos pela comunidade de Jerusalém para o serviço das mesas, quando os cristãos de língua grega se queixaram de que as suas viúvas eram esquecidas na distribuição diária.",
+        "O texto descreve-o como «homem cheio de fé e do Espírito Santo», e mostra-o a discutir nas sinagogas dos judeus helenistas, que não conseguiam resistir à sua argumentação.",
+        "Acusado perante o Sinédrio, respondeu com um longo discurso que percorre a história de Israel e termina numa acusação direta aos seus juízes. Foi arrastado para fora da cidade e apedrejado.",
+        "Morreu pedindo perdão para os que o matavam. Os Atos anotam que as testemunhas depuseram as capas aos pés de um jovem chamado Saulo. A Igreja celebra o primeiro mártir logo no dia a seguir ao Natal."
+      ]
+    },
+    {
+      "day": "12-27",
+      "name": "São João",
+      "title": "Apóstolo e evangelista",
+      "century": "I",
+      "source": "Catholic Encyclopedia (1913); Butler, Lives of the Saints (1866)",
+      "biography": [
+        "Filho de Zebedeu e irmão de Tiago, João era pescador no lago de Genesaré quando foi chamado. Os Evangelhos põem-no, com Pedro e Tiago, nos momentos reservados a poucos: a transfiguração e a agonia no horto.",
+        "O quarto Evangelho designa-o, sem o nomear, como «o discípulo que Jesus amava». É ele quem está junto à cruz e recebe a Mãe do Senhor; é ele quem chega primeiro ao sepulcro na manhã da Páscoa.",
+        "A tradição antiga liga-o a Éfeso, onde teria vivido até idade avançada, e ao desterro em Patmos, de onde vem o Apocalipse. Atribuem-se-lhe o Evangelho, três cartas e o Apocalipse, cuja relação exata é discutida desde a antiguidade.",
+        "É o único dos Doze que a tradição não faz morrer mártir. São Jerónimo conta que, já velho e sem forças para pregar, repetia sempre a mesma frase: «Filhinhos, amai-vos uns aos outros»."
+      ]
+    }
+  ]
+}

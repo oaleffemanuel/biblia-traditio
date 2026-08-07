@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/snack.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../bible/application/bible_providers.dart';
 import '../application/annotation_providers.dart';
@@ -92,8 +93,24 @@ class FavoritesScreen extends ConsumerWidget {
                   leading: Icon(Icons.favorite, color: c.accent, size: 20),
                   title: Text(f.snapshot,
                       maxLines: 3, overflow: TextOverflow.ellipsis),
-                  onTap: () => context
-                      .push('/bible/${f.ref.bookId}/${f.ref.chapter}'),
+                  trailing: IconButton(
+                    tooltip: context.l10n.unfavorite,
+                    icon: Icon(Icons.close, size: 18, color: c.textFaint),
+                    // Undoable rather than confirmed: removing a favorite is
+                    // cheap to reverse, and a dialog for it would nag.
+                    onPressed: () {
+                      final ctrl = ref.read(annotationControllerProvider);
+                      ctrl.toggleFavorite(f.ref, f.snapshot);
+                      showSnack(context.l10n.favoriteRemoved,
+                          action: SnackBarAction(
+                            label: context.l10n.actionUndo,
+                            onPressed: () =>
+                                ctrl.toggleFavorite(f.ref, f.snapshot),
+                          ));
+                    },
+                  ),
+                  onTap: () => context.push(
+                      '/bible/${f.ref.bookId}/${f.ref.chapter}?v=${f.ref.verse}'),
                 );
               },
             ),
@@ -123,8 +140,21 @@ class HighlightsScreen extends ConsumerWidget {
                       decoration: BoxDecoration(
                           color: h.color.color, shape: BoxShape.circle)),
                   title: Text(_ref(ref, h.ref)),
-                  onTap: () => context
-                      .push('/bible/${h.ref.bookId}/${h.ref.chapter}'),
+                  trailing: IconButton(
+                    tooltip: context.l10n.actionRemove,
+                    icon: Icon(Icons.close, size: 18, color: c.textFaint),
+                    onPressed: () {
+                      final ctrl = ref.read(annotationControllerProvider);
+                      ctrl.removeHighlight(h.ref);
+                      showSnack(context.l10n.highlightRemoved,
+                          action: SnackBarAction(
+                            label: context.l10n.actionUndo,
+                            onPressed: () => ctrl.setHighlight(h.ref, h.color),
+                          ));
+                    },
+                  ),
+                  onTap: () => context.push(
+                      '/bible/${h.ref.bookId}/${h.ref.chapter}?v=${h.ref.verse}'),
                 );
               },
             ),

@@ -879,4 +879,83 @@ class AppL10nEn extends AppL10n {
   String translationWithLanguage(String language, String title) {
     return '$language — $title';
   }
+
+  @override
+  String get saintOfTheDay => 'Saint of the Day';
+
+  @override
+  String get saintReadMore => 'Read more';
+
+  @override
+  String saintSource(String source) {
+    return 'Source: $source';
+  }
+
+  @override
+  String saintDied(String year) {
+    return '†$year';
+  }
+
+  @override
+  String get liturgicalDirectory => 'Liturgical Directory';
+
+  @override
+  String get directoryOpen => 'Understand this celebration';
+
+  @override
+  String get directorySeason => 'Liturgical season';
+
+  @override
+  String get directoryCelebration => 'The celebration';
+
+  @override
+  String get directoryColor => 'Liturgical colour';
+
+  @override
+  String get directoryRank => 'Grade of celebration';
+
+  @override
+  String get directoryPractical => 'Practical notes';
+
+  @override
+  String get directorySource =>
+      'Based on the Universal Norms on the Liturgical Year and the Calendar, the General Instruction of the Roman Missal and the Code of Canon Law.';
+
+  @override
+  String liturgyWeekOf(int week) {
+    return 'week $week';
+  }
+
+  @override
+  String get liturgyReadings => 'Readings of the day';
+
+  @override
+  String get rankOptionalMemorial => 'Optional memorial';
+
+  @override
+  String get rankCommemoration => 'Commemoration';
+
+  @override
+  String get colorGreen => 'Green';
+
+  @override
+  String get colorRed => 'Red';
+
+  @override
+  String get colorWhite => 'White';
+
+  @override
+  String get colorPurple => 'Purple';
+
+  @override
+  String get colorRose => 'Rose';
+
+  @override
+  String get actionUndo => 'Undo';
+
+  @override
+  String get favoriteRemoved => 'Removed from favorites';
+
+  @override
+  String get highlightRemoved => 'Highlight removed';
 }

@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../annotations/application/annotation_providers.dart';
+import '../../liturgy/application/liturgy_providers.dart';
+import '../../liturgy/domain/liturgical_day.dart';
+import '../../liturgy/presentation/liturgy_screen.dart' show seasonLabel, slotLabel;
 import '../../reading_plan/application/reading_plan_providers.dart';
 import '../../settings/application/settings_providers.dart';
 
@@ -126,9 +129,16 @@ class _QuickCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.bt;
-    return GestureDetector(
+    return Semantics(
+      button: true,
+      label: label,
+      child: GestureDetector(
       onTap: onTap,
-      child: Container(
+      // The card has a fixed height, so very large text would overflow it.
+      // Clamping keeps it legible and intact instead of painting an error box.
+      child: MediaQuery.withClampedTextScaling(
+        maxScaleFactor: 1.3,
+        child: Container(
         height: 92,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
@@ -158,6 +168,8 @@ class _QuickCard extends StatelessWidget {
                     fontWeight: FontWeight.w500)),
           ],
         ),
+      ),
+      ),
       ),
     );
   }
@@ -211,7 +223,10 @@ class _SecondaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.bt;
-    return GestureDetector(
+    return Semantics(
+      button: true,
+      label: '$title. $subtitle',
+      child: GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -246,18 +261,28 @@ class _SecondaryCard extends StatelessWidget {
           ],
         ),
       ),
+      ),
     );
   }
 }
 
-class _LiturgyPreview extends StatelessWidget {
+/// Today's liturgy at a glance. Reads the real calendar and the real
+/// lectionary — it used to be a hardcoded mock that claimed "Tempo Comum,
+/// Ano A" on Christmas Day.
+class _LiturgyPreview extends ConsumerWidget {
   final VoidCallback onTap;
   const _LiturgyPreview({required this.onTap});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = context.bt;
     final l10n = context.l10n;
+    final light = Theme.of(context).brightness == Brightness.light;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = ref.watch(liturgicalDayProvider(today));
+    final readings = ref.watch(readingsForProvider(today));
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -271,32 +296,35 @@ class _LiturgyPreview extends StatelessWidget {
               Container(
                   width: 10,
                   height: 10,
-                  decoration: const BoxDecoration(
-                      color: LiturgicalPalette.green, shape: BoxShape.circle)),
+                  decoration: BoxDecoration(
+                      color: day.color.dotColor(light: light),
+                      shape: BoxShape.circle)),
               const SizedBox(width: 8),
               Text(l10n.liturgyToday,
                   style: TextStyle(color: c.textSecondary, fontSize: 13)),
             ]),
             const SizedBox(height: 12),
-            Text(l10n.ordinaryTime,
+            Text(day.celebration,
                 style: Theme.of(context).textTheme.headlineMedium),
-            Text(l10n.liturgicalYear('A'),
+            Text(
+                [
+                  seasonLabel(l10n, day.season),
+                  l10n.liturgicalYear(day.sundayCycle),
+                ].join('  ·  '),
                 style: TextStyle(color: c.textSecondary)),
-            const SizedBox(height: 16),
-            Wrap(spacing: 8, children: [
-              for (final r in [
-                l10n.readingFirst,
-                l10n.readingPsalm,
-                l10n.readingSecond,
-                l10n.readingGospel
-              ])
-                Chip(
-                  label: Text(r),
-                  backgroundColor: c.surfaceHigh,
-                  side: BorderSide.none,
-                  labelStyle: TextStyle(color: c.textPrimary, fontSize: 12),
-                ),
-            ]),
+            if (readings != null && readings.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Wrap(spacing: 8, runSpacing: 4, children: [
+                for (final r in readings)
+                  Chip(
+                    label: Text(slotLabel(l10n, r.slot)),
+                    backgroundColor: c.surfaceHigh,
+                    side: BorderSide.none,
+                    labelStyle: TextStyle(color: c.textPrimary, fontSize: 12),
+                    visualDensity: VisualDensity.compact,
+                  ),
+              ]),
+            ],
           ],
         ),
       ),

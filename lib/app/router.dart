@@ -53,6 +53,11 @@ final routerProvider = Provider.family<GoRouter, bool>((ref, completed) {
                         // context that must not overwrite "Continue reading".
                         recordProgress:
                             s.uri.queryParameters['src'] == null,
+                        // ?v=16 scrolls to (and briefly marks) that verse, so
+                        // a note/favorite/search hit lands on the verse the
+                        // reader asked for, not the top of the chapter.
+                        focusVerse: int.tryParse(
+                            s.uri.queryParameters['v'] ?? ''),
                       ),
                     ),
                   ],

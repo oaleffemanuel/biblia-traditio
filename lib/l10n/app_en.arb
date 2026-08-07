@@ -413,5 +413,32 @@
       "language": { "type": "String" },
       "title": { "type": "String" }
     }
-  }
+  },
+  "saintOfTheDay": "Saint of the Day",
+  "saintReadMore": "Read more",
+  "saintSource": "Source: {source}",
+  "@saintSource": {"placeholders": {"source": {"type": "String"}}},
+  "saintDied": "†{year}",
+  "@saintDied": {"placeholders": {"year": {"type": "String"}}},
+  "liturgicalDirectory": "Liturgical Directory",
+  "directoryOpen": "Understand this celebration",
+  "directorySeason": "Liturgical season",
+  "directoryCelebration": "The celebration",
+  "directoryColor": "Liturgical colour",
+  "directoryRank": "Grade of celebration",
+  "directoryPractical": "Practical notes",
+  "directorySource": "Based on the Universal Norms on the Liturgical Year and the Calendar, the General Instruction of the Roman Missal and the Code of Canon Law.",
+  "liturgyWeekOf": "week {week}",
+  "@liturgyWeekOf": {"placeholders": {"week": {"type": "int"}}},
+  "liturgyReadings": "Readings of the day",
+  "rankOptionalMemorial": "Optional memorial",
+  "rankCommemoration": "Commemoration",
+  "colorGreen": "Green",
+  "colorRed": "Red",
+  "colorWhite": "White",
+  "colorPurple": "Purple",
+  "colorRose": "Rose",
+  "actionUndo": "Undo",
+  "favoriteRemoved": "Removed from favorites",
+  "highlightRemoved": "Highlight removed"
 }

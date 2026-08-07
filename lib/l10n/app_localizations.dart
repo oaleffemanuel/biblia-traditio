@@ -1656,6 +1656,150 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'{language} — {title}'**
   String translationWithLanguage(String language, String title);
+
+  /// No description provided for @saintOfTheDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Saint of the Day'**
+  String get saintOfTheDay;
+
+  /// No description provided for @saintReadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Read more'**
+  String get saintReadMore;
+
+  /// No description provided for @saintSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source: {source}'**
+  String saintSource(String source);
+
+  /// No description provided for @saintDied.
+  ///
+  /// In en, this message translates to:
+  /// **'†{year}'**
+  String saintDied(String year);
+
+  /// No description provided for @liturgicalDirectory.
+  ///
+  /// In en, this message translates to:
+  /// **'Liturgical Directory'**
+  String get liturgicalDirectory;
+
+  /// No description provided for @directoryOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Understand this celebration'**
+  String get directoryOpen;
+
+  /// No description provided for @directorySeason.
+  ///
+  /// In en, this message translates to:
+  /// **'Liturgical season'**
+  String get directorySeason;
+
+  /// No description provided for @directoryCelebration.
+  ///
+  /// In en, this message translates to:
+  /// **'The celebration'**
+  String get directoryCelebration;
+
+  /// No description provided for @directoryColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Liturgical colour'**
+  String get directoryColor;
+
+  /// No description provided for @directoryRank.
+  ///
+  /// In en, this message translates to:
+  /// **'Grade of celebration'**
+  String get directoryRank;
+
+  /// No description provided for @directoryPractical.
+  ///
+  /// In en, this message translates to:
+  /// **'Practical notes'**
+  String get directoryPractical;
+
+  /// No description provided for @directorySource.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on the Universal Norms on the Liturgical Year and the Calendar, the General Instruction of the Roman Missal and the Code of Canon Law.'**
+  String get directorySource;
+
+  /// No description provided for @liturgyWeekOf.
+  ///
+  /// In en, this message translates to:
+  /// **'week {week}'**
+  String liturgyWeekOf(int week);
+
+  /// No description provided for @liturgyReadings.
+  ///
+  /// In en, this message translates to:
+  /// **'Readings of the day'**
+  String get liturgyReadings;
+
+  /// No description provided for @rankOptionalMemorial.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional memorial'**
+  String get rankOptionalMemorial;
+
+  /// No description provided for @rankCommemoration.
+  ///
+  /// In en, this message translates to:
+  /// **'Commemoration'**
+  String get rankCommemoration;
+
+  /// No description provided for @colorGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Green'**
+  String get colorGreen;
+
+  /// No description provided for @colorRed.
+  ///
+  /// In en, this message translates to:
+  /// **'Red'**
+  String get colorRed;
+
+  /// No description provided for @colorWhite.
+  ///
+  /// In en, this message translates to:
+  /// **'White'**
+  String get colorWhite;
+
+  /// No description provided for @colorPurple.
+  ///
+  /// In en, this message translates to:
+  /// **'Purple'**
+  String get colorPurple;
+
+  /// No description provided for @colorRose.
+  ///
+  /// In en, this message translates to:
+  /// **'Rose'**
+  String get colorRose;
+
+  /// No description provided for @actionUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get actionUndo;
+
+  /// No description provided for @favoriteRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from favorites'**
+  String get favoriteRemoved;
+
+  /// No description provided for @highlightRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight removed'**
+  String get highlightRemoved;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

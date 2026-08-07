@@ -882,4 +882,83 @@ class AppL10nPt extends AppL10n {
   String translationWithLanguage(String language, String title) {
     return '$language — $title';
   }
+
+  @override
+  String get saintOfTheDay => 'Santo do Dia';
+
+  @override
+  String get saintReadMore => 'Ler mais';
+
+  @override
+  String saintSource(String source) {
+    return 'Fonte: $source';
+  }
+
+  @override
+  String saintDied(String year) {
+    return '†$year';
+  }
+
+  @override
+  String get liturgicalDirectory => 'Diretório Litúrgico';
+
+  @override
+  String get directoryOpen => 'Entender esta celebração';
+
+  @override
+  String get directorySeason => 'Tempo litúrgico';
+
+  @override
+  String get directoryCelebration => 'A celebração';
+
+  @override
+  String get directoryColor => 'Cor litúrgica';
+
+  @override
+  String get directoryRank => 'Grau da celebração';
+
+  @override
+  String get directoryPractical => 'Notas práticas';
+
+  @override
+  String get directorySource =>
+      'Baseado nas Normas Universais sobre o Ano Litúrgico e o Calendário, na Instrução Geral do Missal Romano e no Código de Direito Canónico.';
+
+  @override
+  String liturgyWeekOf(int week) {
+    return '$weekª semana';
+  }
+
+  @override
+  String get liturgyReadings => 'Leituras do dia';
+
+  @override
+  String get rankOptionalMemorial => 'Memória facultativa';
+
+  @override
+  String get rankCommemoration => 'Comemoração';
+
+  @override
+  String get colorGreen => 'Verde';
+
+  @override
+  String get colorRed => 'Vermelho';
+
+  @override
+  String get colorWhite => 'Branco';
+
+  @override
+  String get colorPurple => 'Roxo';
+
+  @override
+  String get colorRose => 'Rosa';
+
+  @override
+  String get actionUndo => 'Desfazer';
+
+  @override
+  String get favoriteRemoved => 'Removido dos favoritos';
+
+  @override
+  String get highlightRemoved => 'Destaque removido';
 }

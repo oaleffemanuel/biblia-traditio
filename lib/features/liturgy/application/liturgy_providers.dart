@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/lectionary.dart';
+import '../domain/liturgical_directory.dart';
 import '../domain/liturgical_calendar.dart';
 import '../domain/liturgical_day.dart';
+import '../domain/saints.dart';
 
 final _calendar = const LiturgicalCalendar();
 
@@ -32,4 +34,21 @@ final lectionaryProvider = FutureProvider<LectionaryRepository>(
 final readingsForProvider =
     Provider.family<List<Reading>?, DateTime>((ref, date) {
   return ref.watch(lectionaryProvider).value?.readingsFor(date);
+});
+
+/// Saints proposed for a date, from the bundled dataset. Empty when the day
+/// isn't covered — the Liturgy screen then shows no section at all.
+final saintsRepositoryProvider = FutureProvider<SaintsRepository>(
+    (ref) => BundledSaintsRepository.load());
+
+final saintsForProvider =
+    Provider.family<List<SaintEntry>, DateTime>((ref, date) {
+  return ref.watch(saintsRepositoryProvider).value?.forDate(date) ?? const [];
+});
+
+/// The directory's explanation of a day (season, celebration, colour, rank and
+/// the practical notes). Pure computation over the resolved day.
+final directoryForProvider =
+    Provider.family<DirectoryEntry, DateTime>((ref, date) {
+  return const LiturgicalDirectory().explain(ref.watch(liturgicalDayProvider(date)));
 });
