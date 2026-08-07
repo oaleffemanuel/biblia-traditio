@@ -150,7 +150,7 @@ cat > "$PKG/manifest.json" <<JSON
       "title": "Comentário dos Padres da Igreja",
       "language": "pt-BR",
       "type": "patristics",
-      "version": 4,
+      "version": 5,
       "source": "Catena Aurea / Haydock (tradução automática de fontes em domínio público; revisão e curadoria de autoria, com função e século de cada comentador)",
       "license": "Fontes em domínio público; tradução automática revisada",
       "asset": "assets/packages/patristics.sqlite.gz",

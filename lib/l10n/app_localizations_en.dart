@@ -958,4 +958,56 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get highlightRemoved => 'Highlight removed';
+
+  @override
+  String liturgyReadingOf(String book) {
+    return 'A reading $book';
+  }
+
+  @override
+  String liturgyGospelCross(String evangelist) {
+    return '✠ A reading from the holy Gospel according to $evangelist';
+  }
+
+  @override
+  String get psalmRefrain => 'Response';
+
+  @override
+  String get psalmVerses => 'Verses';
+
+  @override
+  String get psalmRefrainUnavailable =>
+      'The proper response for this day is given in the Lectionary.';
+
+  @override
+  String get directoryCardSeason => 'Liturgical Season';
+
+  @override
+  String get directoryCardCelebration => 'Celebration';
+
+  @override
+  String get directoryCardColor => 'Liturgical Colour';
+
+  @override
+  String get directoryCardWeek => 'Week';
+
+  @override
+  String get directoryCardYear => 'Liturgical Year';
+
+  @override
+  String get directoryCardCycle => 'Cycle';
+
+  @override
+  String get directoryCardPreface => 'Preface';
+
+  @override
+  String get directoryCardObservances => 'Observances';
+
+  @override
+  String get directoryCardEphemerides => 'Also today';
+
+  @override
+  String liturgicalCycle(String cycle) {
+    return 'Cycle $cycle';
+  }
 }

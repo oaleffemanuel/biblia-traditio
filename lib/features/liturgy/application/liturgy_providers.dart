@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/lectionary.dart';
-import '../domain/liturgical_directory.dart';
 import '../domain/liturgical_calendar.dart';
 import '../domain/liturgical_day.dart';
 import '../domain/saints.dart';
@@ -44,11 +43,4 @@ final saintsRepositoryProvider = FutureProvider<SaintsRepository>(
 final saintsForProvider =
     Provider.family<List<SaintEntry>, DateTime>((ref, date) {
   return ref.watch(saintsRepositoryProvider).value?.forDate(date) ?? const [];
-});
-
-/// The directory's explanation of a day (season, celebration, colour, rank and
-/// the practical notes). Pure computation over the resolved day.
-final directoryForProvider =
-    Provider.family<DirectoryEntry, DateTime>((ref, date) {
-  return const LiturgicalDirectory().explain(ref.watch(liturgicalDayProvider(date)));
 });

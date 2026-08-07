@@ -1800,6 +1800,96 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Highlight removed'**
   String get highlightRemoved;
+
+  /// No description provided for @liturgyReadingOf.
+  ///
+  /// In en, this message translates to:
+  /// **'A reading {book}'**
+  String liturgyReadingOf(String book);
+
+  /// No description provided for @liturgyGospelCross.
+  ///
+  /// In en, this message translates to:
+  /// **'✠ A reading from the holy Gospel according to {evangelist}'**
+  String liturgyGospelCross(String evangelist);
+
+  /// No description provided for @psalmRefrain.
+  ///
+  /// In en, this message translates to:
+  /// **'Response'**
+  String get psalmRefrain;
+
+  /// No description provided for @psalmVerses.
+  ///
+  /// In en, this message translates to:
+  /// **'Verses'**
+  String get psalmVerses;
+
+  /// No description provided for @psalmRefrainUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The proper response for this day is given in the Lectionary.'**
+  String get psalmRefrainUnavailable;
+
+  /// No description provided for @directoryCardSeason.
+  ///
+  /// In en, this message translates to:
+  /// **'Liturgical Season'**
+  String get directoryCardSeason;
+
+  /// No description provided for @directoryCardCelebration.
+  ///
+  /// In en, this message translates to:
+  /// **'Celebration'**
+  String get directoryCardCelebration;
+
+  /// No description provided for @directoryCardColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Liturgical Colour'**
+  String get directoryCardColor;
+
+  /// No description provided for @directoryCardWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get directoryCardWeek;
+
+  /// No description provided for @directoryCardYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Liturgical Year'**
+  String get directoryCardYear;
+
+  /// No description provided for @directoryCardCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle'**
+  String get directoryCardCycle;
+
+  /// No description provided for @directoryCardPreface.
+  ///
+  /// In en, this message translates to:
+  /// **'Preface'**
+  String get directoryCardPreface;
+
+  /// No description provided for @directoryCardObservances.
+  ///
+  /// In en, this message translates to:
+  /// **'Observances'**
+  String get directoryCardObservances;
+
+  /// No description provided for @directoryCardEphemerides.
+  ///
+  /// In en, this message translates to:
+  /// **'Also today'**
+  String get directoryCardEphemerides;
+
+  /// No description provided for @liturgicalCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle {cycle}'**
+  String liturgicalCycle(String cycle);
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

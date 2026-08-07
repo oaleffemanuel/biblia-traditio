@@ -63,7 +63,10 @@ class HomeScreen extends ConsumerWidget {
                       onTap: () {
                         final pos = ref.read(latestProgressProvider);
                         if (pos != null) {
-                          context.push('/bible/${pos.bookId}/${pos.chapter}');
+                          // ?v= returns to the verse that was on screen, not to
+                          // the top of the chapter.
+                          context.push('/bible/${pos.bookId}/${pos.chapter}'
+                              '${pos.verse > 1 ? '?v=${pos.verse}' : ''}');
                         } else {
                           context.go('/bible');
                         }

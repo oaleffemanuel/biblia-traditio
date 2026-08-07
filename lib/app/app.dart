@@ -21,12 +21,19 @@ class BibliaTraditioApp extends ConsumerWidget {
     // ready. Decompression runs off the main isolate — the UI never freezes.
     final dbReady = ref.watch(userDatabaseProvider);
     final content = ref.watch(contentReadyProvider);
-    // Preload the bundled lectionary during the splash. The Liturgy tab is kept
-    // alive in the shell's IndexedStack, so resolving this small asset before any
-    // screen builds avoids an async provider notifying mid-build later.
+    // Preload the bundled lectionary and saints during the splash. The Liturgy
+    // tab is kept alive in the shell's IndexedStack, so resolving these small
+    // assets before any screen builds avoids an async provider notifying
+    // mid-build later — which surfaces as a Riverpod "setState during build"
+    // assertion when a tab change toggles TickerMode and resumes the tab's
+    // paused subscriptions. Any new always-alive async asset belongs here too.
     final lectionary = ref.watch(lectionaryProvider);
+    final saints = ref.watch(saintsRepositoryProvider);
 
-    if (dbReady.isLoading || content.isLoading || lectionary.isLoading) {
+    if (dbReady.isLoading ||
+        content.isLoading ||
+        lectionary.isLoading ||
+        saints.isLoading) {
       return const _Splash();
     }
     // Surface a clear, recoverable error instead of falling through to an empty
@@ -52,15 +59,17 @@ class BibliaTraditioApp extends ConsumerWidget {
       darkTheme: AppTheme.dark(),
       themeMode: settings.themeMode,
       locale: _localeFor(settings.language),
-      supportedLocales: AppL10n.supportedLocales,
+      // Only translated languages are advertised — see AppLanguage.
+      supportedLocales: AppLanguage.supportedLocales,
       localizationsDelegates: AppL10n.localizationsDelegates,
       routerConfig: router,
     );
   }
 
-  /// Only pt/en are translated; other selections fall back to Portuguese.
+  /// A language that isn't translated yet falls back to Portuguese rather than
+  /// rendering a half-localised UI.
   Locale _localeFor(AppLanguage l) =>
-      l == AppLanguage.en ? const Locale('en') : const Locale('pt');
+      AppLanguage.implemented.contains(l) ? l.locale : AppLanguage.pt.locale;
 }
 
 class _Splash extends StatelessWidget {

@@ -172,7 +172,14 @@ Future<void> _shareCardImage(GlobalKey key) async {
   await SharePlus.instance.share(ShareParams(files: [file]));
 }
 
-/// The share card — dark, serif, reverent; a small wordmark, never an ad.
+/// The share card.
+///
+/// Deliberately **light**: the app reads dark, but an exported image lands in a
+/// feed, a print, a parish bulletin — places where ivory paper and ink read as
+/// considered and a black rectangle reads as a screenshot. Wide margins, a
+/// hairline rule, small-caps reference, and a wordmark quiet enough to be a
+/// colophon rather than an advertisement.
+///
 /// One frame serves all three shapes: a single verse, a numbered passage, and
 /// a commentary (which adds the commentator above the text).
 class _ShareCard extends StatelessWidget {
@@ -190,86 +197,91 @@ class _ShareCard extends StatelessWidget {
     this.authorMeta,
   });
 
+  // Paper, ink and a single accent — the app's terracotta, darkened enough to
+  // hold its own on a light ground.
+  static const _paper = Color(0xFFFBF8F3);
+  static const _ink = Color(0xFF1C1A18);
+  static const _muted = Color(0xFF6B635B);
+  static const _accent = Color(0xFFA33B22);
+  static const _rule = Color(0xFFDCD3C7);
+
   @override
   Widget build(BuildContext context) {
-    const bg = Color(0xFF0B0B0C);
-    const accent = Color(0xFFC2492E);
-    const ivory = Color(0xFFEDE9E3);
     final serif = GoogleFonts.ebGaramond();
     final rows = verses;
 
     return Container(
-      width: 320,
-      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 36),
+      width: 340,
+      padding: const EdgeInsets.fromLTRB(36, 40, 36, 30),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: accent.withValues(alpha: 0.25)),
+        color: _paper,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: _rule),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(author == null ? Icons.auto_stories : Icons.format_quote,
-              color: accent.withValues(alpha: 0.8), size: 22),
-          const SizedBox(height: 20),
           if (author != null) ...[
-            Text(author!,
+            Text(author!.toUpperCase(),
                 textAlign: TextAlign.center,
                 style: serif.copyWith(
-                    color: ivory, fontSize: 17, fontWeight: FontWeight.w600)),
+                    color: _accent,
+                    fontSize: 12,
+                    letterSpacing: 1.6,
+                    fontWeight: FontWeight.w600,
+                    height: 1.4)),
             if ((authorMeta ?? '').isNotEmpty) ...[
-              const SizedBox(height: 3),
+              const SizedBox(height: 4),
               Text(authorMeta!,
                   textAlign: TextAlign.center,
                   style: serif.copyWith(
-                      color: ivory.withValues(alpha: 0.6),
-                      fontSize: 12,
-                      letterSpacing: 0.4)),
+                      color: _muted, fontSize: 12.5, fontStyle: FontStyle.italic)),
             ],
-            const SizedBox(height: 18),
+            const SizedBox(height: 22),
           ],
           if (rows != null)
-            // Numbered passage: verse numbers stay, in accent, so "John 1:1–5"
-            // still reads as Scripture rather than a paragraph.
+            // Numbered passage: the verse numbers stay, set small and raised in
+            // the accent, so "John 1:1–5" still reads as Scripture.
             Text.rich(
               TextSpan(children: [
-                const TextSpan(text: '“'),
                 for (var i = 0; i < rows.length; i++) ...[
                   TextSpan(
-                    text: '${rows[i].number} ',
+                    text: '${rows[i].number}\u2009',
                     style: serif.copyWith(
-                        color: accent, fontSize: 13, height: 1.5),
+                        color: _accent,
+                        fontSize: 11,
+                        fontFeatures: const [FontFeature.superscripts()]),
                   ),
                   TextSpan(
                       text: rows[i].text + (i == rows.length - 1 ? '' : ' ')),
                 ],
-                const TextSpan(text: '”'),
               ]),
               textAlign: TextAlign.center,
-              style: serif.copyWith(color: ivory, fontSize: 19, height: 1.5),
+              style: serif.copyWith(color: _ink, fontSize: 19, height: 1.62),
             )
           else
             Text(
               body ?? '',
               textAlign: TextAlign.center,
-              style: serif.copyWith(color: ivory, fontSize: 19, height: 1.5),
+              style: serif.copyWith(color: _ink, fontSize: 20, height: 1.62),
             ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 26),
+          Container(width: 44, height: 1, color: _rule),
+          const SizedBox(height: 14),
           Text(reference.toUpperCase(),
               textAlign: TextAlign.center,
               style: serif.copyWith(
-                  color: accent,
-                  fontSize: 12,
-                  letterSpacing: 2,
+                  color: _accent,
+                  fontSize: 11.5,
+                  letterSpacing: 2.2,
                   fontWeight: FontWeight.w600)),
-          const SizedBox(height: 24),
-          Container(width: 28, height: 1, color: accent.withValues(alpha: 0.4)),
-          const SizedBox(height: 12),
-          Text('Biblia Traditio',
+          const SizedBox(height: 26),
+          // The colophon: present, never promotional.
+          Text('BIBLIA TRADITIO',
               style: serif.copyWith(
-                  color: ivory.withValues(alpha: 0.5),
-                  fontSize: 12,
-                  letterSpacing: 1)),
+                  color: _muted.withValues(alpha: 0.55),
+                  fontSize: 9,
+                  letterSpacing: 2.6)),
         ],
       ),
     );

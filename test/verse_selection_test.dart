@@ -110,7 +110,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('JOÃO 1,1-3'), findsOneWidget);
-    expect(find.text('Biblia Traditio'), findsOneWidget);
+    expect(find.text('BIBLIA TRADITIO'), findsOneWidget);
   });
 
   testWidgets('an over-long span is refused with the limit named, not rendered',

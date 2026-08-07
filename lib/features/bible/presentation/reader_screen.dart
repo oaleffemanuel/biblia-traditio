@@ -16,6 +16,7 @@ import '../../settings/domain/settings.dart';
 import '../application/bible_providers.dart';
 import '../domain/entities.dart';
 import '../domain/psalm_numbering.dart';
+import '../../annotations/presentation/note_editor.dart';
 import 'commentary_panel.dart';
 import 'widgets/book_emblem.dart';
 import 'widgets/navigation_pickers.dart';
@@ -62,6 +63,8 @@ class ReaderScreen extends ConsumerStatefulWidget {
 
 class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   final _scrollController = ItemScrollController();
+  final _positions = ItemPositionsListener.create();
+  Timer? _progressTimer;
 
   /// Multi-verse selection. Long-pressing a verse sets the anchor; tapping
   /// another verse moves the far end, so the selection is a continuous span by
@@ -85,11 +88,76 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     setState(() => _selAnchor = _selEnd = verse);
   }
   void _extendSelection(int verse) => setState(() => _selEnd = verse);
-  void _clearSelection() => setState(() => _selAnchor = _selEnd = null);
+  void _clearSelection() => setState(() {
+        _selAnchor = _selEnd = null;
+        _showColors = false;
+      });
 
   /// Used when the chapter changes underneath a live selection — the verses it
   /// pointed at are gone, so it must not survive into the new chapter.
-  void _clearSelectionSilently() => _selAnchor = _selEnd = null;
+  void _clearSelectionSilently() {
+    _selAnchor = _selEnd = null;
+    _showColors = false;
+  }
+
+  /// Whether the highlight colour bar is open under the action row.
+  bool _showColors = false;
+
+  /// The selected verses, in order, with their canonical text.
+  List<({int number, String text})> _selectedVerses(
+      List<Verse> verses, List<ParallelVerse> rows, bool parallelActive) {
+    final all = parallelActive
+        ? [for (final r in rows) (number: r.number, text: r.canonicalText)]
+        : [for (final v in verses) (number: v.number, text: v.text)];
+    return all.where((v) => _isSelected(v.number)).toList();
+  }
+
+  String _selectionReference(BibleBook? book) {
+    final name = book?.name ?? widget.bookId;
+    final span = _selFrom == _selTo ? '$_selFrom' : '$_selFrom-$_selTo';
+    return '$name ${widget.chapter},$span';
+  }
+
+  void _copySelection(BibleBook? book, List<({int number, String text})> picked) {
+    if (picked.isEmpty) return;
+    final body = picked.map((v) => v.text).join(' ');
+    Clipboard.setData(
+        ClipboardData(text: '“$body”\n— ${_selectionReference(book)}'));
+    _clearSelection();
+    showSnack(context.l10n.copied);
+  }
+
+  /// One tap paints every selected verse and closes the bar — the whole point
+  /// of the colour row is that it costs a single gesture.
+  void _highlightSelection(List<({int number, String text})> picked,
+      HighlightColor color) {
+    HapticFeedback.lightImpact();
+    final ctrl = ref.read(annotationControllerProvider);
+    for (final v in picked) {
+      ctrl.setHighlight(VerseRef(widget.bookId, widget.chapter, v.number), color);
+    }
+    _clearSelection();
+  }
+
+  void _noteSelection(List<({int number, String text})> picked) {
+    if (picked.isEmpty) return;
+    final vref = VerseRef(widget.bookId, widget.chapter, picked.first.number);
+    _clearSelection();
+    showNoteEditor(context, ref, vref);
+  }
+
+  void _favoriteSelection(
+      BibleBook? book, List<({int number, String text})> picked) {
+    if (picked.isEmpty) return;
+    final ctrl = ref.read(annotationControllerProvider);
+    final reference = _selectionReference(book);
+    for (final v in picked) {
+      ctrl.toggleFavorite(VerseRef(widget.bookId, widget.chapter, v.number),
+          '“${v.text}”  ($reference)');
+    }
+    _clearSelection();
+    showSnack(context.l10n.favorite);
+  }
 
   /// Shares the selected span as one card, refusing politely when the passage
   /// is longer than an image can carry legibly.
@@ -115,12 +183,35 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     _clearSelection();
   }
 
-  void _maybeRecord() {
+  void _maybeRecord([int verse = 1]) {
     if (!widget.recordProgress) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final t = ref.read(resolvedTranslationIdProvider);
       ref.read(annotationControllerProvider).recordProgress(
-          t, VerseRef(widget.bookId, widget.chapter, 1));
+          t, VerseRef(widget.bookId, widget.chapter, verse));
+    });
+  }
+
+  /// Records the verse actually at the top of the viewport, so "Continue
+  /// reading" comes back to where the reader stopped rather than to verse 1.
+  /// Debounced — scrolling a chapter shouldn't be hundreds of writes.
+  void _onScroll() {
+    if (!widget.recordProgress) return;
+    _progressTimer?.cancel();
+    _progressTimer = Timer(const Duration(milliseconds: 700), () {
+      if (!mounted) return;
+      final visible = _positions.itemPositions.value
+          .where((p) => p.itemLeadingEdge < 0.5)
+          .toList();
+      if (visible.isEmpty) return;
+      // Index 0 is the chapter header; verse n sits at index n.
+      final top = visible
+          .map((p) => p.index)
+          .where((i) => i >= 1)
+          .fold<int>(1 << 30, (a, b) => a < b ? a : b);
+      if (top == 1 << 30) return;
+      _maybeRecord(top);
     });
   }
 
@@ -129,6 +220,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     super.initState();
     _maybeRecord();
     _focusRequestedVerse();
+    _positions.itemPositions.addListener(_onScroll);
   }
 
   /// Scrolls to `?v=` once the list is attached, and marks the verse for a few
@@ -154,6 +246,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   @override
   void dispose() {
     _focusTimer?.cancel();
+    _progressTimer?.cancel();
+    _positions.itemPositions.removeListener(_onScroll);
     super.dispose();
   }
 
@@ -306,9 +400,20 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   if (_selecting)
                     _SelectionBar(
                       count: _selTo - _selFrom + 1,
+                      showColors: _showColors,
                       onClear: _clearSelection,
-                      onShare: () => _shareSelection(
-                          book, verses, rows, parallelActive),
+                      onToggleColors: () =>
+                          setState(() => _showColors = !_showColors),
+                      onCopy: () => _copySelection(book,
+                          _selectedVerses(verses, rows, parallelActive)),
+                      onShare: () =>
+                          _shareSelection(book, verses, rows, parallelActive),
+                      onNote: () => _noteSelection(
+                          _selectedVerses(verses, rows, parallelActive)),
+                      onFavorite: () => _favoriteSelection(book,
+                          _selectedVerses(verses, rows, parallelActive)),
+                      onPickColor: (color) => _highlightSelection(
+                          _selectedVerses(verses, rows, parallelActive), color),
                     ),
                 ],
               ),
@@ -335,6 +440,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
     return ScrollablePositionedList.builder(
       itemScrollController: _scrollController,
+      itemPositionsListener: _positions,
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 80),
       itemCount: count + 2, // header + verses + footer
       itemBuilder: (context, index) {
@@ -739,50 +845,150 @@ class _ParallelVerseTile extends StatelessWidget {
 /// The bar that appears while verses are selected: how many are picked, a way
 /// out, and the share action. Deliberately slim — the passage stays readable
 /// underneath while the reader adjusts the span.
+/// The long-press action bar — Kindle's gesture, in this app's clothes.
+///
+/// A long press selects the verse and raises this bar; tapping further verses
+/// widens the span and every action applies to the whole of it. "Destacar"
+/// swaps in a row of colours so painting a passage is press → tap → done.
 class _SelectionBar extends StatelessWidget {
   final int count;
+  final bool showColors;
   final VoidCallback onClear;
+  final VoidCallback onToggleColors;
+  final VoidCallback onCopy;
   final VoidCallback onShare;
-  const _SelectionBar(
-      {required this.count, required this.onClear, required this.onShare});
+  final VoidCallback onNote;
+  final VoidCallback onFavorite;
+  final ValueChanged<HighlightColor> onPickColor;
+
+  const _SelectionBar({
+    required this.count,
+    required this.showColors,
+    required this.onClear,
+    required this.onToggleColors,
+    required this.onCopy,
+    required this.onShare,
+    required this.onNote,
+    required this.onFavorite,
+    required this.onPickColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     final c = context.bt;
     final l10n = context.l10n;
-    return Container(
-      decoration: BoxDecoration(
-          color: c.surface, border: Border(top: BorderSide(color: c.divider))),
-      padding: const EdgeInsets.fromLTRB(20, 8, 8, 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(l10n.selectionCount(count),
-                    style: TextStyle(
-                        color: c.textPrimary, fontWeight: FontWeight.w600)),
-                Text(l10n.selectionHint,
-                    style: TextStyle(color: c.textFaint, fontSize: 12)),
-              ],
+    return SafeArea(
+      top: false,
+      child: Container(
+        decoration: BoxDecoration(
+            color: c.surface,
+            border: Border(top: BorderSide(color: c.divider))),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 8, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(l10n.selectionCount(count),
+                        style: TextStyle(
+                            color: c.textSecondary, fontSize: 12.5)),
+                  ),
+                  TextButton(
+                    onPressed: onClear,
+                    style: TextButton.styleFrom(
+                        foregroundColor: c.textSecondary,
+                        visualDensity: VisualDensity.compact),
+                    child: Text(l10n.selectionClear,
+                        style: const TextStyle(fontSize: 12.5)),
+                  ),
+                ],
+              ),
             ),
-          ),
-          TextButton(
-            onPressed: onClear,
-            style: TextButton.styleFrom(foregroundColor: c.textSecondary),
-            child: Text(l10n.selectionClear),
-          ),
-          IconButton(
-            onPressed: onShare,
-            tooltip: l10n.shareSelection,
-            icon: Icon(Icons.ios_share, color: c.accent),
-          ),
-        ],
+            // The colour row takes the place of nothing — it slides in above the
+            // actions, so the actions never move under the reader's thumb.
+            AnimatedSize(
+              duration: const Duration(milliseconds: 160),
+              curve: Curves.easeOut,
+              child: showColors
+                  ? Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 6, 20, 2),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          for (final color in HighlightColor.values)
+                            Semantics(
+                              button: true,
+                              label: color.key,
+                              child: GestureDetector(
+                                onTap: () => onPickColor(color),
+                                behavior: HitTestBehavior.opaque,
+                                child: Padding(
+                                  // 44pt touch target around a 30pt swatch.
+                                  padding: const EdgeInsets.all(7),
+                                  child: Container(
+                                    width: 30,
+                                    height: 30,
+                                    decoration: BoxDecoration(
+                                        color: color.color,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                            color: c.divider, width: 0.5)),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    )
+                  : const SizedBox(width: double.infinity),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _act(c, Icons.copy, l10n.shareCopy, onCopy),
+                  _act(c, Icons.ios_share, l10n.share, onShare),
+                  _act(c, Icons.format_color_fill, l10n.highlight,
+                      onToggleColors,
+                      active: showColors),
+                  _act(c, Icons.edit_note, l10n.note, onNote),
+                  _act(c, Icons.favorite_border, l10n.favorite, onFavorite),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
+
+  Widget _act(BtColors c, IconData icon, String label, VoidCallback onTap,
+          {bool active = false}) =>
+      Expanded(
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 21, color: active ? c.accent : c.textPrimary),
+                const SizedBox(height: 3),
+                Text(label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        color: active ? c.accent : c.textSecondary,
+                        fontSize: 11)),
+              ],
+            ),
+          ),
+        ),
+      );
 }
 
 /// Shown in the reader when the user has Parallel Reading on but no second

@@ -36,6 +36,137 @@ class OverlayResult {
   });
 }
 
+/// What [dedupeCommentaries] removed, for the build report.
+class DedupeReport {
+  /// Rows whose text was byte-identical to one already kept on the same verse
+  /// from the same author.
+  final int exact;
+
+  /// Rows identical once case, accents, punctuation and whitespace are
+  /// ignored — the same excerpt re-typeset ("«E Deus formou…»" vs "E Deus
+  /// formou…").
+  final int normalised;
+
+  /// Kept, but worth knowing about: one excerpt sits entirely inside another
+  /// from the same author on the same verse. These are NOT removed — in a
+  /// catena a short quotation and the longer passage it came from are often
+  /// both genuine — but a curator should eyeball them.
+  final List<String> containedSamples;
+  final int contained;
+
+  const DedupeReport(
+      this.exact, this.normalised, this.contained, this.containedSamples);
+
+  int get removed => exact + normalised;
+}
+
+/// Drops entries that repeat the *same text* from the *same author* on the
+/// *same verse*.
+///
+/// It deliberately does not touch the case the corpus is full of: one Father
+/// with several **different** excerpts on one verse. That is what a catena is —
+/// Cyril of Alexandria has five distinct comments on John 1:1 — and collapsing
+/// them would destroy the corpus, not clean it.
+///
+/// When two rows normalise to the same text the longer original is kept, so
+/// the better-typeset variant survives rather than whichever happened to be
+/// parsed first.
+(PatristicsParseResult, DedupeReport) dedupeCommentaries(
+    PatristicsParseResult input) {
+  final kept = <String, CommentaryRecord>{}; // key → winner
+  final order = <String>[]; // preserves corpus order
+  var exact = 0, normalised = 0;
+
+  for (final rec in input.commentaries) {
+    final base = '${rec.bookId}|${rec.chapter}|${rec.verse}|${rec.fatherName}';
+    final exactKey = '$base|${rec.text}';
+    final normKey = '$base|${_normaliseText(rec.text)}';
+
+    if (kept.containsKey(exactKey)) {
+      exact++;
+      continue;
+    }
+    final rival = kept[normKey];
+    if (rival != null) {
+      normalised++;
+      // Keep whichever carries more of the original typesetting.
+      if (rec.text.length > rival.text.length) {
+        kept[normKey] = rec;
+        kept['$base|${rival.text}'] = rec;
+      }
+      kept[exactKey] = kept[normKey]!;
+      continue;
+    }
+    kept[exactKey] = rec;
+    kept[normKey] = rec;
+    order.add(exactKey);
+  }
+
+  // Report (but keep) excerpts that contain one another.
+  final byVerseAuthor = <String, List<String>>{};
+  for (final key in order) {
+    final rec = kept[key]!;
+    byVerseAuthor
+        .putIfAbsent(
+            '${rec.bookId}|${rec.chapter}|${rec.verse}|${rec.fatherName}',
+            () => [])
+        .add(_normaliseText(rec.text));
+  }
+  var contained = 0;
+  final samples = <String>[];
+  for (final entry in byVerseAuthor.entries) {
+    final texts = entry.value;
+    if (texts.length < 2) continue;
+    for (var i = 0; i < texts.length; i++) {
+      for (var j = i + 1; j < texts.length; j++) {
+        final a = texts[i], b = texts[j];
+        if (a.length < 40 || b.length < 40) continue;
+        if (a.contains(b) || b.contains(a)) {
+          contained++;
+          if (samples.length < 10) samples.add(entry.key);
+          break;
+        }
+      }
+    }
+  }
+
+  final out = PatristicsParseResult()
+    ..filesProcessed = input.filesProcessed
+    ..orphans = input.orphans
+    ..warnings.addAll(input.warnings);
+  for (final key in order) {
+    out.commentaries.add(kept[key]!);
+  }
+  out.fathers.addAll(out.commentaries.map((c) => c.fatherName));
+
+  return (out, DedupeReport(exact, normalised, contained, samples));
+}
+
+String _normaliseText(String s) {
+  final lower = s.toLowerCase();
+  final buf = StringBuffer();
+  for (final rune in lower.runes) {
+    final ch = String.fromCharCode(rune);
+    buf.write(_foldChar(ch));
+  }
+  return buf
+      .toString()
+      .replaceAll(RegExp(r'[^a-z0-9 ]+'), ' ')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim();
+}
+
+const _accents = {
+  'á': 'a', 'à': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a',
+  'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+  'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
+  'ó': 'o', 'ò': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o',
+  'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
+  'ç': 'c', 'ñ': 'n',
+};
+
+String _foldChar(String ch) => _accents[ch] ?? ch;
+
 /// Merges [base] (the original corpus — the coverage floor) with [overlay] (the
 /// corrected corpus). The corrected corpus wins **per verse**: wherever it has
 /// any commentary for (book, chapter, verse), the original entries for that

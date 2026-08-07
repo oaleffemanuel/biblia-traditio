@@ -4,23 +4,43 @@ import 'commentary_prefs.dart';
 
 export 'commentary_prefs.dart';
 
-/// UI languages. `values` keeps codes the parser may encounter; [implemented]
-/// is the subset with real ARB/localization files and is the ONLY list exposed
-/// in onboarding/Settings. Add a language to [implemented] once its ARB ships
-/// (see docs/localization.md).
+/// Every UI language the app is built to carry.
+///
+/// [values] is the roadmap; [implemented] is what actually ships. Only
+/// [implemented] is offered in onboarding and Settings **and** handed to
+/// `MaterialApp.supportedLocales` — the second half matters: without it, merely
+/// dropping `app_es.arb` into `lib/l10n/` would put a Spanish phone into a
+/// half-translated UI without anyone choosing it.
+///
+/// To activate a language: translate its ARB, run `flutter gen-l10n`, add it to
+/// [implemented], and add its assertions to `test/i18n_test.dart`. Nothing else
+/// in the app needs to change. See `docs/localization.md`.
 enum AppLanguage {
   pt('pt', 'Português'),
   en('en', 'English'),
-  es('es', 'Español'),
   it('it', 'Italiano'),
+  es('es', 'Español'),
+  fr('fr', 'Français'),
   la('la', 'Latina');
 
   final String code;
   final String label;
   const AppLanguage(this.code, this.label);
 
+  Locale get locale => Locale(code);
+
   /// UI languages actually translated and selectable today.
   static const List<AppLanguage> implemented = [pt, en];
+
+  /// Built but not yet translated — visible on the roadmap, never to a user.
+  static List<AppLanguage> get planned =>
+      values.where((l) => !implemented.contains(l)).toList();
+
+  /// The locales the app advertises to the platform. Deliberately derived from
+  /// [implemented] rather than from the generated `AppL10n.supportedLocales`,
+  /// which grows the moment an ARB file appears.
+  static List<Locale> get supportedLocales =>
+      implemented.map((l) => l.locale).toList();
 
   static AppLanguage fromCode(String? c) =>
       values.firstWhere((l) => l.code == c, orElse: () => pt);

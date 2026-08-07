@@ -78,7 +78,7 @@ Future<void> _patristics(List<String> argv) async {
   }
 
   PatristicsParseResult res;
-  Map<String, Object?> report;
+  late Map<String, Object?> report;
   if (base != null && overlay != null) {
     final r = overlayPatristics(base, overlay);
     res = r.merged;
@@ -128,6 +128,30 @@ Future<void> _patristics(List<String> argv) async {
       },
     };
   }
+
+  // Same author, same verse, identical text → keep one. Different text from
+  // the same author on the same verse is a catena, not a duplicate, and is
+  // left alone.
+  final (deduped, dedupe) = dedupeCommentaries(res);
+  res = deduped;
+  stdout.writeln('▶ Dedupe');
+  stdout.writeln('  removed ${dedupe.removed} repeated entries'
+      ' (${dedupe.exact} byte-identical, ${dedupe.normalised} identical once'
+      ' punctuation/accents are ignored)');
+  stdout.writeln('  kept ${dedupe.contained} excerpt pairs where one contains'
+      ' the other — in a catena both are usually genuine');
+  report['dedupe'] = {
+    'exact': dedupe.exact,
+    'normalised': dedupe.normalised,
+    'containedKept': dedupe.contained,
+    'containedSamples': dedupe.containedSamples,
+  };
+  report['merged'] = {
+    'commentaries': res.commentaries.length,
+    'verses': res.coveredVerses.length,
+    'authors': res.fathers.length,
+  };
+  _summarise('deduped', res);
 
   for (final w in res.warnings.take(20)) {
     stdout.writeln('  ⚠ $w');

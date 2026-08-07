@@ -961,4 +961,56 @@ class AppL10nPt extends AppL10n {
 
   @override
   String get highlightRemoved => 'Destaque removido';
+
+  @override
+  String liturgyReadingOf(String book) {
+    return 'Leitura $book';
+  }
+
+  @override
+  String liturgyGospelCross(String evangelist) {
+    return '✠ Evangelho de Nosso Senhor Jesus Cristo segundo $evangelist';
+  }
+
+  @override
+  String get psalmRefrain => 'Refrão';
+
+  @override
+  String get psalmVerses => 'Versículos';
+
+  @override
+  String get psalmRefrainUnavailable =>
+      'O refrão próprio deste dia consta do Lecionário.';
+
+  @override
+  String get directoryCardSeason => 'Tempo Litúrgico';
+
+  @override
+  String get directoryCardCelebration => 'Celebração';
+
+  @override
+  String get directoryCardColor => 'Cor Litúrgica';
+
+  @override
+  String get directoryCardWeek => 'Semana';
+
+  @override
+  String get directoryCardYear => 'Ano Litúrgico';
+
+  @override
+  String get directoryCardCycle => 'Ciclo';
+
+  @override
+  String get directoryCardPreface => 'Prefácio';
+
+  @override
+  String get directoryCardObservances => 'Observações';
+
+  @override
+  String get directoryCardEphemerides => 'Efemérides';
+
+  @override
+  String liturgicalCycle(String cycle) {
+    return 'Ciclo $cycle';
+  }
 }

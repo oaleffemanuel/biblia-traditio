@@ -5,11 +5,14 @@ import '../../bible/domain/entities.dart';
 export '../../bible/domain/entities.dart' show VerseRef;
 
 /// Highlight palette (keys persisted; colors resolved per theme).
+/// Declaration order is the order the colour bar paints them — yellow, green,
+/// blue, pink, purple. The `key` is what's stored, so reordering here can never
+/// disturb highlights already on disk.
 enum HighlightColor {
   gold('gold', Color(0xFFE3B23C)),
-  rose('rose', Color(0xFFD98CA6)),
-  sky('sky', Color(0xFF7FA8D4)),
   sage('sage', Color(0xFF8CB48C)),
+  sky('sky', Color(0xFF7FA8D4)),
+  rose('rose', Color(0xFFD98CA6)),
   lilac('lilac', Color(0xFFB39DDB));
 
   final String key;

@@ -215,7 +215,8 @@ void main() {
 
     // sharing card via the action bar
     await tap(tester, find.byIcon(Icons.ios_share));
-    expect(await until(tester, find.text('Biblia Traditio')), isTrue,
+    // The exported card is light stock with a small-caps colophon.
+    expect(await until(tester, find.text('BIBLIA TRADITIO')), isTrue,
         reason: 'share card did not render');
     debugPrint('RESULT share_card=ok');
     await tester.tapAt(const Offset(20, 40));

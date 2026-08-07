@@ -95,101 +95,120 @@ void main() {
     });
   });
 
+  // Minimal labels so the domain can be exercised without Flutter l10n.
+  final labels = DirectoryLabels(
+    season: 'Tempo Litúrgico',
+    celebration: 'Celebração',
+    color: 'Cor Litúrgica',
+    week: 'Semana',
+    year: 'Ano Litúrgico',
+    cycle: 'Ciclo',
+    preface: 'Prefácio',
+    observances: 'Observações',
+    ephemerides: 'Efemérides',
+    seasonName: (s) => switch (s) {
+      LiturgicalSeason.advent => 'Advento',
+      LiturgicalSeason.christmas => 'Tempo do Natal',
+      LiturgicalSeason.lent => 'Quaresma',
+      LiturgicalSeason.triduum => 'Tríduo Pascal',
+      LiturgicalSeason.easter => 'Tempo Pascal',
+      LiturgicalSeason.ordinary => 'Tempo Comum',
+    },
+    colorName: (c) => switch (c) {
+      LiturgicalColor.green => 'Verde',
+      LiturgicalColor.red => 'Vermelho',
+      LiturgicalColor.white => 'Branco',
+      LiturgicalColor.purple => 'Roxo',
+      LiturgicalColor.rose => 'Rosa',
+    },
+    rankName: (r) => r.name,
+    weekOf: (w) => '$wª semana',
+    yearOf: (y) => 'Ano $y',
+    cycleOf: (c) => 'Ciclo $c',
+  );
+
+  DirectoryEntry explain(int y, int m, int d) =>
+      directory.explain(cal.resolve(DateTime(y, m, d)), labels);
+
+  String? valueOf(DirectoryEntry e, String label) =>
+      e.cards.where((c) => c.label == label).map((c) => c.value).firstOrNull;
+
   group('liturgical directory', () {
-    test('explains every day of a year without gaps or throwing', () {
+    test('every day of a year yields a complete, non-empty card set', () {
       for (var d = DateTime(2026, 1, 1);
           d.year == 2026;
           d = DateTime(d.year, d.month, d.day + 1)) {
-        final e = directory.explain(cal.resolve(d));
-        expect(e.season.paragraphs, isNotEmpty, reason: '$d');
-        expect(e.color.paragraphs, isNotEmpty, reason: '$d');
-        expect(e.rank.paragraphs, isNotEmpty, reason: '$d');
+        final e = directory.explain(cal.resolve(d), labels);
+        expect(e.cards, isNotEmpty, reason: '$d');
+        for (final card in e.cards) {
+          expect(card.label.trim(), isNotEmpty, reason: '$d');
+          expect(card.value.trim(), isNotEmpty, reason: '$d ${card.label}');
+        }
+        // The five cards that must always be answerable.
+        for (final label in const [
+          'Tempo Litúrgico', 'Celebração', 'Cor Litúrgica',
+          'Ano Litúrgico', 'Prefácio',
+        ]) {
+          expect(e.cards.any((c) => c.label == label), isTrue,
+              reason: '$d missing $label');
+        }
       }
     });
 
-    test('names the season and its meaning', () {
-      final lent = directory.explain(cal.resolve(DateTime(2026, 3, 2)));
-      expect(lent.season.title, 'Quaresma');
-      expect(lent.season.paragraphs.join(), contains('quarenta dias'));
+    test('cards stay concise — no essays', () {
+      for (var d = DateTime(2026, 1, 1);
+          d.year == 2026;
+          d = DateTime(d.year, d.month, d.day + 1)) {
+        for (final card in directory.explain(cal.resolve(d), labels).cards) {
+          expect(card.value.length, lessThan(400), reason: '$d ${card.label}');
+          expect((card.note ?? '').length, lessThan(240),
+              reason: '$d ${card.label}');
+        }
+      }
     });
 
-    test('explains the particular celebration when it knows one', () {
-      final ash = directory.explain(cal.resolve(DateTime(2026, 2, 18)));
-      expect(ash.celebration, isNotNull);
-      expect(ash.celebration!.title, 'Quarta-feira de Cinzas');
+    test('names the season and the celebration', () {
+      expect(valueOf(explain(2026, 3, 2), 'Tempo Litúrgico'), 'Quaresma');
+      expect(valueOf(explain(2026, 2, 18), 'Celebração'), 'Quarta-feira de Cinzas');
     });
 
-    test('an ordinary weekday has no celebration topic, only the season', () {
-      final feria = directory.explain(cal.resolve(DateTime(2026, 7, 8)));
-      expect(feria.celebration, isNull);
-      expect(feria.season.title, 'Tempo Comum');
+    test('reports the colour, the week and the year', () {
+      expect(valueOf(explain(2026, 7, 8), 'Cor Litúrgica'), 'Verde');
+      expect(valueOf(explain(2026, 3, 15), 'Cor Litúrgica'), 'Rosa'); // Laetare
+      expect(valueOf(explain(2026, 11, 22), 'Semana'), '34ª semana');
+      expect(valueOf(explain(2026, 3, 2), 'Ano Litúrgico'), 'Ano A');
     });
 
-    test('the colour explanation matches the day', () {
-      expect(directory.explain(cal.resolve(DateTime(2026, 7, 8))).color.title,
-          'Verde');
-      expect(directory.explain(cal.resolve(DateTime(2026, 5, 24))).color.title,
-          'Vermelho'); // Pentecost
-      expect(directory.explain(cal.resolve(DateTime(2026, 3, 15))).color.title,
-          'Rosa'); // Laetare
+    test('names the preface family the Missal appoints', () {
+      expect(valueOf(explain(2026, 12, 25), 'Prefácio'), contains('Natal'));
+      expect(valueOf(explain(2026, 5, 24), 'Prefácio'), contains('Pentecostes'));
+      expect(valueOf(explain(2026, 3, 2), 'Prefácio'), contains('Quaresma'));
+      // An ordinary Sunday vs an ordinary weekday take different families.
+      expect(valueOf(explain(2026, 7, 12), 'Prefácio'), contains('Domingos'));
+      expect(valueOf(explain(2026, 7, 8), 'Prefácio'), contains('Comum'));
     });
 
-    test('the rank explanation matches the grade', () {
-      expect(directory.explain(cal.resolve(DateTime(2026, 8, 15))).rank.title,
-          'Solenidade');
-      expect(directory.explain(cal.resolve(DateTime(2026, 1, 28))).rank.title,
-          'Memória obrigatória');
-      expect(directory.explain(cal.resolve(DateTime(2026, 7, 8))).rank.title,
-          'Féria');
-    });
-
-    group('practical notes', () {
+    group('observances and ephemerides', () {
       test('Ash Wednesday states the fast and who it binds', () {
-        final notes =
-            directory.explain(cal.resolve(DateTime(2026, 2, 18))).practical;
-        expect(notes.join(), contains('jejum'));
-        expect(notes.join(), contains('abstinência'));
-      });
-
-      test('a Sunday states the precept', () {
-        final notes =
-            directory.explain(cal.resolve(DateTime(2026, 6, 14))).practical;
-        expect(notes.join(), contains('preceito'));
+        expect(valueOf(explain(2026, 2, 18), 'Observações'), contains('Jejum'));
       });
 
       test('a universal holy day flags that conferences may differ', () {
-        final notes =
-            directory.explain(cal.resolve(DateTime(2026, 8, 15))).practical;
-        expect(notes.join(), contains('conferências episcopais'));
+        expect(valueOf(explain(2026, 8, 15), 'Observações'),
+            contains('conferência episcopal'));
       });
 
-      test('optional memorials are listed as available, not imposed', () {
-        final notes =
-            directory.explain(cal.resolve(DateTime(2026, 1, 20))).practical;
-        expect(notes.join(), contains('pode celebrar-se também'));
-        expect(notes.join(), contains('São Sebastião'));
+      test('optional memorials appear as ephemerides, not as the celebration',
+          () {
+        final e = explain(2026, 1, 20);
+        expect(valueOf(e, 'Efemérides'), contains('São Sebastião'));
+        expect(valueOf(e, 'Celebração'), isNot(contains('Sebastião')));
       });
 
-      test('an octave day says so', () {
-        final notes =
-            directory.explain(cal.resolve(DateTime(2026, 4, 7))).practical;
-        expect(notes.join(), contains('oitava'));
-      });
-
-      test('a plain weekday has nothing to add', () {
-        // 8 July 2026: a Wednesday in Ordinary Time with no memorial at all,
-        // no precept and no Friday abstinence.
-        final notes =
-            directory.explain(cal.resolve(DateTime(2026, 7, 8))).practical;
-        expect(notes, isEmpty);
-      });
-
-      test('a weekday that carries an optional memorial offers it', () {
-        // 9 July 2026 has one; the day itself stays a feria.
-        final day = cal.resolve(DateTime(2026, 7, 9));
-        expect(day.rank, LiturgicalRank.weekday);
-        expect(directory.explain(day).practical.join(),
-            contains('Agostinho Zhao Rong'));
+      test('a plain weekday carries neither card', () {
+        final e = explain(2026, 7, 8);
+        expect(valueOf(e, 'Observações'), isNull);
+        expect(valueOf(e, 'Efemérides'), isNull);
       });
     });
   });

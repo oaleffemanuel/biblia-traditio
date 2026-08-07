@@ -87,7 +87,7 @@ void main() {
     expect(find.textContaining('No princípio era o Verbo'), findsWidgets);
     expect(find.text('JOÃO 1,1-3'), findsOneWidget);
     // Subtle branding, never a promotional caption.
-    expect(find.text('Biblia Traditio'), findsOneWidget);
+    expect(find.text('BIBLIA TRADITIO'), findsOneWidget);
     expect(find.textContaining('Taken from'), findsNothing);
     expect(find.textContaining('Baixe'), findsNothing);
     // The three share actions.
@@ -108,11 +108,11 @@ void main() {
     await tester.tap(find.text('abrir'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Santo Agostinho de Hipona'), findsOneWidget);
+    expect(find.text('SANTO AGOSTINHO DE HIPONA'), findsOneWidget);
     expect(find.text('Doutor da Igreja — séc. V'), findsOneWidget);
     expect(find.textContaining('logos'), findsOneWidget);
     expect(find.text('JOÃO 1,1'), findsOneWidget);
-    expect(find.text('Biblia Traditio'), findsOneWidget);
+    expect(find.text('BIBLIA TRADITIO'), findsOneWidget);
   });
 
   test('the over-limit message names the limit in both languages', () {

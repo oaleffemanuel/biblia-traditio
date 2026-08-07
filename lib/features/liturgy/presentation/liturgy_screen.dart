@@ -9,6 +9,7 @@ import '../../bible/application/bible_providers.dart';
 import '../../bible/domain/entities.dart';
 import '../application/liturgy_providers.dart';
 import '../domain/lectionary.dart';
+import '../domain/book_proclamation.dart';
 import '../domain/liturgical_day.dart';
 import 'liturgical_directory_screen.dart';
 import 'saint_screen.dart';
@@ -296,6 +297,9 @@ class _ReadingCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.bt;
     final l10n = context.l10n;
+    final bookTitle = reading.bookId == null
+        ? null
+        : proclamationFor(reading.bookId!)?.title;
     return Container(
       decoration: BoxDecoration(
           color: c.surface, borderRadius: BorderRadius.circular(18)),
@@ -320,8 +324,17 @@ class _ReadingCard extends ConsumerWidget {
                                 letterSpacing: 1,
                                 fontWeight: FontWeight.w600)),
                         const SizedBox(height: 3),
+                        // The lector's own words for the book — "Livro do
+                        // Profeta Naum" — with the citation beneath it, so the
+                        // card reads as a reading and not as a code.
+                        if (bookTitle != null)
+                          Text(bookTitle,
+                              style: Theme.of(context).textTheme.titleMedium),
                         Text(reading.reference,
-                            style: Theme.of(context).textTheme.titleMedium),
+                            style: bookTitle == null
+                                ? Theme.of(context).textTheme.titleMedium
+                                : TextStyle(
+                                    color: c.textSecondary, fontSize: 13)),
                       ],
                     ),
                   ),
@@ -347,13 +360,25 @@ class _ReadingCard extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Before the Gospel: proclamation + acclamation.
+                  // The reading as it is proclaimed: announcement, text,
+                  // response — the shape a lector or a listener recognises.
                   if (reading.slot == ReadingSlot.gospel) ...[
                     _say(context, _gospelProclamation(ref, l10n), people: false),
                     _say(context, l10n.liturgyResponseGloryToYou, people: true),
                     const SizedBox(height: 10),
+                  ] else if (reading.slot != ReadingSlot.psalm &&
+                      bookTitle != null) ...[
+                    _say(
+                        context,
+                        l10n.liturgyReadingOf(
+                            proclamationFor(reading.bookId!)!.ofForm),
+                        people: false),
+                    const SizedBox(height: 10),
                   ],
-                  _ReadingText(reading: reading),
+                  if (reading.slot == ReadingSlot.psalm)
+                    _PsalmBody(reading: reading)
+                  else
+                    _ReadingText(reading: reading),
                   // Fixed responses after the reading (Order of Mass).
                   ..._endingResponses(context, l10n),
                 ],
@@ -367,7 +392,7 @@ class _ReadingCard extends ConsumerWidget {
   String _gospelProclamation(WidgetRef ref, AppL10n l10n) {
     final book = ref.watch(bookByIdProvider(reading.bookId ?? ''));
     final evangelist = book == null ? '' : 'São ${book.name}';
-    return l10n.liturgyGospelAccording(evangelist);
+    return l10n.liturgyGospelCross(evangelist);
   }
 
   /// Standard fixed responses that close each reading; psalm has none.
@@ -688,19 +713,11 @@ class _DirectoryCard extends StatelessWidget {
             Icon(Icons.menu_book_outlined, size: 20, color: c.accent),
             const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(context.l10n.liturgicalDirectory,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 2),
-                  Text(context.l10n.directoryOpen,
-                      style: TextStyle(color: c.textSecondary, fontSize: 13)),
-                ],
-              ),
+              child: Text(context.l10n.liturgicalDirectory,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w600)),
             ),
             Icon(Icons.chevron_right, color: c.textFaint),
           ]),
@@ -708,4 +725,45 @@ class _DirectoryCard extends StatelessWidget {
       ),
     );
   }
+}
+
+
+/// The responsorial psalm, laid out as it is sung: the response first, then the
+/// verses.
+///
+/// The refrain is a line the *Lectionary* appoints — it is not derivable from
+/// the psalm text — so when the dataset doesn't carry one the card says where
+/// it lives instead of inventing a line. Extending `tool/build_lectionary.py`
+/// to capture refrains is what would fill this in.
+class _PsalmBody extends StatelessWidget {
+  final Reading reading;
+  const _PsalmBody({required this.reading});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.bt;
+    final l10n = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _label(c, l10n.psalmRefrain),
+        Text(l10n.psalmRefrainUnavailable,
+            style: TextStyle(
+                color: c.textFaint, fontStyle: FontStyle.italic, height: 1.4)),
+        const SizedBox(height: 14),
+        _label(c, l10n.psalmVerses),
+        _ReadingText(reading: reading),
+      ],
+    );
+  }
+
+  Widget _label(BtColors c, String text) => Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Text(text.toUpperCase(),
+            style: TextStyle(
+                color: c.accent,
+                fontSize: 10.5,
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.w600)),
+      );
 }

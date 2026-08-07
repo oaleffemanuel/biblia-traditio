@@ -8,10 +8,28 @@ import '../domain/liturgical_day.dart';
 import '../domain/liturgical_directory.dart';
 import 'liturgy_screen.dart' show colorLabel, rankLabel, seasonLabel;
 
-/// The Liturgical Directory: what today's celebration *is*, and why.
-///
-/// Opened from the Liturgy screen as a sheet — the app keeps its three tabs;
-/// this is a layer over the day, not a new destination.
+/// Localised labels for the directory, built from the active locale.
+DirectoryLabels directoryLabels(AppL10n l) => DirectoryLabels(
+      season: l.directoryCardSeason,
+      celebration: l.directoryCardCelebration,
+      color: l.directoryCardColor,
+      week: l.directoryCardWeek,
+      year: l.directoryCardYear,
+      cycle: l.directoryCardCycle,
+      preface: l.directoryCardPreface,
+      observances: l.directoryCardObservances,
+      ephemerides: l.directoryCardEphemerides,
+      seasonName: (s) => seasonLabel(l, s),
+      colorName: (c) => colorLabel(l, c),
+      rankName: (r) => rankLabel(l, r),
+      weekOf: l.liturgyWeekOf,
+      yearOf: l.liturgicalYear,
+      cycleOf: l.liturgicalCycle,
+    );
+
+/// The Liturgical Directory: what today's celebration is, answered card by
+/// card. Opened from the Liturgy screen as a sheet — the app keeps its three
+/// tabs; this is a layer over the day, not a new destination.
 void showLiturgicalDirectory(BuildContext context, DateTime date) {
   final c = context.bt;
   showModalBottomSheet(
@@ -41,7 +59,8 @@ class _DirectoryBody extends ConsumerWidget {
     final l10n = context.l10n;
     final light = Theme.of(context).brightness == Brightness.light;
     final day = ref.watch(liturgicalDayProvider(date));
-    final entry = ref.watch(directoryForProvider(date));
+    final entry =
+        const LiturgicalDirectory().explain(day, directoryLabels(l10n));
 
     return Column(
       children: [
@@ -54,18 +73,8 @@ class _DirectoryBody extends ConsumerWidget {
         Expanded(
           child: ListView(
             controller: controller,
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
             children: [
-              Text(l10n.liturgicalDirectory.toUpperCase(),
-                  style: TextStyle(
-                      color: c.accent,
-                      fontSize: 11,
-                      letterSpacing: 1,
-                      fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
-              Text(day.celebration,
-                  style: Theme.of(context).textTheme.headlineMedium),
-              const SizedBox(height: 8),
               Row(children: [
                 Container(
                     width: 10,
@@ -73,59 +82,22 @@ class _DirectoryBody extends ConsumerWidget {
                     decoration: BoxDecoration(
                         color: day.color.dotColor(light: light),
                         shape: BoxShape.circle)),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Expanded(
-                  child: Text(
-                    [
-                      seasonLabel(l10n, day.season),
-                      if (day.week != null) l10n.liturgyWeekOf(day.week!),
-                      l10n.liturgicalYear(day.sundayCycle),
-                      colorLabel(l10n, day.color),
-                    ].join('  ·  '),
-                    style: TextStyle(color: c.textSecondary),
-                  ),
+                  child: Text(l10n.liturgicalDirectory,
+                      style: Theme.of(context).textTheme.headlineMedium),
                 ),
               ]),
-              const SizedBox(height: 24),
-              if (entry.celebration != null)
-                _Topic(l10n.directoryCelebration, entry.celebration!),
-              _Topic(l10n.directorySeason, entry.season),
-              _Topic(l10n.directoryRank, entry.rank),
-              _Topic(l10n.directoryColor, entry.color),
-              if (entry.practical.isNotEmpty) ...[
-                _Label(l10n.directoryPractical, c),
-                for (final note in entry.practical)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 7, right: 10),
-                          child: Container(
-                              width: 4,
-                              height: 4,
-                              decoration: BoxDecoration(
-                                  color: c.accent, shape: BoxShape.circle)),
-                        ),
-                        Expanded(
-                          child: Text(note,
-                              style: TextStyle(
-                                  color: c.textSecondary, height: 1.5)),
-                        ),
-                      ],
-                    ),
-                  ),
-                const SizedBox(height: 8),
-              ],
-              Divider(color: c.divider),
-              const SizedBox(height: 8),
+              const SizedBox(height: 20),
+              for (final card in entry.cards)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _Card(card: card),
+                ),
+              const SizedBox(height: 4),
               Text(l10n.directorySource,
                   style:
-                      TextStyle(color: c.textFaint, fontSize: 12, height: 1.4)),
-              const SizedBox(height: 4),
-              Text(rankLabel(l10n, day.rank),
-                  style: TextStyle(color: c.textFaint, fontSize: 12)),
+                      TextStyle(color: c.textFaint, fontSize: 11.5, height: 1.4)),
             ],
           ),
         ),
@@ -134,51 +106,42 @@ class _DirectoryBody extends ConsumerWidget {
   }
 }
 
-class _Topic extends StatelessWidget {
-  final String label;
-  final DirectoryTopic topic;
-  const _Topic(this.label, this.topic);
+class _Card extends StatelessWidget {
+  final DirectoryCard card;
+  const _Card({required this.card});
 
   @override
   Widget build(BuildContext context) {
     final c = context.bt;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _Label(label, c),
-        Text(topic.title,
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.w600)),
-        const SizedBox(height: 8),
-        for (final p in topic.paragraphs)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Text(p,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.copyWith(height: 1.6)),
-          ),
-        const SizedBox(height: 8),
-      ],
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+          color: c.surfaceHigh.withValues(alpha: 0.45),
+          borderRadius: BorderRadius.circular(14)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(card.label.toUpperCase(),
+              style: TextStyle(
+                  color: c.textFaint,
+                  fontSize: 10.5,
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+          Text(card.value,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w600, height: 1.35)),
+          if (card.note != null) ...[
+            const SizedBox(height: 6),
+            Text(card.note!,
+                style: TextStyle(
+                    color: c.textSecondary, fontSize: 13, height: 1.45)),
+          ],
+        ],
+      ),
     );
   }
-}
-
-class _Label extends StatelessWidget {
-  final String text;
-  final BtColors c;
-  const _Label(this.text, this.c);
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child: Text(text.toUpperCase(),
-            style: TextStyle(
-                color: c.textFaint,
-                fontSize: 11,
-                letterSpacing: 1,
-                fontWeight: FontWeight.w600)),
-      );
 }
