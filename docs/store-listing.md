@@ -129,6 +129,46 @@ Doutores da Igreja, calendário litúrgico.
 
 ---
 
+## Google Play publication audit (2026-08-08)
+
+**Blocker — no upload keystore.** The release build falls back to the debug key
+(`CN=Android Debug`, verified with `apksigner`/`jarsigner` on the built
+artifacts). Nothing can be uploaded until an upload key exists:
+
+```bash
+keytool -genkey -v -keystore ~/keys/biblia-traditio.jks -storetype JKS \
+        -keyalg RSA -keysize 2048 -validity 10000 -alias bibliatraditio
+cp android/key.properties.example android/key.properties   # fill in 4 values
+flutter build appbundle --release
+```
+
+`android/key.properties`, `**/*.jks` and `**/*.keystore` are gitignored, and
+`test/android_release_test.dart` fails if a real `key.properties` appears in the
+repo. **Back the .jks up** — Play cannot reissue a lost upload key.
+
+**Blocker — fonts are fetched at runtime, not bundled.** `google_fonts` resolves
+in three steps (bundled asset → device cache → HTTP to `fonts.gstatic.com`).
+The built APK contains only `MaterialIcons-Regular.otf` and `CupertinoIcons.ttf`
+— **no EB Garamond, no Inter** — and `GoogleFonts.config.allowRuntimeFetching`
+is left at its default (true). Consequences:
+
+- **Android:** the release manifest has no `INTERNET` permission, so the fetch
+  fails and google_fonts silently falls back to the platform font. The app's
+  typography — the "breviary-grade typography" of the store listing — does not
+  render on Android.
+- **iOS:** the fetch *succeeds* (iOS has no network permission gate), so the app
+  contacts a Google server on first run. That sits awkwardly with the "fully
+  offline" claim and with a clean "no data collected" declaration.
+
+Fix: bundle EB Garamond and Inter (both SIL OFL 1.1, redistributable with the
+licence) as assets and set `allowRuntimeFetching = false`. Upstream ships only
+variable fonts (`EBGaramond[wght].ttf`), which google_fonts' static-filename
+lookup does not match — so either generate static instances or declare the
+variable fonts directly in `pubspec.yaml` and set `fontFamily` in
+`BtTypography`. Needs on-device verification on Android before shipping.
+
+---
+
 ## Open questions before publishing (privacy policy + store)
 
 1. **Publisher / developer legal name** for the store account and the policy

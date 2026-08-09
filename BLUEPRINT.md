@@ -95,6 +95,16 @@ Everything below assumes 3 tabs and a PD-sourced primary translation, both easil
 - **Directory refined:** the cards became fields separated by hairline rules — more whitespace, stronger hierarchy, no container chrome. Week now reads "19ª semana do Tempo Comum".
 - **Version 1.1.0+3** for the next iOS archive; bundle id and signing unchanged.
 
+**Play publication audit (2026-08-08).** Two blockers, both verified against the
+built artifacts rather than the config: the AAB/APK are **debug-signed**
+(`CN=Android Debug`) because no upload keystore exists, and **the fonts are
+fetched at runtime rather than bundled** — the APK carries only the two icon
+fonts, so EB Garamond and Inter cannot render on Android (no `INTERNET`
+permission) and *do* reach `fonts.gstatic.com` on iOS. Everything else audited
+clean: identity, SDK levels, zero permissions, live privacy/support URLs, no
+login, no ads, no analytics, no third-party SDK that collects anything. Details
+and the fix for each are in `docs/store-listing.md`.
+
 **Pending next:** a Brazilian (CNBB) refrain source to fill `refrain_for()` — a US-lectionary refrain would be wrong on the days where CNBB differs, and the refrain is not derivable from the psalm text; lectionary beyond 2026; at-rest encryption; Septuagint/Hebrew packs (not shipped — see §16); extending the Saints dataset beyond its first tranche; translating the four planned languages; **and the Android upload keystore, which still does not exist.**
 
 ---
