@@ -179,6 +179,18 @@ class ContentDatabase {
     return out.toList()..sort();
   }
 
+  /// Number of commentaries on verses [vStart]..[vEnd] of a chapter (thematic
+  /// index). 0 when the patristics pack is not installed.
+  int commentaryCountInRange(String bookId, int chapter, int vStart, int vEnd) {
+    final db = _patristics;
+    if (db == null) return 0;
+    final rows = db.select(
+        'SELECT COUNT(*) AS n FROM commentary WHERE book_id = ? AND chapter = ? '
+        'AND verse BETWEEN ? AND ?',
+        [bookId, chapter, vStart, vEnd]);
+    return rows.isEmpty ? 0 : (rows.first['n'] as int);
+  }
+
   Set<int> versesWithCommentary(String bookId, int chapter) {
     final db = _patristics;
     if (db == null) return const {};

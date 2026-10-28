@@ -11,19 +11,19 @@ enum ReadingSlot { first, psalm, second, gospel }
 
 extension ReadingSlotX on ReadingSlot {
   String get labelPt => switch (this) {
-        ReadingSlot.first => '1ª leitura',
-        ReadingSlot.psalm => 'Salmo',
-        ReadingSlot.second => '2ª leitura',
-        ReadingSlot.gospel => 'Evangelho',
-      };
+    ReadingSlot.first => '1ª leitura',
+    ReadingSlot.psalm => 'Salmo',
+    ReadingSlot.second => '2ª leitura',
+    ReadingSlot.gospel => 'Evangelho',
+  };
 
   static ReadingSlot? from(String s) => switch (s) {
-        'first' => ReadingSlot.first,
-        'psalm' => ReadingSlot.psalm,
-        'second' => ReadingSlot.second,
-        'gospel' => ReadingSlot.gospel,
-        _ => null,
-      };
+    'first' => ReadingSlot.first,
+    'psalm' => ReadingSlot.psalm,
+    'second' => ReadingSlot.second,
+    'gospel' => ReadingSlot.gospel,
+    _ => null,
+  };
 }
 
 class Reading {
@@ -46,31 +46,48 @@ class Reading {
   /// rather than printing a line that may not be the one sung.
   final String? refrain;
   final String? refrainRef;
+  final String? refrainBookId;
+  final int? refrainChapter;
+  final int? refrainVerse;
+  final String? acclamation;
 
-  const Reading(this.slot, this.reference,
-      {this.bookId,
-      this.chapter,
-      this.verse,
-      this.verseStart,
-      this.verseEnd,
-      this.refrain,
-      this.refrainRef});
+  const Reading(
+    this.slot,
+    this.reference, {
+    this.bookId,
+    this.chapter,
+    this.verse,
+    this.verseStart,
+    this.verseEnd,
+    this.refrain,
+    this.refrainRef,
+    this.refrainBookId,
+    this.refrainChapter,
+    this.refrainVerse,
+    this.acclamation,
+  });
 
-  bool get hasRefrain => (refrain ?? '').trim().isNotEmpty;
+  bool get hasRefrain =>
+      (refrain ?? '').trim().isNotEmpty ||
+      (refrainBookId != null && refrainChapter != null && refrainVerse != null);
 
   bool get canOpen => bookId != null && chapter != null;
 
   factory Reading.fromJson(Map<String, dynamic> j) => Reading(
-        ReadingSlotX.from(j['slot'] as String) ?? ReadingSlot.first,
-        j['ref'] as String,
-        bookId: j['book'] as String?,
-        chapter: (j['chapter'] as num?)?.toInt(),
-        verse: (j['verse'] as num?)?.toInt(),
-        verseStart: (j['vStart'] as num?)?.toInt(),
-        verseEnd: (j['vEnd'] as num?)?.toInt(),
-        refrain: j['refrain'] as String?,
-        refrainRef: j['refrainRef'] as String?,
-      );
+    ReadingSlotX.from(j['slot'] as String) ?? ReadingSlot.first,
+    j['ref'] as String,
+    bookId: j['book'] as String?,
+    chapter: (j['chapter'] as num?)?.toInt(),
+    verse: (j['verse'] as num?)?.toInt(),
+    verseStart: (j['vStart'] as num?)?.toInt(),
+    verseEnd: (j['vEnd'] as num?)?.toInt(),
+    refrain: j['refrain'] as String?,
+    refrainRef: j['refrainRef'] as String?,
+    refrainBookId: j['refrainBook'] as String?,
+    refrainChapter: (j['refrainChapter'] as num?)?.toInt(),
+    refrainVerse: (j['refrainVerse'] as num?)?.toInt(),
+    acclamation: j['acclamation'] as String?,
+  );
 }
 
 abstract class LectionaryRepository {
@@ -106,12 +123,29 @@ class BundledLectionaryRepository implements LectionaryRepository {
     final Map<String, List<Reading>> byDate = {};
     try {
       final raw = await rootBundle.loadString(asset);
+      Map<String, dynamic> acclamations = const {};
+      try {
+        acclamations =
+            jsonDecode(
+                  await rootBundle.loadString(
+                    'assets/lectionary/acclamations.json',
+                  ),
+                )
+                as Map<String, dynamic>;
+      } on Exception {
+        // The references-only lectionary remains usable without enrichment.
+      }
       final j = jsonDecode(raw) as Map<String, dynamic>;
       final entries = j['entries'] as Map<String, dynamic>? ?? const {};
       for (final e in entries.entries) {
-        final list = (e.value['readings'] as List)
-            .map((r) => Reading.fromJson(r as Map<String, dynamic>))
-            .toList();
+        final dayExtra =
+            acclamations[e.key] as Map<String, dynamic>? ?? const {};
+        final list = (e.value['readings'] as List).map((r) {
+          final source = Map<String, dynamic>.from(r as Map<String, dynamic>);
+          final extra = dayExtra[source['slot']] as Map<String, dynamic>?;
+          if (extra != null) source.addAll(extra);
+          return Reading.fromJson(source);
+        }).toList();
         byDate[e.key] = list;
       }
     } on Exception {

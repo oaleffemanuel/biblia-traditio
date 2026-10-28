@@ -1,0 +1,15 @@
+{
+  "2026-10-28": {
+    "psalm": {
+      "ref": "Sl 18(19A),2-3.4-5",
+      "refrainRef": "Sl 18(19A),5a",
+      "refrainBook": "ps",
+      "refrainChapter": 18,
+      "refrainVerse": 5
+    },
+    "gospel": {
+      "vEnd": 19,
+      "acclamation": "A vós, ó Deus, louvamos, a vós, Senhor, cantamos; vos louva, ó Senhor, o coro dos Apóstolos!"
+    }
+  }
+}

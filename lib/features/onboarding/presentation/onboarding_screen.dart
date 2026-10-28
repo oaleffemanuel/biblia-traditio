@@ -46,8 +46,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   /// The style answer only *preselects* the translation shown on the next step,
   /// which the reader still confirms — nothing is switched behind their back.
   void _chooseStyle(TranslationStyle style) {
-    final suggested =
-        suggestedTranslationId(style, ref.read(availableTranslationsProvider));
+    final suggested = suggestedTranslationId(
+      style,
+      ref.read(availableTranslationsProvider),
+    );
     setState(() {
       _style = style;
       if (suggested != null) _translationId = suggested;
@@ -68,10 +70,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     // so this can never enable a column with nothing to show.
     s.setParallelPreference(_parallel);
     final secondary = translationForParallel(
-        ref.read(availableTranslationsProvider), _parallel);
+      ref.read(availableTranslationsProvider),
+      _parallel,
+    );
     s.setParallelReading(secondary != null && secondary.id != _translationId);
     s.setSecondaryTranslation(
-        secondary != null && secondary.id != _translationId ? secondary.id : '');
+      secondary != null && secondary.id != _translationId ? secondary.id : '',
+    );
 
     s.completeOnboarding(); // flips initial route to /home
   }
@@ -107,10 +112,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   transitionBuilder: (child, anim) => FadeTransition(
                     opacity: anim,
                     child: SlideTransition(
-                      position: Tween(
-                              begin: const Offset(0.06, 0), end: Offset.zero)
-                          .animate(CurvedAnimation(
-                              parent: anim, curve: Curves.easeOut)),
+                      position:
+                          Tween(
+                            begin: const Offset(0.06, 0),
+                            end: Offset.zero,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: anim,
+                              curve: Curves.easeOut,
+                            ),
+                          ),
                       child: child,
                     ),
                   ),
@@ -130,8 +141,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               if (_step > 0 && _step < _steps - 1)
                 TextButton(
                   onPressed: _next,
-                  child: Text(context.l10n.onbSkip,
-                      style: TextStyle(color: c.textFaint)),
+                  child: Text(
+                    context.l10n.onbSkip,
+                    style: TextStyle(color: c.textFaint),
+                  ),
                 )
               else
                 const SizedBox(height: 48),
@@ -159,8 +172,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         onSelect: (_) {},
       );
     }
-    final selected = available.firstWhere((t) => t.id == _translationId,
-        orElse: () => available.first);
+    final selected = available.firstWhere(
+      (t) => t.id == _translationId,
+      orElse: () => available.first,
+    );
     return _ChoiceStep<({String id, String lang, String title})>(
       c,
       title: l10n.onbTranslationTitle,
@@ -180,18 +195,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final l10n = context.l10n;
     final options = ref.watch(availableParallelPreferencesProvider);
     String label(ParallelPreference p) => switch (p) {
-          ParallelPreference.none => l10n.parallelNone,
-          ParallelPreference.latin => l10n.parallelLatin,
-          ParallelPreference.greek => l10n.parallelGreek,
-          ParallelPreference.hebrew => l10n.parallelHebrew,
-        };
+      ParallelPreference.none => l10n.parallelNone,
+      ParallelPreference.latin => l10n.parallelLatin,
+      ParallelPreference.greek => l10n.parallelGreek,
+      ParallelPreference.hebrew => l10n.parallelHebrew,
+    };
     return _ChoiceStep<ParallelPreference>(
       c,
       title: l10n.onbParallelTitle,
       subtitle: l10n.onbParallelSubtitle,
       options: options,
       labelOf: label,
-      selected: options.contains(_parallel) ? _parallel : ParallelPreference.none,
+      selected: options.contains(_parallel)
+          ? _parallel
+          : ParallelPreference.none,
       onSelect: (p) => setState(() => _parallel = p),
     );
   }
@@ -202,49 +219,49 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       0 => _Welcome(c),
       1 => _NameStep(c, _nameController, () => setState(() {})),
       2 => _ChoiceStep<AppLanguage>(
-          c,
-          title: l10n.onbLanguageTitle,
-          subtitle: l10n.onbLanguageSubtitle,
-          options: AppLanguage.implemented, // only translated UI languages
-          labelOf: (l) => l.label,
-          selected: AppLanguage.implemented.contains(_language)
-              ? _language
-              : AppLanguage.pt,
-          onSelect: (l) => setState(() => _language = l),
-        ),
+        c,
+        title: l10n.onbLanguageTitle,
+        subtitle: l10n.onbLanguageSubtitle,
+        options: AppLanguage.implemented, // only translated UI languages
+        labelOf: (l) => l.label,
+        selected: AppLanguage.implemented.contains(_language)
+            ? _language
+            : AppLanguage.pt,
+        onSelect: (l) => setState(() => _language = l),
+      ),
       3 => _ChoiceStep<TranslationStyle>(
-          c,
-          title: l10n.onbStyleTitle,
-          subtitle: l10n.onbStyleSubtitle,
-          options: TranslationStyle.choices,
-          labelOf: (s) => switch (s) {
-            TranslationStyle.academic => l10n.styleAcademic,
-            TranslationStyle.simple => l10n.styleSimple,
-            TranslationStyle.balanced => l10n.styleBalanced,
-            TranslationStyle.liturgical => l10n.styleLiturgical,
-            TranslationStyle.unset => l10n.styleBalanced,
-          },
-          selected: _style,
-          onSelect: _chooseStyle,
-        ),
+        c,
+        title: l10n.onbStyleTitle,
+        subtitle: l10n.onbStyleSubtitle,
+        options: TranslationStyle.choices,
+        labelOf: (s) => switch (s) {
+          TranslationStyle.academic => l10n.styleAcademic,
+          TranslationStyle.simple => l10n.styleSimple,
+          TranslationStyle.balanced => l10n.styleBalanced,
+          TranslationStyle.liturgical => l10n.styleLiturgical,
+          TranslationStyle.unset => l10n.styleBalanced,
+        },
+        selected: _style,
+        onSelect: _chooseStyle,
+      ),
       4 => _translationStep(c),
       5 => _parallelStep(c),
       6 => _ToggleStep(
-          c,
-          icon: Icons.notifications_none,
-          title: l10n.onbNotificationsTitle,
-          subtitle: l10n.onbNotificationsSubtitle,
-          value: _notifications,
-          onChanged: (v) => setState(() => _notifications = v),
-        ),
+        c,
+        icon: Icons.notifications_none,
+        title: l10n.onbNotificationsTitle,
+        subtitle: l10n.onbNotificationsSubtitle,
+        value: _notifications,
+        onChanged: (v) => setState(() => _notifications = v),
+      ),
       _ => _ToggleStep(
-          c,
-          icon: Icons.calendar_month_outlined,
-          title: l10n.onbPlanTitle,
-          subtitle: l10n.onbPlanSubtitle,
-          value: _readingPlan,
-          onChanged: (v) => setState(() => _readingPlan = v),
-        ),
+        c,
+        icon: Icons.calendar_month_outlined,
+        title: l10n.onbPlanTitle,
+        subtitle: l10n.onbPlanSubtitle,
+        value: _readingPlan,
+        onChanged: (v) => setState(() => _readingPlan = v),
+      ),
     };
   }
 }
@@ -254,27 +271,47 @@ class _Welcome extends StatelessWidget {
   const _Welcome(this.c);
   @override
   Widget build(BuildContext context) => Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 96,
-            height: 96,
-            decoration: BoxDecoration(
-                color: c.accentSoft,
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: c.accent.withValues(alpha: 0.4))),
-            child: Icon(Icons.menu_book, color: c.accent, size: 44),
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Container(
+        width: 148,
+        height: 148,
+        padding: const EdgeInsets.all(26),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [c.heroStart, c.heroEnd],
           ),
-          const SizedBox(height: 32),
-          Text(context.l10n.appName,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.displaySmall),
-          const SizedBox(height: 12),
-          Text(context.l10n.tagline,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: c.textSecondary, fontSize: 16)),
-        ],
-      );
+          border: Border.all(color: c.gold, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: c.gold.withValues(alpha: 0.18),
+              blurRadius: 36,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: Image.asset(
+          'assets/branding/emblem_gold.png',
+          excludeFromSemantics: true,
+        ),
+      ),
+      const SizedBox(height: 32),
+      Text(
+        context.l10n.appName,
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.displaySmall,
+      ),
+      const SizedBox(height: 12),
+      Text(
+        context.l10n.tagline,
+        textAlign: TextAlign.center,
+        style: TextStyle(color: c.textSecondary, fontSize: 16),
+      ),
+    ],
+  );
 }
 
 class _NameStep extends StatelessWidget {
@@ -284,33 +321,38 @@ class _NameStep extends StatelessWidget {
   const _NameStep(this.c, this.controller, this.onChanged);
   @override
   Widget build(BuildContext context) => Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(context.l10n.onbNameTitle,
-              style: Theme.of(context).textTheme.headlineMedium),
-          const SizedBox(height: 8),
-          Text(context.l10n.onbNameSubtitle,
-              style: TextStyle(color: c.textSecondary)),
-          const SizedBox(height: 24),
-          TextField(
-            controller: controller,
-            autofocus: true,
-            textCapitalization: TextCapitalization.words,
-            onChanged: (_) => onChanged(),
-            style: TextStyle(color: c.textPrimary, fontSize: 18),
-            decoration: InputDecoration(
-              hintText: context.l10n.namePlaceholder,
-              hintStyle: TextStyle(color: c.textFaint),
-              filled: true,
-              fillColor: c.surface,
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none),
-            ),
+    mainAxisAlignment: MainAxisAlignment.center,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        context.l10n.onbNameTitle,
+        style: Theme.of(context).textTheme.headlineMedium,
+      ),
+      const SizedBox(height: 8),
+      Text(
+        context.l10n.onbNameSubtitle,
+        style: TextStyle(color: c.textSecondary),
+      ),
+      const SizedBox(height: 24),
+      TextField(
+        controller: controller,
+        autofocus: true,
+        textCapitalization: TextCapitalization.words,
+        onChanged: (_) => onChanged(),
+        style: TextStyle(color: c.textPrimary, fontSize: 18),
+        decoration: InputDecoration(
+          hintText: context.l10n.namePlaceholder,
+          hintStyle: TextStyle(color: c.textFaint),
+          filled: true,
+          fillColor: c.surface,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
           ),
-        ],
-      );
+        ),
+      ),
+    ],
+  );
 }
 
 class _ChoiceStep<T> extends StatelessWidget {
@@ -321,41 +363,43 @@ class _ChoiceStep<T> extends StatelessWidget {
   final String Function(T) labelOf;
   final T selected;
   final ValueChanged<T> onSelect;
-  const _ChoiceStep(this.c,
-      {required this.title,
-      required this.subtitle,
-      required this.options,
-      required this.labelOf,
-      required this.selected,
-      required this.onSelect});
+  const _ChoiceStep(
+    this.c, {
+    required this.title,
+    required this.subtitle,
+    required this.options,
+    required this.labelOf,
+    required this.selected,
+    required this.onSelect,
+  });
 
   @override
   Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 16),
-          Text(title, style: Theme.of(context).textTheme.headlineMedium),
-          const SizedBox(height: 8),
-          Text(subtitle, style: TextStyle(color: c.textSecondary)),
-          const SizedBox(height: 20),
-          Expanded(
-            child: ListView(
-              children: [
-                for (final o in options)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: _SelectTile(
-                      c,
-                      label: labelOf(o),
-                      selected: o == selected,
-                      onTap: () => onSelect(o),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const SizedBox(height: 16),
+      Text(title, style: Theme.of(context).textTheme.headlineMedium),
+      const SizedBox(height: 8),
+      Text(subtitle, style: TextStyle(color: c.textSecondary)),
+      const SizedBox(height: 20),
+      Expanded(
+        child: ListView(
+          children: [
+            for (final o in options)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _SelectTile(
+                  c,
+                  label: labelOf(o),
+                  selected: o == selected,
+                  onTap: () => onSelect(o),
+                ),
+              ),
+          ],
+        ),
+      ),
+    ],
+  );
 }
 
 class _SelectTile extends StatelessWidget {
@@ -363,35 +407,43 @@ class _SelectTile extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
-  const _SelectTile(this.c,
-      {required this.label, required this.selected, required this.onTap});
+  const _SelectTile(
+    this.c, {
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
   @override
   Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-          decoration: BoxDecoration(
-            color: selected ? c.accentSoft : c.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-                color: selected ? c.accent : Colors.transparent, width: 1.2),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(label,
-                    style: TextStyle(
-                        color: c.textPrimary,
-                        fontSize: 16,
-                        fontWeight:
-                            selected ? FontWeight.w600 : FontWeight.w400)),
-              ),
-              if (selected) Icon(Icons.check_circle, color: c.accent, size: 20),
-            ],
-          ),
+    onTap: onTap,
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      decoration: BoxDecoration(
+        color: selected ? c.accentSoft : c.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: selected ? c.accent : Colors.transparent,
+          width: 1.2,
         ),
-      );
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: c.textPrimary,
+                fontSize: 16,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ),
+          if (selected) Icon(Icons.check_circle, color: c.accent, size: 20),
+        ],
+      ),
+    ),
+  );
 }
 
 class _ToggleStep extends StatelessWidget {
@@ -401,36 +453,42 @@ class _ToggleStep extends StatelessWidget {
   final String subtitle;
   final bool value;
   final ValueChanged<bool> onChanged;
-  const _ToggleStep(this.c,
-      {required this.icon,
-      required this.title,
-      required this.subtitle,
-      required this.value,
-      required this.onChanged});
+  const _ToggleStep(
+    this.c, {
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
   @override
   Widget build(BuildContext context) => Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(icon, color: c.accent, size: 48),
+      const SizedBox(height: 24),
+      Text(
+        title,
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.headlineMedium,
+      ),
+      const SizedBox(height: 12),
+      Text(
+        subtitle,
+        textAlign: TextAlign.center,
+        style: TextStyle(color: c.textSecondary, height: 1.4),
+      ),
+      const SizedBox(height: 28),
+      Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: c.accent, size: 48),
-          const SizedBox(height: 24),
-          Text(title,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineMedium),
-          const SizedBox(height: 12),
-          Text(subtitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: c.textSecondary, height: 1.4)),
-          const SizedBox(height: 28),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _OptionChip(c, context.l10n.notNow, !value, () => onChanged(false)),
-              const SizedBox(width: 12),
-              _OptionChip(c, context.l10n.enable, value, () => onChanged(true)),
-            ],
-          ),
+          _OptionChip(c, context.l10n.notNow, !value, () => onChanged(false)),
+          const SizedBox(width: 12),
+          _OptionChip(c, context.l10n.enable, value, () => onChanged(true)),
         ],
-      );
+      ),
+    ],
+  );
 }
 
 class _OptionChip extends StatelessWidget {
@@ -441,20 +499,23 @@ class _OptionChip extends StatelessWidget {
   const _OptionChip(this.c, this.label, this.selected, this.onTap);
   @override
   Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          decoration: BoxDecoration(
-            color: selected ? c.accent : c.surface,
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Text(label,
-              style: TextStyle(
-                  color: selected ? Colors.white : c.textPrimary,
-                  fontWeight: FontWeight.w600)),
+    onTap: onTap,
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      decoration: BoxDecoration(
+        color: selected ? c.accent : c.surface,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: selected ? Colors.white : c.textPrimary,
+          fontWeight: FontWeight.w600,
         ),
-      );
+      ),
+    ),
+  );
 }
 
 class _ProgressDots extends StatelessWidget {
@@ -487,8 +548,11 @@ class _PrimaryButton extends StatelessWidget {
   final String label;
   final bool enabled;
   final VoidCallback onTap;
-  const _PrimaryButton(
-      {required this.label, required this.enabled, required this.onTap});
+  const _PrimaryButton({
+    required this.label,
+    required this.enabled,
+    required this.onTap,
+  });
   @override
   Widget build(BuildContext context) {
     final c = context.bt;
@@ -500,12 +564,14 @@ class _PrimaryButton extends StatelessWidget {
           disabledBackgroundColor: c.surfaceHigh,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(28)),
+            borderRadius: BorderRadius.circular(28),
+          ),
         ),
         onPressed: enabled ? onTap : null,
-        child: Text(label,
-            style: const TextStyle(
-                fontSize: 16, fontWeight: FontWeight.w600)),
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
       ),
     );
   }

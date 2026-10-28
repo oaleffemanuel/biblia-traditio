@@ -1030,7 +1030,7 @@ abstract class AppL10n {
   /// No description provided for @licMatosBody.
   ///
   /// In en, this message translates to:
-  /// **'Catholic translation by Fr. Matos Soares (d. 1950) — a public-domain candidate in Brazil since 2021 (life + 70 years). Provenance is being verified during the beta.'**
+  /// **'Catholic translation by Fr. Matos Soares (d. 1957). Editorial provenance and authorization for digital distribution are still being verified; do not publish this translation without confirmed permission.'**
   String get licMatosBody;
 
   /// No description provided for @ossLicenses.
@@ -1651,6 +1651,24 @@ abstract class AppL10n {
   /// **'English'**
   String get langEnglish;
 
+  /// No description provided for @langItalian.
+  ///
+  /// In en, this message translates to:
+  /// **'Italian'**
+  String get langItalian;
+
+  /// No description provided for @langSpanish.
+  ///
+  /// In en, this message translates to:
+  /// **'Spanish'**
+  String get langSpanish;
+
+  /// No description provided for @langFrench.
+  ///
+  /// In en, this message translates to:
+  /// **'French'**
+  String get langFrench;
+
   /// No description provided for @translationWithLanguage.
   ///
   /// In en, this message translates to:
@@ -1902,6 +1920,174 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 excerpt} other{{count} excerpts}}'**
   String commentaryExcerptCount(int count);
+
+  /// No description provided for @homePsalmToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s psalm'**
+  String get homePsalmToday;
+
+  /// No description provided for @homePsalmRefrain.
+  ///
+  /// In en, this message translates to:
+  /// **'Psalm refrain'**
+  String get homePsalmRefrain;
+
+  /// No description provided for @homeReadPsalm.
+  ///
+  /// In en, this message translates to:
+  /// **'Read the psalm'**
+  String get homeReadPsalm;
+
+  /// No description provided for @homeGospelToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Gospel'**
+  String get homeGospelToday;
+
+  /// No description provided for @homeReadGospel.
+  ///
+  /// In en, this message translates to:
+  /// **'Read the Gospel'**
+  String get homeReadGospel;
+
+  /// No description provided for @homeSeeLiturgy.
+  ///
+  /// In en, this message translates to:
+  /// **'See the liturgy'**
+  String get homeSeeLiturgy;
+
+  /// No description provided for @sectionPentateuch.
+  ///
+  /// In en, this message translates to:
+  /// **'Pentateuch'**
+  String get sectionPentateuch;
+
+  /// No description provided for @sectionHistorical.
+  ///
+  /// In en, this message translates to:
+  /// **'Historical books'**
+  String get sectionHistorical;
+
+  /// No description provided for @sectionWisdom.
+  ///
+  /// In en, this message translates to:
+  /// **'Wisdom books'**
+  String get sectionWisdom;
+
+  /// No description provided for @sectionProphets.
+  ///
+  /// In en, this message translates to:
+  /// **'Prophets'**
+  String get sectionProphets;
+
+  /// No description provided for @sectionGospels.
+  ///
+  /// In en, this message translates to:
+  /// **'Gospels'**
+  String get sectionGospels;
+
+  /// No description provided for @sectionActs.
+  ///
+  /// In en, this message translates to:
+  /// **'Acts of the Apostles'**
+  String get sectionActs;
+
+  /// No description provided for @sectionPauline.
+  ///
+  /// In en, this message translates to:
+  /// **'Letters of St Paul'**
+  String get sectionPauline;
+
+  /// No description provided for @sectionCatholicLetters.
+  ///
+  /// In en, this message translates to:
+  /// **'Catholic letters'**
+  String get sectionCatholicLetters;
+
+  /// No description provided for @sectionApocalypse.
+  ///
+  /// In en, this message translates to:
+  /// **'Apocalypse'**
+  String get sectionApocalypse;
+
+  /// No description provided for @themesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Thematic library'**
+  String get themesTitle;
+
+  /// No description provided for @themesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scripture by theme, read with the Fathers'**
+  String get themesSubtitle;
+
+  /// No description provided for @themeLibraryLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'The Thematic library could not be loaded. Please try again.'**
+  String get themeLibraryLoadError;
+
+  /// No description provided for @themePassages.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} passages'**
+  String themePassages(int n);
+
+  /// No description provided for @themePassagesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Passages'**
+  String get themePassagesLabel;
+
+  /// No description provided for @themeCommentaryCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} commentaries by the Fathers'**
+  String themeCommentaryCount(int n);
+
+  /// No description provided for @themeNoText.
+  ///
+  /// In en, this message translates to:
+  /// **'Text not available in the current translation.'**
+  String get themeNoText;
+
+  /// No description provided for @shareChooseExcerpt.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the excerpt for the image'**
+  String get shareChooseExcerpt;
+
+  /// No description provided for @shareExcerptHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the sentences that should appear on the card. Copying as text always takes the whole commentary.'**
+  String get shareExcerptHint;
+
+  /// No description provided for @shareExcerptCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} of {max} characters'**
+  String shareExcerptCount(int n, int max);
+
+  /// No description provided for @shareContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get shareContinue;
+
+  /// No description provided for @shareExcerptTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Too long for one card — unselect a sentence.'**
+  String get shareExcerptTooLong;
+
+  /// No description provided for @shareExcerptNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one sentence.'**
+  String get shareExcerptNone;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

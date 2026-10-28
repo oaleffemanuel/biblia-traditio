@@ -2,13 +2,79 @@ import 'package:biblia_traditio/features/liturgy/domain/lectionary.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _canon = {
-  'gn', 'ex', 'lv', 'nm', 'dt', 'jo', 'jgs', 'rt', '1sm', '2sm', '1kgs',
-  '2kgs', '1chr', '2chr', 'ezr', 'neh', 'tb', 'jdt', 'est', '1mac', '2mac',
-  'jb', 'ps', 'prv', 'eccl', 'sg', 'ws', 'sir', 'is', 'jer', 'lam', 'bar',
-  'ez', 'dn', 'hos', 'jl', 'am', 'ob', 'jon', 'mi', 'na', 'hb', 'zep', 'hg',
-  'zec', 'mal', 'mt', 'mk', 'lk', 'jn', 'acts', 'rom', '1cor', '2cor', 'gal',
-  'eph', 'phil', 'col', '1thes', '2thes', '1tm', '2tm', 'tit', 'phlm', 'heb',
-  'jas', '1pt', '2pt', '1jn', '2jn', '3jn', 'jud', 'rv',
+  'gn',
+  'ex',
+  'lv',
+  'nm',
+  'dt',
+  'jo',
+  'jgs',
+  'rt',
+  '1sm',
+  '2sm',
+  '1kgs',
+  '2kgs',
+  '1chr',
+  '2chr',
+  'ezr',
+  'neh',
+  'tb',
+  'jdt',
+  'est',
+  '1mac',
+  '2mac',
+  'jb',
+  'ps',
+  'prv',
+  'eccl',
+  'sg',
+  'ws',
+  'sir',
+  'is',
+  'jer',
+  'lam',
+  'bar',
+  'ez',
+  'dn',
+  'hos',
+  'jl',
+  'am',
+  'ob',
+  'jon',
+  'mi',
+  'na',
+  'hb',
+  'zep',
+  'hg',
+  'zec',
+  'mal',
+  'mt',
+  'mk',
+  'lk',
+  'jn',
+  'acts',
+  'rom',
+  '1cor',
+  '2cor',
+  'gal',
+  'eph',
+  'phil',
+  'col',
+  '1thes',
+  '2thes',
+  '1tm',
+  '2tm',
+  'tit',
+  'phlm',
+  'heb',
+  'jas',
+  '1pt',
+  '2pt',
+  '1jn',
+  '2jn',
+  '3jn',
+  'jud',
+  'rv',
 };
 
 void main() {
@@ -26,10 +92,15 @@ void main() {
   }
 
   test('ordinary weekday has first + psalm + gospel (no second)', () {
-    final day = repo.readingsFor(DateTime(2026, 6, 22)); // Monday, Ordinary Time
+    final day = repo.readingsFor(
+      DateTime(2026, 6, 22),
+    ); // Monday, Ordinary Time
     expect(day, isNotNull);
     final slots = day!.map((r) => r.slot).toSet();
-    expect(slots, containsAll([ReadingSlot.first, ReadingSlot.psalm, ReadingSlot.gospel]));
+    expect(
+      slots,
+      containsAll([ReadingSlot.first, ReadingSlot.psalm, ReadingSlot.gospel]),
+    );
     expect(slots.contains(ReadingSlot.second), isFalse);
     expectAllOpenableCanonical(day);
   });
@@ -37,8 +108,7 @@ void main() {
   test('Sunday has all four readings', () {
     final day = repo.readingsFor(DateTime(2026, 6, 21)); // 12th Sunday OT (A)
     expect(day, isNotNull);
-    expect(day!.map((r) => r.slot),
-        containsAll(ReadingSlot.values));
+    expect(day!.map((r) => r.slot), containsAll(ReadingSlot.values));
     expectAllOpenableCanonical(day);
   });
 
@@ -71,7 +141,10 @@ void main() {
     final psalm = day!.firstWhere((r) => r.slot == ReadingSlot.psalm);
     expect(psalm.bookId, 'ps');
     expect(psalm.chapter, 68); // Hebrew 69 → Vulgate 68
-    expect(psalm.reference, contains('69')); // displayed as the lectionary cites
+    expect(
+      psalm.reference,
+      contains('69'),
+    ); // displayed as the lectionary cites
   });
 
   test('every reading carries a deep-link target + render span', () {
@@ -110,7 +183,23 @@ void main() {
 
   test('out-of-coverage date returns null (graceful empty state)', () {
     expect(repo.readingsFor(DateTime(2030, 6, 17)), isNull);
-    expect(const EmptyLectionaryRepository().readingsFor(DateTime(2026, 1, 1)),
-        isNull);
+    expect(
+      const EmptyLectionaryRepository().readingsFor(DateTime(2026, 1, 1)),
+      isNull,
+    );
   });
+
+  test(
+    'Brazilian enrichment keeps the current feast references and short texts',
+    () {
+      final day = repo.readingsFor(DateTime(2026, 10, 28))!;
+      final psalm = day.firstWhere((r) => r.slot == ReadingSlot.psalm);
+      final gospel = day.firstWhere((r) => r.slot == ReadingSlot.gospel);
+      expect(psalm.reference, 'Sl 18(19A),2-3.4-5');
+      expect(psalm.refrainRef, 'Sl 18(19A),5a');
+      expect(psalm.refrainVerse, 5);
+      expect(gospel.verseEnd, 19);
+      expect(gospel.acclamation, contains('coro dos Apóstolos'));
+    },
+  );
 }

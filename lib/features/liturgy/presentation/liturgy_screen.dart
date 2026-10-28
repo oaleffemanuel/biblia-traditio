@@ -22,52 +22,55 @@ DateTime _today() {
 /// Calendar-day arithmetic. `add(Duration(days:))` shifts off midnight across a
 /// daylight-saving change, which would break the `==` comparisons the strip and
 /// the day providers rely on.
-DateTime _shift(DateTime d, int days) => DateTime(d.year, d.month, d.day + days);
+DateTime _shift(DateTime d, int days) =>
+    DateTime(d.year, d.month, d.day + days);
 
 String _monthYear(BuildContext context, DateTime d) =>
     toBeginningOfSentenceCase(
-        DateFormat.yMMMM(Localizations.localeOf(context).toLanguageTag())
-            .format(d)) ??
+      DateFormat.yMMMM(
+        Localizations.localeOf(context).toLanguageTag(),
+      ).format(d),
+    ) ??
     '';
 
 String _weekdayShort(BuildContext context, DateTime d) =>
     toBeginningOfSentenceCase(
-        DateFormat.E(Localizations.localeOf(context).toLanguageTag())
-            .format(d)) ??
+      DateFormat.E(Localizations.localeOf(context).toLanguageTag()).format(d),
+    ) ??
     '';
 
 String seasonLabel(AppL10n l, LiturgicalSeason s) => switch (s) {
-      LiturgicalSeason.advent => l.seasonAdvent,
-      LiturgicalSeason.christmas => l.seasonChristmas,
-      LiturgicalSeason.ordinary => l.seasonOrdinary,
-      LiturgicalSeason.lent => l.seasonLent,
-      LiturgicalSeason.triduum => l.seasonTriduum,
-      LiturgicalSeason.easter => l.seasonEaster,
-    };
+  LiturgicalSeason.advent => l.seasonAdvent,
+  LiturgicalSeason.christmas => l.seasonChristmas,
+  LiturgicalSeason.ordinary => l.seasonOrdinary,
+  LiturgicalSeason.lent => l.seasonLent,
+  LiturgicalSeason.triduum => l.seasonTriduum,
+  LiturgicalSeason.easter => l.seasonEaster,
+};
 
 String rankLabel(AppL10n l, LiturgicalRank r) => switch (r) {
-      LiturgicalRank.solemnity => l.rankSolemnity,
-      LiturgicalRank.feast => l.rankFeast,
-      LiturgicalRank.memorial => l.rankMemorial,
-      LiturgicalRank.optionalMemorial => l.rankOptionalMemorial,
-      LiturgicalRank.commemoration => l.rankCommemoration,
-      LiturgicalRank.weekday => '',
-    };
+  LiturgicalRank.solemnity => l.rankSolemnity,
+  LiturgicalRank.feast => l.rankFeast,
+  LiturgicalRank.memorial => l.rankMemorial,
+  LiturgicalRank.optionalMemorial => l.rankOptionalMemorial,
+  LiturgicalRank.commemoration => l.rankCommemoration,
+  LiturgicalRank.weekday => '',
+};
 
 String colorLabel(AppL10n l, LiturgicalColor c) => switch (c) {
-      LiturgicalColor.green => l.colorGreen,
-      LiturgicalColor.red => l.colorRed,
-      LiturgicalColor.white => l.colorWhite,
-      LiturgicalColor.purple => l.colorPurple,
-      LiturgicalColor.rose => l.colorRose,
-    };
+  LiturgicalColor.green => l.colorGreen,
+  LiturgicalColor.red => l.colorRed,
+  LiturgicalColor.white => l.colorWhite,
+  LiturgicalColor.purple => l.colorPurple,
+  LiturgicalColor.rose => l.colorRose,
+};
 
 String slotLabel(AppL10n l, ReadingSlot s) => switch (s) {
-      ReadingSlot.first => l.readingFirst,
-      ReadingSlot.psalm => l.readingPsalm,
-      ReadingSlot.second => l.readingSecond,
-      ReadingSlot.gospel => l.readingGospel,
-    };
+  ReadingSlot.first => l.readingFirst,
+  ReadingSlot.psalm => l.readingPsalm,
+  ReadingSlot.second => l.readingSecond,
+  ReadingSlot.gospel => l.readingGospel,
+};
 
 class LiturgyScreen extends ConsumerStatefulWidget {
   const LiturgyScreen({super.key});
@@ -96,11 +99,15 @@ class _LiturgyScreenState extends ConsumerState<LiturgyScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(context.l10n.liturgyTitle,
-                      style: Theme.of(context).textTheme.displaySmall),
+                  Text(
+                    context.l10n.liturgyTitle,
+                    style: Theme.of(context).textTheme.displaySmall,
+                  ),
                   IconButton(
-                    icon: Icon(Icons.calendar_today_outlined,
-                        color: c.textSecondary),
+                    icon: Icon(
+                      Icons.calendar_today_outlined,
+                      color: c.textSecondary,
+                    ),
                     onPressed: _openCalendar,
                   ),
                 ],
@@ -108,63 +115,73 @@ class _LiturgyScreenState extends ConsumerState<LiturgyScreen> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-              child: Text(_monthYear(context, _selected),
-                  style: TextStyle(color: c.textSecondary)),
+              child: Text(
+                _monthYear(context, _selected),
+                style: TextStyle(color: c.textSecondary),
+              ),
             ),
             // Fixed-height strip: clamp scaling so large text shrinks the label
             // rather than overflowing the cell.
             MediaQuery.withClampedTextScaling(
               maxScaleFactor: 1.2,
               child: SizedBox(
-              height: 84,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: strip.length,
-                itemBuilder: (_, i) {
-                  final d = strip[i];
-                  final on = d == _selected;
-                  final dayColor = ref.watch(liturgicalDayProvider(d)).color;
-                  return Semantics(
-                    button: true,
-                    selected: on,
-                    child: GestureDetector(
-                    onTap: () => setState(() => _selected = d),
-                    child: Container(
-                      width: 60,
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      decoration: BoxDecoration(
-                        color: on ? c.textPrimary : c.surface,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(_weekdayShort(context, d),
-                              style: TextStyle(
+                height: 84,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: strip.length,
+                  itemBuilder: (_, i) {
+                    final d = strip[i];
+                    final on = d == _selected;
+                    final dayColor = ref.watch(liturgicalDayProvider(d)).color;
+                    return Semantics(
+                      button: true,
+                      selected: on,
+                      child: GestureDetector(
+                        onTap: () => setState(() => _selected = d),
+                        child: Container(
+                          width: 60,
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          decoration: BoxDecoration(
+                            color: on ? c.textPrimary : c.surface,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                _weekdayShort(context, d),
+                                style: TextStyle(
                                   color: on ? c.background : c.textSecondary,
-                                  fontSize: 12)),
-                          const SizedBox(height: 4),
-                          Text('${d.day}',
-                              style: TextStyle(
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${d.day}',
+                                style: TextStyle(
                                   color: on ? c.background : c.textPrimary,
                                   fontSize: 20,
-                                  fontWeight: FontWeight.w600)),
-                          const SizedBox(height: 5),
-                          Container(
-                              width: 6,
-                              height: 6,
-                              decoration: BoxDecoration(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
                                   color: dayColor.dotColor(light: light),
-                                  shape: BoxShape.circle)),
-                        ],
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ),
             ),
             const SizedBox(height: 16),
             Padding(
@@ -196,7 +213,8 @@ class _LiturgyScreenState extends ConsumerState<LiturgyScreen> {
       isScrollControlled: true,
       backgroundColor: context.bt.surface,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (_) => _CalendarModal(initial: _selected),
     );
     if (picked != null) setState(() => _selected = picked);
@@ -212,38 +230,67 @@ class _CelebrationCard extends StatelessWidget {
     final l10n = context.l10n;
     final light = Theme.of(context).brightness == Brightness.light;
     final rank = rankLabel(l10n, day.rank);
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-          color: c.surface, borderRadius: BorderRadius.circular(18)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
+    final tone = day.color.dotColor(light: light);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        decoration: BoxDecoration(
+          color: c.surface,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // The liturgical colour as a band across the top of the card — the
+            // vestment colour of the day, visible before anything is read.
             Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                    color: day.color.dotColor(light: light),
-                    shape: BoxShape.circle)),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(day.celebration,
-                  style: Theme.of(context).textTheme.titleLarge),
+              height: 6,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [tone, tone.withValues(alpha: 0.55)],
+                ),
+              ),
             ),
-          ]),
-          const SizedBox(height: 8),
-          Text(
-            [
-              seasonLabel(l10n, day.season),
-              if (day.week != null) l10n.liturgyWeekOf(day.week!),
-              l10n.liturgicalYear(day.sundayCycle),
-              colorLabel(l10n, day.color),
-              if (rank.isNotEmpty) rank,
-            ].join('  ·  '),
-            style: TextStyle(color: c.textSecondary),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: tone,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          day.celebration,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    [
+                      seasonLabel(l10n, day.season),
+                      if (day.week != null) l10n.liturgyWeekOf(day.week!),
+                      l10n.liturgicalYear(day.sundayCycle),
+                      colorLabel(l10n, day.color),
+                      if (rank.isNotEmpty) rank,
+                    ].join('  ·  '),
+                    style: TextStyle(color: c.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -260,8 +307,6 @@ class _ReadingsSection extends StatefulWidget {
 }
 
 class _ReadingsSectionState extends State<_ReadingsSection> {
-  // Collapsed by default: shows clean reference cards (no wall of text) and
-  // avoids resolving Bible text until the user opens a reading.
   final _expanded = <int>{};
 
   @override
@@ -270,16 +315,75 @@ class _ReadingsSectionState extends State<_ReadingsSection> {
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
       child: Column(
         children: [
-          for (var i = 0; i < widget.readings.length; i++)
+          for (var i = 0; i < widget.readings.length; i++) ...[
+            if (widget.readings[i].slot == ReadingSlot.gospel &&
+                widget.readings[i].acclamation != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _AcclamationBlock(text: widget.readings[i].acclamation!),
+              ),
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: _ReadingCard(
                 reading: widget.readings[i],
                 expanded: _expanded.contains(i),
-                onToggle: () => setState(() =>
-                    _expanded.contains(i) ? _expanded.remove(i) : _expanded.add(i)),
+                onToggle: () => setState(
+                  () => _expanded.contains(i)
+                      ? _expanded.remove(i)
+                      : _expanded.add(i),
+                ),
               ),
             ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _AcclamationBlock extends StatelessWidget {
+  final String text;
+  const _AcclamationBlock({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.bt;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 17),
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border(left: BorderSide(color: c.accent, width: 4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'ALELUIA',
+            style: TextStyle(
+              color: c.accent,
+              fontSize: 11,
+              letterSpacing: 1.3,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Aleluia, aleluia!',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: c.accent,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            'V. $text',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              fontStyle: FontStyle.italic,
+              height: 1.45,
+            ),
+          ),
         ],
       ),
     );
@@ -290,8 +394,11 @@ class _ReadingCard extends ConsumerWidget {
   final Reading reading;
   final bool expanded;
   final VoidCallback onToggle;
-  const _ReadingCard(
-      {required this.reading, required this.expanded, required this.onToggle});
+  const _ReadingCard({
+    required this.reading,
+    required this.expanded,
+    required this.onToggle,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -302,7 +409,9 @@ class _ReadingCard extends ConsumerWidget {
         : proclamationFor(reading.bookId!)?.title;
     return Container(
       decoration: BoxDecoration(
-          color: c.surface, borderRadius: BorderRadius.circular(18)),
+        color: c.surface,
+        borderRadius: BorderRadius.circular(18),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -317,39 +426,51 @@ class _ReadingCard extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(slotLabel(l10n, reading.slot).toUpperCase(),
-                            style: TextStyle(
-                                color: c.accent,
-                                fontSize: 11,
-                                letterSpacing: 1,
-                                fontWeight: FontWeight.w600)),
+                        Text(
+                          slotLabel(l10n, reading.slot).toUpperCase(),
+                          style: TextStyle(
+                            color: c.accent,
+                            fontSize: 11,
+                            letterSpacing: 1,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         const SizedBox(height: 3),
                         // The lector's own words for the book — "Livro do
                         // Profeta Naum" — with the citation beneath it, so the
                         // card reads as a reading and not as a code.
                         if (bookTitle != null)
-                          Text(bookTitle,
-                              style: Theme.of(context).textTheme.titleMedium),
-                        Text(reading.reference,
-                            style: bookTitle == null
-                                ? Theme.of(context).textTheme.titleMedium
-                                : TextStyle(
-                                    color: c.textSecondary, fontSize: 13)),
+                          Text(
+                            bookTitle,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        Text(
+                          reading.reference,
+                          style: bookTitle == null
+                              ? Theme.of(context).textTheme.titleMedium
+                              : TextStyle(color: c.textSecondary, fontSize: 13),
+                        ),
                       ],
                     ),
                   ),
                   if (reading.canOpen)
                     IconButton(
-                      icon: Icon(Icons.menu_book_outlined,
-                          size: 20, color: c.textSecondary),
+                      icon: Icon(
+                        Icons.menu_book_outlined,
+                        size: 20,
+                        color: c.textSecondary,
+                      ),
                       tooltip: l10n.liturgyOpenInBible,
                       // Separate context: ?src=liturgy so it never overwrites
                       // Home → "Continue reading".
-                      onPressed: () => context
-                          .go('/bible/${reading.bookId}/${reading.chapter}?src=liturgy'),
+                      onPressed: () => context.go(
+                        '/bible/${reading.bookId}/${reading.chapter}?src=liturgy',
+                      ),
                     ),
-                  Icon(expanded ? Icons.expand_less : Icons.expand_more,
-                      color: c.textFaint),
+                  Icon(
+                    expanded ? Icons.expand_less : Icons.expand_more,
+                    color: c.textFaint,
+                  ),
                 ],
               ),
             ),
@@ -363,16 +484,22 @@ class _ReadingCard extends ConsumerWidget {
                   // The reading as it is proclaimed: announcement, text,
                   // response — the shape a lector or a listener recognises.
                   if (reading.slot == ReadingSlot.gospel) ...[
-                    _say(context, _gospelProclamation(ref, l10n), people: false),
+                    _say(
+                      context,
+                      _gospelProclamation(ref, l10n),
+                      people: false,
+                    ),
                     _say(context, l10n.liturgyResponseGloryToYou, people: true),
                     const SizedBox(height: 10),
                   ] else if (reading.slot != ReadingSlot.psalm &&
                       bookTitle != null) ...[
                     _say(
-                        context,
-                        l10n.liturgyReadingOf(
-                            proclamationFor(reading.bookId!)!.ofForm),
-                        people: false),
+                      context,
+                      l10n.liturgyReadingOf(
+                        proclamationFor(reading.bookId!)!.ofForm,
+                      ),
+                      people: false,
+                    ),
                     const SizedBox(height: 10),
                   ],
                   if (reading.slot == ReadingSlot.psalm)
@@ -399,13 +526,13 @@ class _ReadingCard extends ConsumerWidget {
   List<Widget> _endingResponses(BuildContext context, AppL10n l10n) {
     final lines = switch (reading.slot) {
       ReadingSlot.first || ReadingSlot.second => [
-          (l10n.liturgyResponseWordOfLord, false),
-          (l10n.liturgyResponseThanksToGod, true),
-        ],
+        (l10n.liturgyResponseWordOfLord, false),
+        (l10n.liturgyResponseThanksToGod, true),
+      ],
       ReadingSlot.gospel => [
-          (l10n.liturgyResponseWordOfSalvation, false),
-          (l10n.liturgyResponseGloryToYou, true),
-        ],
+        (l10n.liturgyResponseWordOfSalvation, false),
+        (l10n.liturgyResponseGloryToYou, true),
+      ],
       ReadingSlot.psalm => const <(String, bool)>[],
     };
     if (lines.isEmpty) return const [];
@@ -422,12 +549,15 @@ class _ReadingCard extends ConsumerWidget {
     final c = context.bt;
     return Padding(
       padding: const EdgeInsets.only(top: 2),
-      child: Text(people ? 'R. $text' : text,
-          style: TextStyle(
-              color: people ? c.accent : c.textSecondary,
-              fontStyle: FontStyle.italic,
-              fontWeight: people ? FontWeight.w600 : FontWeight.w400,
-              height: 1.4)),
+      child: Text(
+        people ? 'R. $text' : text,
+        style: TextStyle(
+          color: people ? c.accent : c.textSecondary,
+          fontStyle: FontStyle.italic,
+          fontWeight: people ? FontWeight.w600 : FontWeight.w400,
+          height: 1.4,
+        ),
+      ),
     );
   }
 }
@@ -441,19 +571,24 @@ class _ReadingText extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.bt;
     if (!reading.canOpen) {
-      return Text(context.l10n.readingTextUnavailable,
-          style: TextStyle(color: c.textFaint));
+      return Text(
+        context.l10n.readingTextUnavailable,
+        style: TextStyle(color: c.textFaint),
+      );
     }
-    final content = ref.watch(chapterProvider(
-        (bookId: reading.bookId!, chapter: reading.chapter!)));
+    final content = ref.watch(
+      chapterProvider((bookId: reading.bookId!, chapter: reading.chapter!)),
+    );
     final start = reading.verseStart ?? 1;
     final end = reading.verseEnd ?? start;
     final verses = (content?.verses ?? const <Verse>[])
         .where((v) => v.number >= start && v.number <= end)
         .toList();
     if (verses.isEmpty) {
-      return Text(context.l10n.readingTextUnavailable,
-          style: TextStyle(color: c.textFaint));
+      return Text(
+        context.l10n.readingTextUnavailable,
+        style: TextStyle(color: c.textFaint),
+      );
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -466,11 +601,13 @@ class _ReadingText extends ConsumerWidget {
                 style: Theme.of(context).textTheme.bodyLarge,
                 children: [
                   TextSpan(
-                      text: '${v.number}  ',
-                      style: TextStyle(
-                          color: c.accent,
-                          fontSize: 12,
-                          fontFeatures: const [])),
+                    text: '${v.number}  ',
+                    style: TextStyle(
+                      color: c.accent,
+                      fontSize: 12,
+                      fontFeatures: const [],
+                    ),
+                  ),
                   TextSpan(text: v.text),
                 ],
               ),
@@ -486,20 +623,24 @@ class _LectionaryNotice extends StatelessWidget {
   const _LectionaryNotice(this.c);
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-            color: c.surface, borderRadius: BorderRadius.circular(18)),
-        child: Row(children: [
-          Icon(Icons.menu_book_outlined, color: c.textFaint),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              context.l10n.lectionaryNotice,
-              style: TextStyle(color: c.textSecondary, height: 1.4),
-            ),
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
+      color: c.surface,
+      borderRadius: BorderRadius.circular(18),
+    ),
+    child: Row(
+      children: [
+        Icon(Icons.menu_book_outlined, color: c.textFaint),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            context.l10n.lectionaryNotice,
+            style: TextStyle(color: c.textSecondary, height: 1.4),
           ),
-        ]),
-      );
+        ),
+      ],
+    ),
+  );
 }
 
 class _CalendarModal extends ConsumerStatefulWidget {
@@ -510,16 +651,16 @@ class _CalendarModal extends ConsumerStatefulWidget {
 }
 
 class _CalendarModalState extends ConsumerState<_CalendarModal> {
-  late DateTime _month =
-      DateTime(widget.initial.year, widget.initial.month, 1);
+  late DateTime _month = DateTime(widget.initial.year, widget.initial.month, 1);
   late DateTime _picked = widget.initial;
 
   @override
   Widget build(BuildContext context) {
     final c = context.bt;
     final light = Theme.of(context).brightness == Brightness.light;
-    final colors =
-        ref.watch(monthColorsProvider((year: _month.year, month: _month.month)));
+    final colors = ref.watch(
+      monthColorsProvider((year: _month.year, month: _month.month)),
+    );
     final firstWeekday = _month.weekday % 7; // Sun=0
     final daysInMonth = DateTime(_month.year, _month.month + 1, 0).day;
 
@@ -531,18 +672,22 @@ class _CalendarModalState extends ConsumerState<_CalendarModal> {
           children: [
             Row(
               children: [
-                Text(_monthYear(context, _month),
-                    style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  _monthYear(context, _month),
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
                 const Spacer(),
                 IconButton(
                   icon: Icon(Icons.chevron_left, color: c.textSecondary),
-                  onPressed: () => setState(() =>
-                      _month = DateTime(_month.year, _month.month - 1, 1)),
+                  onPressed: () => setState(
+                    () => _month = DateTime(_month.year, _month.month - 1, 1),
+                  ),
                 ),
                 IconButton(
                   icon: Icon(Icons.chevron_right, color: c.textSecondary),
-                  onPressed: () => setState(() =>
-                      _month = DateTime(_month.year, _month.month + 1, 1)),
+                  onPressed: () => setState(
+                    () => _month = DateTime(_month.year, _month.month + 1, 1),
+                  ),
                 ),
               ],
             ),
@@ -553,9 +698,10 @@ class _CalendarModalState extends ConsumerState<_CalendarModal> {
                   Expanded(
                     child: Center(
                       child: Text(
-                          // Week starts on Sunday; 2024-01-07 was a Sunday.
-                          _weekdayShort(context, DateTime(2024, 1, 7 + i)),
-                          style: TextStyle(color: c.textSecondary, fontSize: 12)),
+                        // Week starts on Sunday; 2024-01-07 was a Sunday.
+                        _weekdayShort(context, DateTime(2024, 1, 7 + i)),
+                        style: TextStyle(color: c.textSecondary, fontSize: 12),
+                      ),
                     ),
                   ),
               ],
@@ -565,13 +711,15 @@ class _CalendarModalState extends ConsumerState<_CalendarModal> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 7),
+                crossAxisCount: 7,
+              ),
               itemCount: firstWeekday + daysInMonth,
               itemBuilder: (_, i) {
                 if (i < firstWeekday) return const SizedBox.shrink();
                 final dayNum = i - firstWeekday + 1;
                 final date = DateTime(_month.year, _month.month, dayNum);
-                final on = date == DateTime(_picked.year, _picked.month, _picked.day);
+                final on =
+                    date == DateTime(_picked.year, _picked.month, _picked.day);
                 return GestureDetector(
                   onTap: () => setState(() => _picked = date),
                   child: Column(
@@ -581,21 +729,27 @@ class _CalendarModalState extends ConsumerState<_CalendarModal> {
                         width: 34,
                         height: 34,
                         decoration: BoxDecoration(
-                            color: on ? c.textPrimary : Colors.transparent,
-                            shape: BoxShape.circle),
+                          color: on ? c.textPrimary : Colors.transparent,
+                          shape: BoxShape.circle,
+                        ),
                         alignment: Alignment.center,
-                        child: Text('$dayNum',
-                            style: TextStyle(
-                                color: on ? c.background : c.textPrimary)),
+                        child: Text(
+                          '$dayNum',
+                          style: TextStyle(
+                            color: on ? c.background : c.textPrimary,
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Container(
-                          width: 5,
-                          height: 5,
-                          decoration: BoxDecoration(
-                              color: (colors[dayNum] ?? LiturgicalColor.green)
-                                  .dotColor(light: light),
-                              shape: BoxShape.circle)),
+                        width: 5,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: (colors[dayNum] ?? LiturgicalColor.green)
+                              .dotColor(light: light),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
                     ],
                   ),
                 );
@@ -606,14 +760,18 @@ class _CalendarModalState extends ConsumerState<_CalendarModal> {
               width: double.infinity,
               child: FilledButton(
                 style: FilledButton.styleFrom(
-                    backgroundColor: c.textPrimary,
-                    foregroundColor: c.background,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(28))),
+                  backgroundColor: c.textPrimary,
+                  foregroundColor: c.background,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                ),
                 onPressed: () => Navigator.pop(context, _picked),
-                child: Text(context.l10n.actionConfirm,
-                    style: TextStyle(fontWeight: FontWeight.w600)),
+                child: Text(
+                  context.l10n.actionConfirm,
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
             ),
           ],
@@ -622,7 +780,6 @@ class _CalendarModalState extends ConsumerState<_CalendarModal> {
     );
   }
 }
-
 
 /// "Santo do Dia" — shown only when the bundled dataset actually has a life for
 /// this day. No entry means no section: the screen is unchanged, not padded
@@ -647,41 +804,53 @@ class _SaintOfTheDay extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
       child: Container(
         decoration: BoxDecoration(
-            color: c.surface, borderRadius: BorderRadius.circular(18)),
+          color: c.surface,
+          borderRadius: BorderRadius.circular(18),
+        ),
         padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(children: [
-              Icon(Icons.auto_awesome_outlined, size: 16, color: c.accent),
-              const SizedBox(width: 8),
-              Text(l10n.saintOfTheDay.toUpperCase(),
+            Row(
+              children: [
+                Icon(Icons.auto_awesome_outlined, size: 16, color: c.accent),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.saintOfTheDay.toUpperCase(),
                   style: TextStyle(
-                      color: c.accent,
-                      fontSize: 11,
-                      letterSpacing: 1,
-                      fontWeight: FontWeight.w600)),
-            ]),
+                    color: c.accent,
+                    fontSize: 11,
+                    letterSpacing: 1,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 10),
             Text(saint.name, style: Theme.of(context).textTheme.titleLarge),
             if (meta.isNotEmpty) ...[
               const SizedBox(height: 3),
-              Text(meta, style: TextStyle(color: c.textSecondary, fontSize: 13)),
+              Text(
+                meta,
+                style: TextStyle(color: c.textSecondary, fontSize: 13),
+              ),
             ],
             const SizedBox(height: 12),
-            Text(saint.biography.first,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.copyWith(height: 1.5)),
+            Text(
+              saint.biography.first,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(height: 1.5),
+            ),
             if (saint.biography.length > 1)
               Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton(
                   onPressed: () => showSaint(context, saint),
                   style: TextButton.styleFrom(
-                      foregroundColor: c.accent,
-                      padding: const EdgeInsets.symmetric(vertical: 4)),
+                    foregroundColor: c.accent,
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                  ),
                   child: Text(l10n.saintReadMore),
                 ),
               ),
@@ -708,26 +877,30 @@ class _DirectoryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         child: Container(
           decoration: BoxDecoration(
-              color: c.surface, borderRadius: BorderRadius.circular(18)),
+            color: c.surface,
+            borderRadius: BorderRadius.circular(18),
+          ),
           padding: const EdgeInsets.all(18),
-          child: Row(children: [
-            Icon(Icons.menu_book_outlined, size: 20, color: c.accent),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(context.l10n.liturgicalDirectory,
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w600)),
-            ),
-            Icon(Icons.chevron_right, color: c.textFaint),
-          ]),
+          child: Row(
+            children: [
+              Icon(Icons.menu_book_outlined, size: 20, color: c.accent),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  context.l10n.liturgicalDirectory,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Icon(Icons.chevron_right, color: c.textFaint),
+            ],
+          ),
         ),
       ),
     );
   }
 }
-
 
 /// The responsorial psalm, laid out as it is sung: the response, the verses,
 /// and the response again.
@@ -736,59 +909,91 @@ class _DirectoryCard extends StatelessWidget {
 /// instead of printing a line that may not be the one sung — the Lectionary
 /// appoints it, sometimes adapts the wording, and sometimes takes it from
 /// outside the psalm, so it is not derivable from the psalm text.
-class _PsalmBody extends StatelessWidget {
+class _PsalmBody extends ConsumerWidget {
   final Reading reading;
   const _PsalmBody({required this.reading});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = context.bt;
     final l10n = context.l10n;
-    final hasRefrain = reading.hasRefrain;
+    final refrain = reading.refrain ?? _resolveRefrain(ref);
+    final hasRefrain = refrain != null && refrain.trim().isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _label(c, l10n.psalmRefrain),
         if (hasRefrain)
-          _refrain(context, c)
+          _refrain(context, c, refrain)
         else
-          Text(l10n.psalmRefrainUnavailable,
-              style: TextStyle(
-                  color: c.textFaint, fontStyle: FontStyle.italic, height: 1.4)),
+          Text(
+            l10n.psalmRefrainUnavailable,
+            style: TextStyle(
+              color: c.textFaint,
+              fontStyle: FontStyle.italic,
+              height: 1.4,
+            ),
+          ),
         const SizedBox(height: 16),
         _label(c, l10n.psalmVerses),
         _ReadingText(reading: reading),
         // The response returns after the verses, as it does when sung.
         if (hasRefrain) ...[
           const SizedBox(height: 14),
-          _refrain(context, c),
+          _refrain(context, c, refrain),
         ],
       ],
     );
   }
 
-  Widget _refrain(BuildContext context, BtColors c) => Padding(
-        padding: const EdgeInsets.only(bottom: 2),
-        child: Text.rich(
-          TextSpan(children: [
-            TextSpan(
-                text: 'R. ',
-                style: TextStyle(
-                    color: c.accent, fontWeight: FontWeight.w700)),
-            TextSpan(text: reading.refrain!),
-          ]),
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: c.accent, fontWeight: FontWeight.w600, height: 1.45),
-        ),
-      );
+  String? _resolveRefrain(WidgetRef ref) {
+    if (reading.refrainBookId == null ||
+        reading.refrainChapter == null ||
+        reading.refrainVerse == null) {
+      return null;
+    }
+    final content = ref.watch(
+      chapterProvider((
+        bookId: reading.refrainBookId!,
+        chapter: reading.refrainChapter!,
+      )),
+    );
+    return content?.verses
+        .where((v) => v.number == reading.refrainVerse)
+        .map((v) => v.text.trim())
+        .firstOrNull;
+  }
+
+  Widget _refrain(BuildContext context, BtColors c, String text) => Padding(
+    padding: const EdgeInsets.only(bottom: 2),
+    child: Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(
+            text: 'R. ',
+            style: TextStyle(color: c.accent, fontWeight: FontWeight.w700),
+          ),
+          TextSpan(text: text),
+        ],
+      ),
+      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+        color: c.accent,
+        fontWeight: FontWeight.w600,
+        height: 1.45,
+      ),
+    ),
+  );
 
   Widget _label(BtColors c, String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child: Text(text.toUpperCase(),
-            style: TextStyle(
-                color: c.textFaint,
-                fontSize: 10.5,
-                letterSpacing: 1.2,
-                fontWeight: FontWeight.w600)),
-      );
+    padding: const EdgeInsets.only(bottom: 6),
+    child: Text(
+      text.toUpperCase(),
+      style: TextStyle(
+        color: c.textFaint,
+        fontSize: 10.5,
+        letterSpacing: 1.2,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  );
 }

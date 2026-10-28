@@ -54,11 +54,12 @@ class _BibleLibraryScreenState extends ConsumerState<BibleLibraryScreen> {
                 children: [
                   // Settings lives on Home; the Bible screen no longer carries
                   // a redundant overflow menu.
-                  Text(context.l10n.bibleTitle,
-                      style: Theme.of(context)
-                          .textTheme
-                          .displaySmall
-                          ?.copyWith(fontWeight: FontWeight.w700)),
+                  Text(
+                    context.l10n.bibleTitle,
+                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   _SearchField(onChanged: (v) => setState(() => _query = v)),
                   const SizedBox(height: 16),
@@ -103,17 +104,86 @@ class _TestamentList extends ConsumerWidget {
     final books = query.isEmpty
         ? all
         : all
-            .where((b) => b.name.toLowerCase().contains(query.toLowerCase()))
-            .toList();
+              .where((b) => b.name.toLowerCase().contains(query.toLowerCase()))
+              .toList();
 
     if (books.isEmpty) return _EmptyLibrary(installed: all.isNotEmpty);
 
-    return ListView.separated(
+    // Canonical sections (Pentateuch, Prophets, Gospels…) head the list the
+    // way a printed Bible's contents page does. A search shows a flat list.
+    final items = <Object>[];
+    String? section;
+    for (final b in books) {
+      final s = query.isEmpty ? _sectionOf(context, b) : null;
+      if (s != null && s != section) {
+        items.add(s);
+        section = s;
+      }
+      items.add(b);
+    }
+
+    return ListView.builder(
       key: PageStorageKey('books-${testament.name}'),
-      itemCount: books.length,
-      separatorBuilder: (_, _) =>
-          Divider(height: 1, color: c.divider, indent: 80),
-      itemBuilder: (_, i) => _BookRow(book: books[i]),
+      itemCount: items.length,
+      itemBuilder: (_, i) {
+        final it = items[i];
+        if (it is String) return _SectionHeader(it);
+        final b = it as BibleBook;
+        final nextIsHeader = i + 1 < items.length && items[i + 1] is String;
+        return Column(
+          children: [
+            _BookRow(book: b),
+            if (!nextIsHeader && i + 1 < items.length)
+              Divider(height: 1, color: c.divider, indent: 80),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Section by canonical order (73-book Catholic canon).
+  static String? _sectionOf(BuildContext context, BibleBook b) {
+    final l10n = context.l10n;
+    final o = b.order;
+    if (b.testament == Testament.ot) {
+      if (o <= 5) return l10n.sectionPentateuch;
+      if (o <= 21) return l10n.sectionHistorical;
+      if (o <= 28) return l10n.sectionWisdom;
+      return l10n.sectionProphets;
+    }
+    if (o <= 50) return l10n.sectionGospels;
+    if (o == 51) return l10n.sectionActs;
+    if (o <= 65) return l10n.sectionPauline;
+    if (o <= 72) return l10n.sectionCatholicLetters;
+    return l10n.sectionApocalypse;
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String label;
+  const _SectionHeader(this.label);
+  @override
+  Widget build(BuildContext context) {
+    final c = context.bt;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 8),
+      child: Row(
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              color: c.gold,
+              fontSize: 11,
+              letterSpacing: 1.6,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Container(height: 1, color: c.gold.withValues(alpha: 0.28)),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -134,17 +204,20 @@ class _BookRow extends StatelessWidget {
             BookEmblem(bookId: book.id, abbrev: book.abbrev),
             const SizedBox(width: 16),
             Expanded(
-              child: Text(book.name,
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w500)),
+              child: Text(
+                book.name,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
+              ),
             ),
             if (book.isDeutero)
               Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: Text(context.l10n.deuterocanonicalShort,
-                    style: TextStyle(color: c.textFaint, fontSize: 11)),
+                child: Text(
+                  context.l10n.deuterocanonicalShort,
+                  style: TextStyle(color: c.textFaint, fontSize: 11),
+                ),
               ),
           ],
         ),
@@ -180,10 +253,13 @@ class _TestamentToggle extends StatelessWidget {
                 borderRadius: BorderRadius.circular(24),
               ),
               alignment: Alignment.center,
-              child: Text(label,
-                  style: TextStyle(
-                      color: on ? c.textPrimary : c.textSecondary,
-                      fontWeight: FontWeight.w600)),
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: on ? c.textPrimary : c.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
         ),
@@ -196,10 +272,12 @@ class _TestamentToggle extends StatelessWidget {
         color: c.surface,
         borderRadius: BorderRadius.circular(28),
       ),
-      child: Row(children: [
-        seg(context.l10n.oldTestament, Testament.ot),
-        seg(context.l10n.newTestament, Testament.nt),
-      ]),
+      child: Row(
+        children: [
+          seg(context.l10n.oldTestament, Testament.ot),
+          seg(context.l10n.newTestament, Testament.nt),
+        ],
+      ),
     );
   }
 }
@@ -221,7 +299,9 @@ class _SearchField extends StatelessWidget {
         fillColor: c.surface,
         contentPadding: const EdgeInsets.symmetric(vertical: 4),
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
       ),
     );
   }

@@ -107,8 +107,14 @@ Doutores da Igreja, calendário litúrgico.
 - **Bíblia Católica em Português** (`pt_beta`) — internal iacula corpus; provenance
   **unconfirmed**; beta-gated.
 - **Padre Matos Soares** (`pt_matos_soares`, Portuguese) — Catholic translation by
-  Fr. António Pereira de Matos Soares (**d. 1950**). Under Brazilian copyright
-  (life + 70 years) the work is a **public-domain candidate since 2021**. Text was
+  Fr. Manuel de Matos Soares (**d. 1957**, per Wikipedia and the publishers'
+  own blurbs, which call the 1956 revision his last; one source says 1958 —
+  confirm with a biography before relying on it). Under Brazilian and
+  Portuguese copyright (life + 70 years, counted from 1 January after death)
+  the translation enters the public domain on **1 January 2028** (2029 if he
+  died in 1958). **It cannot be shipped publicly before then without a licence
+  from the rights holder.** Earlier notes in this repo assumed d. 1950 / PD since
+  2021 — that was wrong. Text was
   collected from padrepauloricardo.org (edição *matos-soares*) — a faithful
   digitisation adds no new rights to a public-domain text; the PD basis is the
   translator's death + 70 years, not the digitiser. Full 73-book Catholic canon,
@@ -146,7 +152,16 @@ flutter build appbundle --release
 `test/android_release_test.dart` fails if a real `key.properties` appears in the
 repo. **Back the .jks up** — Play cannot reissue a lost upload key.
 
-**Blocker — fonts are fetched at runtime, not bundled.** `google_fonts` resolves
+**Fixed (2026-10-27) — fonts are now bundled.** Static instances of EB Garamond
+(Regular/Medium/SemiBold/Bold + italics) and Inter (Regular/Medium/SemiBold/Bold,
+opsz 14) generated with fontTools from the upstream variable fonts live in
+`assets/fonts/` with both OFL licences; `pubspec.yaml` declares the folder and
+`main.dart` sets `GoogleFonts.config.allowRuntimeFetching = false`, so
+`google_fonts` resolves them from the asset manifest and never touches the
+network. Verified by listing the release APK contents. The original finding is
+kept below for the record.
+
+**Was: blocker — fonts are fetched at runtime, not bundled.** `google_fonts` resolves
 in three steps (bundled asset → device cache → HTTP to `fonts.gstatic.com`).
 The built APK contains only `MaterialIcons-Regular.otf` and `CupertinoIcons.ttf`
 — **no EB Garamond, no Inter** — and `GoogleFonts.config.allowRuntimeFetching`

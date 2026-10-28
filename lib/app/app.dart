@@ -9,6 +9,7 @@ import '../features/liturgy/application/liturgy_providers.dart';
 import '../features/packages/application/package_providers.dart';
 import '../features/settings/application/settings_providers.dart';
 import '../features/settings/domain/settings.dart';
+import '../features/themes/application/theme_providers.dart';
 import 'router.dart';
 
 class BibliaTraditioApp extends ConsumerWidget {
@@ -29,11 +30,13 @@ class BibliaTraditioApp extends ConsumerWidget {
     // paused subscriptions. Any new always-alive async asset belongs here too.
     final lectionary = ref.watch(lectionaryProvider);
     final saints = ref.watch(saintsRepositoryProvider);
+    final themes = ref.watch(themeLibraryProvider);
 
     if (dbReady.isLoading ||
         content.isLoading ||
         lectionary.isLoading ||
-        saints.isLoading) {
+        saints.isLoading ||
+        themes.isLoading) {
       return const _Splash();
     }
     // Surface a clear, recoverable error instead of falling through to an empty
@@ -89,21 +92,29 @@ class _Splash extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(error ? Icons.error_outline : Icons.menu_book,
-                  color: c.accent, size: 48),
+              Icon(
+                error ? Icons.error_outline : Icons.menu_book,
+                color: c.accent,
+                size: 48,
+              ),
               const SizedBox(height: 24),
-              Text('Biblia Traditio',
-                  style: TextStyle(
-                      color: c.textSecondary,
-                      fontSize: 16,
-                      letterSpacing: 1)),
+              Text(
+                'Biblia Traditio',
+                style: TextStyle(
+                  color: c.textSecondary,
+                  fontSize: 16,
+                  letterSpacing: 1,
+                ),
+              ),
               const SizedBox(height: 24),
               if (!error)
                 SizedBox(
                   width: 22,
                   height: 22,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: c.accent.withValues(alpha: 0.7)),
+                    strokeWidth: 2,
+                    color: c.accent.withValues(alpha: 0.7),
+                  ),
                 )
               else if (onRetry != null)
                 IconButton.outlined(
@@ -112,7 +123,8 @@ class _Splash extends StatelessWidget {
                   icon: const Icon(Icons.refresh),
                   color: c.accent,
                   style: IconButton.styleFrom(
-                      side: BorderSide(color: c.accent.withValues(alpha: 0.5))),
+                    side: BorderSide(color: c.accent.withValues(alpha: 0.5)),
+                  ),
                 ),
             ],
           ),

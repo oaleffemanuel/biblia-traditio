@@ -62,3 +62,5 @@ assets/packages/*.sqlite.gz
 assets/packages/manifest.json
 tool/importer/data/*.xml
 tool/importer/data/*.json
+tool/importer/data/*-cache/
+tool/importer/data/*.martini-cache/

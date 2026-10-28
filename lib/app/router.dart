@@ -13,6 +13,8 @@ import '../features/liturgy/presentation/liturgy_screen.dart';
 import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../features/reading_plan/presentation/reading_plan_screen.dart';
 import '../features/search/presentation/search_screen.dart';
+import '../features/themes/presentation/theme_detail_screen.dart';
+import '../features/themes/presentation/themes_screen.dart';
 import '../features/settings/presentation/attributions_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import 'back_navigation.dart';
@@ -77,6 +79,11 @@ final routerProvider = Provider.family<GoRouter, bool>((ref, completed) {
       GoRoute(path: '/favorites', builder: (_, _) => const FavoritesScreen()),
       GoRoute(path: '/highlights', builder: (_, _) => const HighlightsScreen()),
       GoRoute(path: '/search', builder: (_, _) => const SearchScreen()),
+      GoRoute(path: '/themes', builder: (_, _) => const ThemesScreen()),
+      GoRoute(
+          path: '/themes/:id',
+          builder: (_, st) =>
+              ThemeDetailScreen(themeId: st.pathParameters['id']!)),
     ],
   );
 });

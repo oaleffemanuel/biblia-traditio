@@ -524,7 +524,7 @@ class AppL10nPt extends AppL10n {
 
   @override
   String get licMatosBody =>
-      'Tradução católica do Pe. Matos Soares (falecido em 1950) — candidata a domínio público no Brasil desde 2021 (vida + 70 anos). A proveniência está em verificação durante o beta.';
+      'Tradução católica do Pe. Matos Soares (falecido em 1957). A origem editorial e a autorização para distribuição digital ainda estão em verificação; não publicar esta tradução sem licença confirmada.';
 
   @override
   String get ossLicenses => 'Licenças de código aberto';
@@ -879,6 +879,15 @@ class AppL10nPt extends AppL10n {
   String get langEnglish => 'Inglês';
 
   @override
+  String get langItalian => 'Italiano';
+
+  @override
+  String get langSpanish => 'Espanhol';
+
+  @override
+  String get langFrench => 'Francês';
+
+  @override
   String translationWithLanguage(String language, String title) {
     return '$language — $title';
   }
@@ -1029,4 +1038,98 @@ class AppL10nPt extends AppL10n {
     );
     return '$_temp0';
   }
+
+  @override
+  String get homePsalmToday => 'Salmo de hoje';
+
+  @override
+  String get homePsalmRefrain => 'Refrão do salmo';
+
+  @override
+  String get homeReadPsalm => 'Ler o salmo';
+
+  @override
+  String get homeGospelToday => 'Evangelho de hoje';
+
+  @override
+  String get homeReadGospel => 'Ler o evangelho';
+
+  @override
+  String get homeSeeLiturgy => 'Ver a liturgia';
+
+  @override
+  String get sectionPentateuch => 'Pentateuco';
+
+  @override
+  String get sectionHistorical => 'Livros históricos';
+
+  @override
+  String get sectionWisdom => 'Livros sapienciais';
+
+  @override
+  String get sectionProphets => 'Livros proféticos';
+
+  @override
+  String get sectionGospels => 'Evangelhos';
+
+  @override
+  String get sectionActs => 'Atos dos Apóstolos';
+
+  @override
+  String get sectionPauline => 'Cartas de São Paulo';
+
+  @override
+  String get sectionCatholicLetters => 'Cartas católicas';
+
+  @override
+  String get sectionApocalypse => 'Apocalipse';
+
+  @override
+  String get themesTitle => 'Biblioteca temática';
+
+  @override
+  String get themesSubtitle =>
+      'A Escritura por temas, lida com os Padres da Igreja';
+
+  @override
+  String get themeLibraryLoadError =>
+      'Não foi possível carregar a Biblioteca temática. Tente novamente.';
+
+  @override
+  String themePassages(int n) {
+    return '$n passagens';
+  }
+
+  @override
+  String get themePassagesLabel => 'Passagens';
+
+  @override
+  String themeCommentaryCount(int n) {
+    return '$n comentários dos Padres da Igreja';
+  }
+
+  @override
+  String get themeNoText => 'Texto não disponível na tradução atual.';
+
+  @override
+  String get shareChooseExcerpt => 'Escolha o trecho para a imagem';
+
+  @override
+  String get shareExcerptHint =>
+      'Toque nas frases que devem aparecer no cartão. Copiar em texto leva sempre o comentário inteiro.';
+
+  @override
+  String shareExcerptCount(int n, int max) {
+    return '$n de $max caracteres';
+  }
+
+  @override
+  String get shareContinue => 'Continuar';
+
+  @override
+  String get shareExcerptTooLong =>
+      'Longo demais para um cartão: desmarque uma frase.';
+
+  @override
+  String get shareExcerptNone => 'Selecione ao menos uma frase.';
 }

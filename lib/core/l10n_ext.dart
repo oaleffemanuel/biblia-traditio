@@ -17,6 +17,9 @@ String? languageName(AppL10n l, String code) => switch (code) {
       'he' || 'hbo' => l.langHebrew,
       'pt' => l.langPortuguese,
       'en' => l.langEnglish,
+      'it' => l.langItalian,
+      'es' => l.langSpanish,
+      'fr' => l.langFrench,
       _ => null,
     };
 

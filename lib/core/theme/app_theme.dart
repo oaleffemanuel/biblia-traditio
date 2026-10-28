@@ -42,7 +42,7 @@ class AppTheme {
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: c.background,
-        selectedItemColor: c.textPrimary,
+        selectedItemColor: c.accent,
         unselectedItemColor: c.textFaint,
         type: BottomNavigationBarType.fixed,
         showUnselectedLabels: true,

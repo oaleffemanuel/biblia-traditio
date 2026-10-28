@@ -17,19 +17,28 @@ import 'widgets/share_verse.dart';
 /// Verse-tap experience, redesigned around Tradition: the Church Fathers tab is
 /// primary, personal notes are secondary, and the read/share/highlight actions
 /// live in a slim bar at the bottom. "Read Scripture with the Church."
-void showCommentaryPanel(BuildContext context, WidgetRef ref, VerseRef vref,
-    {required String bookName, required String verseText}) {
+void showCommentaryPanel(
+  BuildContext context,
+  WidgetRef ref,
+  VerseRef vref, {
+  required String bookName,
+  required String verseText,
+}) {
   final c = context.bt;
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: c.surface,
     shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
     builder: (_) => FractionallySizedBox(
       heightFactor: 0.85,
       child: _CommentaryPanel(
-          vref: vref, bookName: bookName, verseText: verseText),
+        vref: vref,
+        bookName: bookName,
+        verseText: verseText,
+      ),
     ),
   );
 }
@@ -52,8 +61,11 @@ class _CommentaryPanel extends ConsumerStatefulWidget {
   final VerseRef vref;
   final String bookName;
   final String verseText;
-  const _CommentaryPanel(
-      {required this.vref, required this.bookName, required this.verseText});
+  const _CommentaryPanel({
+    required this.vref,
+    required this.bookName,
+    required this.verseText,
+  });
   @override
   ConsumerState<_CommentaryPanel> createState() => _CommentaryPanelState();
 }
@@ -83,10 +95,13 @@ class _CommentaryPanelState extends ConsumerState<_CommentaryPanel>
       children: [
         const SizedBox(height: 10),
         Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-                color: c.divider, borderRadius: BorderRadius.circular(2))),
+          width: 40,
+          height: 4,
+          decoration: BoxDecoration(
+            color: c.divider,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
         // Header: the verse, quoted.
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 14, 12, 8),
@@ -97,20 +112,25 @@ class _CommentaryPanelState extends ConsumerState<_CommentaryPanel>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_ref,
-                        style: TextStyle(
-                            color: c.accent,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                            letterSpacing: 0.5)),
+                    Text(
+                      _ref,
+                      style: TextStyle(
+                        color: c.accent,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    Text('“${widget.verseText}”',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyLarge
-                            ?.copyWith(fontSize: 16, height: 1.35)),
+                    Text(
+                      '“${widget.verseText}”',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontSize: 16,
+                        height: 1.35,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -171,12 +191,13 @@ class _FathersTab extends ConsumerStatefulWidget {
   final _Filter filter;
   final ValueChanged<_Filter> onFilter;
   final bool hasPatristics;
-  const _FathersTab(
-      {required this.commentaries,
-      required this.reference,
-      required this.filter,
-      required this.onFilter,
-      required this.hasPatristics});
+  const _FathersTab({
+    required this.commentaries,
+    required this.reference,
+    required this.filter,
+    required this.onFilter,
+    required this.hasPatristics,
+  });
 
   @override
   ConsumerState<_FathersTab> createState() => _FathersTabState();
@@ -200,7 +221,8 @@ class _FathersTabState extends ConsumerState<_FathersTab> {
       _Filter.medieval => cent != null && cent >= 9,
       _Filter.augustine =>
         name.contains('agostinho') || name.contains('augustin'),
-      _Filter.aquinas => name.contains('aquin') || name.contains('tomás de aqu'),
+      _Filter.aquinas =>
+        name.contains('aquin') || name.contains('tomás de aqu'),
     };
   }
 
@@ -212,7 +234,9 @@ class _FathersTabState extends ConsumerState<_FathersTab> {
 
     if (all.isEmpty) {
       return _Empty(
-        icon: widget.hasPatristics ? Icons.auto_stories_outlined : Icons.download,
+        icon: widget.hasPatristics
+            ? Icons.auto_stories_outlined
+            : Icons.download,
         message: widget.hasPatristics
             ? l10n.noCommentaryForVerse
             : l10n.patristicsNotInstalled,
@@ -239,8 +263,9 @@ class _FathersTabState extends ConsumerState<_FathersTab> {
       ])
         if (visible.any((cm) => _matches(f, cm))) f,
     ];
-    final effective =
-        available.contains(widget.filter) ? widget.filter : _Filter.all;
+    final effective = available.contains(widget.filter)
+        ? widget.filter
+        : _Filter.all;
     final shown = visible.where((cm) => _matches(effective, cm)).toList();
     // One block per author, first-appearance order, excerpts in corpus order.
     final grouped = <String, List<Commentary>>{};
@@ -248,16 +273,15 @@ class _FathersTabState extends ConsumerState<_FathersTab> {
       grouped.putIfAbsent(cm.fatherName, () => []).add(cm);
     }
     final authors = grouped.keys.toList();
-    final allOpen =
-        authors.isNotEmpty && authors.every(_expanded.contains);
+    final allOpen = authors.isNotEmpty && authors.every(_expanded.contains);
 
     String label(_Filter f) => switch (f) {
-          _Filter.all => l10n.filterAll,
-          _Filter.fathers => l10n.filterFathers,
-          _Filter.medieval => l10n.filterMedieval,
-          _Filter.augustine => l10n.filterAugustine,
-          _Filter.aquinas => l10n.filterAquinas,
-        };
+      _Filter.all => l10n.filterAll,
+      _Filter.fathers => l10n.filterFathers,
+      _Filter.medieval => l10n.filterMedieval,
+      _Filter.augustine => l10n.filterAugustine,
+      _Filter.aquinas => l10n.filterAquinas,
+    };
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,7 +304,8 @@ class _FathersTabState extends ConsumerState<_FathersTab> {
                       selectedColor: c.accentSoft,
                       side: BorderSide.none,
                       labelStyle: TextStyle(
-                          color: effective == f ? c.accent : c.textSecondary),
+                        color: effective == f ? c.accent : c.textSecondary,
+                      ),
                     ),
                   ),
               ],
@@ -291,8 +316,10 @@ class _FathersTabState extends ConsumerState<_FathersTab> {
           child: Row(
             children: [
               Expanded(
-                child: Text(l10n.commentaryCount(shown.length),
-                    style: TextStyle(color: c.textFaint, fontSize: 12)),
+                child: Text(
+                  l10n.commentaryCount(shown.length),
+                  style: TextStyle(color: c.textFaint, fontSize: 12),
+                ),
               ),
               if (shown.isNotEmpty)
                 TextButton(
@@ -304,14 +331,18 @@ class _FathersTabState extends ConsumerState<_FathersTab> {
                     }
                   }),
                   style: TextButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      foregroundColor: c.accent),
+                    visualDensity: VisualDensity.compact,
+                    foregroundColor: c.accent,
+                  ),
                   child: Text(
-                      allOpen
-                          ? l10n.commentaryCollapseAll
-                          : l10n.commentaryExpandAll,
-                      style: const TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w600)),
+                    allOpen
+                        ? l10n.commentaryCollapseAll
+                        : l10n.commentaryExpandAll,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
             ],
           ),
@@ -322,16 +353,21 @@ class _FathersTabState extends ConsumerState<_FathersTab> {
             child: Row(
               children: [
                 Expanded(
-                  child: Text(l10n.commentaryHiddenByPrefs(hiddenByPrefs),
-                      style: TextStyle(color: c.textFaint, fontSize: 12)),
+                  child: Text(
+                    l10n.commentaryHiddenByPrefs(hiddenByPrefs),
+                    style: TextStyle(color: c.textFaint, fontSize: 12),
+                  ),
                 ),
                 TextButton(
                   onPressed: () => setState(() => _ignorePrefs = true),
                   style: TextButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      foregroundColor: c.textSecondary),
-                  child: Text(l10n.commentaryShowHidden,
-                      style: const TextStyle(fontSize: 12)),
+                    visualDensity: VisualDensity.compact,
+                    foregroundColor: c.textSecondary,
+                  ),
+                  child: Text(
+                    l10n.commentaryShowHidden,
+                    style: const TextStyle(fontSize: 12),
+                  ),
                 ),
               ],
             ),
@@ -350,9 +386,11 @@ class _FathersTabState extends ConsumerState<_FathersTab> {
                 excerpts: grouped[author]!,
                 reference: widget.reference,
                 expanded: _expanded.contains(author),
-                onToggle: () => setState(() => _expanded.contains(author)
-                    ? _expanded.remove(author)
-                    : _expanded.add(author)),
+                onToggle: () => setState(
+                  () => _expanded.contains(author)
+                      ? _expanded.remove(author)
+                      : _expanded.add(author),
+                ),
               );
             },
           ),
@@ -405,14 +443,23 @@ class _AuthorBlock extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(author,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: c.accent, fontWeight: FontWeight.w600)),
+                      Text(
+                        author,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: c.accent,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
                       if (meta != null) ...[
                         const SizedBox(height: 2),
-                        Text(meta,
-                            style:
-                                TextStyle(color: c.textSecondary, fontSize: 13)),
+                        Text(
+                          meta,
+                          style: TextStyle(
+                            color: c.textSecondary,
+                            fontSize: 13,
+                          ),
+                        ),
                       ],
                     ],
                   ),
@@ -422,13 +469,17 @@ class _AuthorBlock extends StatelessWidget {
                 if (many)
                   Padding(
                     padding: const EdgeInsets.only(left: 8, top: 2),
-                    child: Text(l10n.commentaryExcerptCount(excerpts.length),
-                        style: TextStyle(color: c.textFaint, fontSize: 12)),
+                    child: Text(
+                      l10n.commentaryExcerptCount(excerpts.length),
+                      style: TextStyle(color: c.textFaint, fontSize: 12),
+                    ),
                   ),
                 Padding(
                   padding: const EdgeInsets.only(left: 8, top: 2),
-                  child: Icon(expanded ? Icons.expand_less : Icons.expand_more,
-                      color: c.textFaint),
+                  child: Icon(
+                    expanded ? Icons.expand_less : Icons.expand_more,
+                    color: c.textFaint,
+                  ),
                 ),
               ],
             ),
@@ -489,23 +540,29 @@ class _Excerpt extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (label != null) ...[
-            Text(label!.toUpperCase(),
-                style: TextStyle(
-                    color: c.textFaint,
-                    fontSize: 10.5,
-                    letterSpacing: 1.1,
-                    fontWeight: FontWeight.w600)),
+            Text(
+              label!.toUpperCase(),
+              style: TextStyle(
+                color: c.textFaint,
+                fontSize: 10.5,
+                letterSpacing: 1.1,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 6),
           ],
-          Text(item.text,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge
-                  ?.copyWith(fontSize: 17, height: 1.5)),
+          Text(
+            item.text,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(fontSize: 17, height: 1.5),
+          ),
           if (item.isMachineTranslation) ...[
             const SizedBox(height: 8),
-            Text('${l10n.machineTranslation} · ${item.source ?? ''}',
-                style: TextStyle(color: c.textFaint, fontSize: 11)),
+            Text(
+              '${l10n.machineTranslation} · ${item.source ?? ''}',
+              style: TextStyle(color: c.textFaint, fontSize: 11),
+            ),
           ],
           Align(
             alignment: Alignment.centerLeft,
@@ -518,11 +575,14 @@ class _Excerpt extends StatelessWidget {
                 text: item.text,
               ),
               icon: const Icon(Icons.ios_share, size: 17),
-              label: Text(l10n.shareCommentary,
-                  style: const TextStyle(fontSize: 13)),
+              label: Text(
+                l10n.shareCommentary,
+                style: const TextStyle(fontSize: 13),
+              ),
               style: TextButton.styleFrom(
-                  foregroundColor: c.textSecondary,
-                  visualDensity: VisualDensity.compact),
+                foregroundColor: c.textSecondary,
+                visualDensity: VisualDensity.compact,
+              ),
             ),
           ),
         ],
@@ -552,16 +612,20 @@ class _NotesTab extends ConsumerWidget {
               icon: const Icon(Icons.add, size: 18),
               label: Text(l10n.writeReflection),
               style: OutlinedButton.styleFrom(
-                  foregroundColor: c.accent,
-                  side: BorderSide(color: c.accent.withValues(alpha: 0.5)),
-                  padding: const EdgeInsets.symmetric(vertical: 14)),
+                foregroundColor: c.accent,
+                side: BorderSide(color: c.accent.withValues(alpha: 0.5)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
             ),
           ),
         ),
         if (notes.isEmpty)
           Expanded(
-              child: _Empty(
-                  icon: Icons.note_outlined, message: l10n.noNotesForVerse))
+            child: _Empty(
+              icon: Icons.note_outlined,
+              message: l10n.noNotesForVerse,
+            ),
+          )
         else
           Expanded(
             child: ListView.separated(
@@ -572,10 +636,12 @@ class _NotesTab extends ConsumerWidget {
                 final n = notes[i];
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text(n.body,
-                      maxLines: 4, overflow: TextOverflow.ellipsis),
-                  onTap: () =>
-                      showNoteEditor(context, ref, vref, existing: n),
+                  title: Text(
+                    n.body,
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  onTap: () => showNoteEditor(context, ref, vref, existing: n),
                 );
               },
             ),
@@ -595,41 +661,48 @@ class _ColorRow extends ConsumerWidget {
     final c = context.bt;
     final ctrl = ref.read(annotationControllerProvider);
     final highlighted = ref
-        .watch(highlightsForChapterProvider(
-            (bookId: vref.bookId, chapter: vref.chapter)))
+        .watch(
+          highlightsForChapterProvider((
+            bookId: vref.bookId,
+            chapter: vref.chapter,
+          )),
+        )
         .containsKey(vref.verse);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       color: c.surfaceHigh.withValues(alpha: 0.4),
-      child: Row(children: [
-        for (final color in HighlightColor.values)
-          Padding(
-            padding: const EdgeInsets.only(right: 14),
-            child: GestureDetector(
-              onTap: () {
-                ctrl.setHighlight(vref, color);
-                onPick();
-              },
-              child: Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
+      child: Row(
+        children: [
+          for (final color in HighlightColor.values)
+            Padding(
+              padding: const EdgeInsets.only(right: 14),
+              child: GestureDetector(
+                onTap: () {
+                  ctrl.setHighlight(vref, color);
+                  onPick();
+                },
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
                     color: color.color,
                     shape: BoxShape.circle,
-                    border: Border.all(color: c.divider)),
+                    border: Border.all(color: c.divider),
+                  ),
+                ),
               ),
             ),
-          ),
-        const Spacer(),
-        if (highlighted)
-          IconButton(
-            icon: Icon(Icons.format_color_reset, color: c.textSecondary),
-            onPressed: () {
-              ctrl.removeHighlight(vref);
-              onPick();
-            },
-          ),
-      ]),
+          const Spacer(),
+          if (highlighted)
+            IconButton(
+              icon: Icon(Icons.format_color_reset, color: c.textSecondary),
+              onPressed: () {
+                ctrl.removeHighlight(vref);
+                onPick();
+              },
+            ),
+        ],
+      ),
     );
   }
 }
@@ -640,11 +713,12 @@ class _ActionBar extends ConsumerWidget {
   final String reference;
   final String verseText;
   final VoidCallback onHighlight;
-  const _ActionBar(
-      {required this.vref,
-      required this.reference,
-      required this.verseText,
-      required this.onHighlight});
+  const _ActionBar({
+    required this.vref,
+    required this.reference,
+    required this.verseText,
+    required this.onHighlight,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -658,51 +732,67 @@ class _ActionBar extends ConsumerWidget {
       top: false,
       child: Container(
         decoration: BoxDecoration(
-            color: c.surface,
-            border: Border(top: BorderSide(color: c.divider))),
+          color: c.surface,
+          border: Border(top: BorderSide(color: c.divider)),
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _act(c, Icons.format_color_fill, c.textPrimary, l10n.highlight,
-                onHighlight),
+            _act(
+              c,
+              Icons.format_color_fill,
+              c.textPrimary,
+              l10n.highlight,
+              onHighlight,
+            ),
             // Favorite/bookmark are NOT silent: the icon fills and turns accent
             // the instant they're tapped — that's the feedback. A SnackBar here
             // would float over this very action bar (covering the other actions
             // and stealing taps), so we keep the visual toggle as the signal.
             _act(
-                c,
-                favorite ? Icons.favorite : Icons.favorite_border,
-                favorite ? c.accent : c.textPrimary,
-                favorite ? l10n.unfavorite : l10n.favorite,
-                () => ctrl.toggleFavorite(vref, '“$verseText”  ($reference)')),
+              c,
+              favorite ? Icons.favorite : Icons.favorite_border,
+              favorite ? c.accent : c.textPrimary,
+              favorite ? l10n.unfavorite : l10n.favorite,
+              () => ctrl.toggleFavorite(vref, '“$verseText”  ($reference)'),
+            ),
             _act(c, Icons.ios_share, c.textPrimary, l10n.share, () {
               showShareVerse(context, reference: reference, text: verseText);
             }),
             _act(c, Icons.copy, c.textPrimary, l10n.copyVerse, () {
               Clipboard.setData(
-                  ClipboardData(text: '“$verseText”\n— $reference'));
+                ClipboardData(text: '“$verseText”\n— $reference'),
+              );
               // Copy is silent — close the panel so the confirmation toast is
               // visible (it would otherwise be hidden behind this sheet).
               Navigator.pop(context);
               showSnack(l10n.copied);
             }),
             _act(
-                c,
-                bookmarked ? Icons.bookmark : Icons.bookmark_border,
-                bookmarked ? c.accent : c.textPrimary,
-                bookmarked ? l10n.unbookmark : l10n.bookmark,
-                () => ctrl.toggleBookmark(vref)),
+              c,
+              bookmarked ? Icons.bookmark : Icons.bookmark_border,
+              bookmarked ? c.accent : c.textPrimary,
+              bookmarked ? l10n.unbookmark : l10n.bookmark,
+              () => ctrl.toggleBookmark(vref),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _act(BtColors c, IconData icon, Color color, String tooltip,
-          VoidCallback onTap) =>
-      IconButton(
-          tooltip: tooltip, icon: Icon(icon, color: color), onPressed: onTap);
+  Widget _act(
+    BtColors c,
+    IconData icon,
+    Color color,
+    String tooltip,
+    VoidCallback onTap,
+  ) => IconButton(
+    tooltip: tooltip,
+    icon: Icon(icon, color: color),
+    onPressed: onTap,
+  );
 }
 
 class _Empty extends StatelessWidget {
@@ -720,9 +810,11 @@ class _Empty extends StatelessWidget {
           children: [
             Icon(icon, size: 44, color: c.textFaint),
             const SizedBox(height: 14),
-            Text(message,
-                textAlign: TextAlign.center,
-                style: TextStyle(color: c.textSecondary, height: 1.4)),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: c.textSecondary, height: 1.4),
+            ),
           ],
         ),
       ),

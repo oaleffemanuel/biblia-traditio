@@ -117,12 +117,13 @@ void main() {
 
     Finder verse(int n) =>
         find.textContaining('Versículo $n do', findRichText: true).first;
+    Finder verseNumber(int n) => find.text('$n').first;
 
     testWidgets('long press raises all five actions', (tester) async {
       await pump(tester);
       expect(find.text('Destacar'), findsNothing);
 
-      await tester.longPress(verse(2));
+      await tester.longPress(verseNumber(2));
       await tester.pumpAndSettle();
 
       for (final label in ['Copiar', 'Partilhar', 'Destacar', 'Nota', 'Favoritar']) {
@@ -133,7 +134,7 @@ void main() {
     testWidgets('Destacar opens the colour bar, and closes it again',
         (tester) async {
       await pump(tester);
-      await tester.longPress(verse(2));
+      await tester.longPress(verseNumber(2));
       await tester.pumpAndSettle();
 
       expect(find.byType(GestureDetector), findsWidgets);
@@ -158,7 +159,7 @@ void main() {
     testWidgets('the bar acts on the whole selection, not just the anchor',
         (tester) async {
       await pump(tester);
-      await tester.longPress(verse(2));
+      await tester.longPress(verseNumber(2));
       await tester.pumpAndSettle();
       expect(find.text('1 versículo selecionado'), findsOneWidget);
 
@@ -171,7 +172,7 @@ void main() {
 
     testWidgets('clearing dismisses the bar entirely', (tester) async {
       await pump(tester);
-      await tester.longPress(verse(2));
+      await tester.longPress(verseNumber(2));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Limpar'));
       await tester.pumpAndSettle();

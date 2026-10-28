@@ -41,6 +41,7 @@ const double _kSideBySideMinWidth = 600;
 class ReaderScreen extends ConsumerStatefulWidget {
   final String bookId;
   final int chapter;
+
   /// Whether opening this chapter updates Home → "Continue reading". True for
   /// personal Bible browsing; false when opened from a separate context
   /// (Liturgy, Reading Plan) so those never overwrite the user's own position.
@@ -50,12 +51,13 @@ class ReaderScreen extends ConsumerStatefulWidget {
   /// briefly so the eye lands where the tap promised.
   final int? focusVerse;
 
-  const ReaderScreen(
-      {super.key,
-      required this.bookId,
-      required this.chapter,
-      this.recordProgress = true,
-      this.focusVerse});
+  const ReaderScreen({
+    super.key,
+    required this.bookId,
+    required this.chapter,
+    this.recordProgress = true,
+    this.focusVerse,
+  });
 
   @override
   ConsumerState<ReaderScreen> createState() => _ReaderScreenState();
@@ -87,11 +89,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     HapticFeedback.selectionClick();
     setState(() => _selAnchor = _selEnd = verse);
   }
+
   void _extendSelection(int verse) => setState(() => _selEnd = verse);
   void _clearSelection() => setState(() {
-        _selAnchor = _selEnd = null;
-        _showColors = false;
-      });
+    _selAnchor = _selEnd = null;
+    _showColors = false;
+  });
 
   /// Used when the chapter changes underneath a live selection — the verses it
   /// pointed at are gone, so it must not survive into the new chapter.
@@ -105,7 +108,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
   /// The selected verses, in order, with their canonical text.
   List<({int number, String text})> _selectedVerses(
-      List<Verse> verses, List<ParallelVerse> rows, bool parallelActive) {
+    List<Verse> verses,
+    List<ParallelVerse> rows,
+    bool parallelActive,
+  ) {
     final all = parallelActive
         ? [for (final r in rows) (number: r.number, text: r.canonicalText)]
         : [for (final v in verses) (number: v.number, text: v.text)];
@@ -118,23 +124,36 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     return '$name ${widget.chapter},$span';
   }
 
-  void _copySelection(BibleBook? book, List<({int number, String text})> picked) {
+  void _copySelection(
+    BibleBook? book,
+    List<({int number, String text})> picked,
+  ) {
     if (picked.isEmpty) return;
-    final body = picked.map((v) => v.text).join(' ');
     Clipboard.setData(
-        ClipboardData(text: '“$body”\n— ${_selectionReference(book)}'));
+      ClipboardData(
+        text: formatPassageForClipboard(
+          reference: _selectionReference(book),
+          verses: picked,
+        ),
+      ),
+    );
     _clearSelection();
     showSnack(context.l10n.copied);
   }
 
   /// One tap paints every selected verse and closes the bar — the whole point
   /// of the colour row is that it costs a single gesture.
-  void _highlightSelection(List<({int number, String text})> picked,
-      HighlightColor color) {
+  void _highlightSelection(
+    List<({int number, String text})> picked,
+    HighlightColor color,
+  ) {
     HapticFeedback.lightImpact();
     final ctrl = ref.read(annotationControllerProvider);
     for (final v in picked) {
-      ctrl.setHighlight(VerseRef(widget.bookId, widget.chapter, v.number), color);
+      ctrl.setHighlight(
+        VerseRef(widget.bookId, widget.chapter, v.number),
+        color,
+      );
     }
     _clearSelection();
   }
@@ -147,13 +166,17 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   void _favoriteSelection(
-      BibleBook? book, List<({int number, String text})> picked) {
+    BibleBook? book,
+    List<({int number, String text})> picked,
+  ) {
     if (picked.isEmpty) return;
     final ctrl = ref.read(annotationControllerProvider);
     final reference = _selectionReference(book);
     for (final v in picked) {
-      ctrl.toggleFavorite(VerseRef(widget.bookId, widget.chapter, v.number),
-          '“${v.text}”  ($reference)');
+      ctrl.toggleFavorite(
+        VerseRef(widget.bookId, widget.chapter, v.number),
+        '“${v.text}”  ($reference)',
+      );
     }
     _clearSelection();
     showSnack(context.l10n.favorite);
@@ -161,15 +184,15 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
   /// Shares the selected span as one card, refusing politely when the passage
   /// is longer than an image can carry legibly.
-  void _shareSelection(BibleBook? book, List<Verse> verses,
-      List<ParallelVerse> rows, bool parallelActive) {
+  void _shareSelection(
+    BibleBook? book,
+    List<Verse> verses,
+    List<ParallelVerse> rows,
+    bool parallelActive,
+  ) {
     final all = parallelActive
-        ? [
-            for (final r in rows) (number: r.number, text: r.canonicalText),
-          ]
-        : [
-            for (final v in verses) (number: v.number, text: v.text),
-          ];
+        ? [for (final r in rows) (number: r.number, text: r.canonicalText)]
+        : [for (final v in verses) (number: v.number, text: v.text)];
     final picked = all.where((v) => _isSelected(v.number)).toList();
     if (picked.isEmpty) return;
     if (passageLength(picked) > kMaxShareSelectionChars) {
@@ -178,8 +201,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     }
     final name = book?.name ?? widget.bookId;
     final span = _selFrom == _selTo ? '$_selFrom' : '$_selFrom-$_selTo';
-    showSharePassage(context,
-        reference: '$name ${widget.chapter},$span', verses: picked);
+    showSharePassage(
+      context,
+      reference: '$name ${widget.chapter},$span',
+      verses: picked,
+    );
     _clearSelection();
   }
 
@@ -188,8 +214,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final t = ref.read(resolvedTranslationIdProvider);
-      ref.read(annotationControllerProvider).recordProgress(
-          t, VerseRef(widget.bookId, widget.chapter, verse));
+      ref
+          .read(annotationControllerProvider)
+          .recordProgress(t, VerseRef(widget.bookId, widget.chapter, verse));
     });
   }
 
@@ -232,9 +259,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.isAttached) {
         _scrollController.scrollTo(
-            index: v,
-            duration: const Duration(milliseconds: 420),
-            curve: Curves.easeOutCubic);
+          index: v,
+          duration: const Duration(milliseconds: 420),
+          curve: Curves.easeOutCubic,
+        );
       }
     });
     _focusTimer?.cancel();
@@ -276,7 +304,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
   Future<void> _pickChapter(BibleBook book) async {
     final n = await showChapterPicker(
-        context, book.name, book.chapterCount, widget.chapter);
+      context,
+      book.name,
+      book.chapterCount,
+      widget.chapter,
+    );
     if (n != null && mounted) _goTo(book.id, n);
   }
 
@@ -284,8 +316,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final n = await showVersePicker(context, verseCount, 1);
     if (n != null && _scrollController.isAttached) {
       _scrollController.scrollTo(
-          index: n, duration: const Duration(milliseconds: 350),
-          curve: Curves.easeInOut);
+        index: n,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+      );
     }
   }
 
@@ -296,7 +330,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       backgroundColor: c.surface,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (_) => const _ParallelOptionsSheet(),
     );
   }
@@ -307,12 +342,15 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final bookId = widget.bookId;
     final chapter = widget.chapter;
     final book = ref.watch(bookByIdProvider(bookId));
-    final content =
-        ref.watch(chapterProvider((bookId: bookId, chapter: chapter)));
-    final markers =
-        ref.watch(commentaryMarkersProvider((bookId: bookId, chapter: chapter)));
-    final highlights =
-        ref.watch(highlightsForChapterProvider((bookId: bookId, chapter: chapter)));
+    final content = ref.watch(
+      chapterProvider((bookId: bookId, chapter: chapter)),
+    );
+    final markers = ref.watch(
+      commentaryMarkersProvider((bookId: bookId, chapter: chapter)),
+    );
+    final highlights = ref.watch(
+      highlightsForChapterProvider((bookId: bookId, chapter: chapter)),
+    );
 
     final settings = ref.watch(settingsProvider);
     final secondaryId = ref.watch(resolvedSecondaryTranslationIdProvider);
@@ -328,8 +366,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final translations = ref.watch(availableTranslationsProvider);
     String langOf(String? id) => id == null
         ? ''
-        : translations.where((t) => t.id == id).map((t) => t.lang).firstOrNull ??
-            '';
+        : translations
+                  .where((t) => t.id == id)
+                  .map((t) => t.lang)
+                  .firstOrNull ??
+              '';
     final primaryLang = langOf(ref.watch(resolvedTranslationIdProvider));
     final secondaryLang = langOf(secondaryId);
 
@@ -343,30 +384,41 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 0,
-        title: Row(children: [
-          _pill(
+        title: Row(
+          children: [
+            _pill(
               c,
               book?.testament == Testament.nt
                   ? context.l10n.newTestamentShort
                   : context.l10n.oldTestamentShort,
-              onTap: _pickBook),
-          const SizedBox(width: 6),
-          Flexible(
-              child: _pill(c, book?.name ?? bookId, onTap: _pickBook)),
-        ]),
+              onTap: _pickBook,
+            ),
+            const SizedBox(width: 6),
+            Flexible(child: _pill(c, book?.name ?? bookId, onTap: _pickBook)),
+          ],
+        ),
         actions: [
           if (book != null)
-            _pill(c, '$chapter${_psalmSuffix(bookId, chapter)}',
-                onTap: () => _pickChapter(book)),
+            _pill(
+              c,
+              '$chapter${_psalmSuffix(bookId, chapter)}',
+              onTap: () => _pickChapter(book),
+            ),
           IconButton(
-            icon: Icon(Icons.view_column_outlined,
-                color: parallelActive ? c.accent : c.textSecondary, size: 20),
+            icon: Icon(
+              Icons.view_column_outlined,
+              color: parallelActive ? c.accent : c.textSecondary,
+              size: 20,
+            ),
             tooltip: context.l10n.parallelReading,
             onPressed: _showParallelOptions,
           ),
           IconButton(
-            icon: Icon(Icons.format_list_numbered,
-                color: c.textSecondary, size: 20),
+            icon: Icon(
+              Icons.format_list_numbered,
+              color: c.textSecondary,
+              size: 20,
+            ),
             tooltip: context.l10n.goToVerse,
             onPressed: verseCount == 0 ? null : () => _pickVerse(verseCount),
           ),
@@ -404,16 +456,23 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                       onClear: _clearSelection,
                       onToggleColors: () =>
                           setState(() => _showColors = !_showColors),
-                      onCopy: () => _copySelection(book,
-                          _selectedVerses(verses, rows, parallelActive)),
+                      onCopy: () => _copySelection(
+                        book,
+                        _selectedVerses(verses, rows, parallelActive),
+                      ),
                       onShare: () =>
                           _shareSelection(book, verses, rows, parallelActive),
                       onNote: () => _noteSelection(
-                          _selectedVerses(verses, rows, parallelActive)),
-                      onFavorite: () => _favoriteSelection(book,
-                          _selectedVerses(verses, rows, parallelActive)),
+                        _selectedVerses(verses, rows, parallelActive),
+                      ),
+                      onFavorite: () => _favoriteSelection(
+                        book,
+                        _selectedVerses(verses, rows, parallelActive),
+                      ),
                       onPickColor: (color) => _highlightSelection(
-                          _selectedVerses(verses, rows, parallelActive), color),
+                        _selectedVerses(verses, rows, parallelActive),
+                        color,
+                      ),
                     ),
                 ],
               ),
@@ -450,7 +509,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         if (index == count + 1) {
           return _ChapterNav(book: book, chapter: chapter, onGo: _goTo);
         }
-        final number = parallelActive ? rows[index - 1].number : verses[index - 1].number;
+        final number = parallelActive
+            ? rows[index - 1].number
+            : verses[index - 1].number;
         final heading = headingByVerse[number];
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -458,11 +519,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             if (heading != null)
               Padding(
                 padding: const EdgeInsets.only(top: 18, bottom: 10),
-                child: Text(_titleCase(heading.text),
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(fontWeight: FontWeight.w700)),
+                child: Text(
+                  _titleCase(heading.text),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                ),
               ),
             // While a selection is open, tapping extends it instead of opening
             // the commentary panel — one gesture, one meaning at a time.
@@ -529,18 +591,26 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           margin: const EdgeInsets.symmetric(horizontal: 2),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-              color: c.surface, borderRadius: BorderRadius.circular(16)),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Flexible(
-                child: Text(text,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: c.textSecondary, fontSize: 13))),
-            if (onTap != null)
-              Padding(
-                padding: const EdgeInsets.only(left: 2),
-                child: Icon(Icons.expand_more, size: 14, color: c.textFaint),
+            color: c.surface,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  text,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: c.textSecondary, fontSize: 13),
+                ),
               ),
-          ]),
+              if (onTap != null)
+                Padding(
+                  padding: const EdgeInsets.only(left: 2),
+                  child: Icon(Icons.expand_more, size: 14, color: c.textFaint),
+                ),
+            ],
+          ),
         ),
       );
 
@@ -558,23 +628,32 @@ class _Header extends StatelessWidget {
   final String bookId;
   final BibleBook? book;
   final int chapter;
-  const _Header({required this.bookId, required this.book, required this.chapter});
+  const _Header({
+    required this.bookId,
+    required this.book,
+    required this.chapter,
+  });
   @override
   Widget build(BuildContext context) {
     final c = context.bt;
-    return Column(children: [
-      const SizedBox(height: 12),
-      BookEmblem(bookId: bookId, abbrev: book?.abbrev ?? '', size: 96),
-      const SizedBox(height: 16),
-      Text(book?.name ?? bookId,
-          style: Theme.of(context).textTheme.headlineMedium),
-      Text('${context.l10n.chapterTitle(chapter)}${_psalmSuffix(bookId, chapter)}',
-          style: Theme.of(context)
-              .textTheme
-              .titleLarge
-              ?.copyWith(color: c.textSecondary)),
-      const SizedBox(height: 28),
-    ]);
+    return Column(
+      children: [
+        const SizedBox(height: 12),
+        BookEmblem(bookId: bookId, abbrev: book?.abbrev ?? '', size: 96),
+        const SizedBox(height: 16),
+        Text(
+          book?.name ?? bookId,
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+        Text(
+          '${context.l10n.chapterTitle(chapter)}${_psalmSuffix(bookId, chapter)}',
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(color: c.textSecondary),
+        ),
+        const SizedBox(height: 28),
+      ],
+    );
   }
 }
 
@@ -582,8 +661,11 @@ class _ChapterNav extends StatelessWidget {
   final BibleBook? book;
   final int chapter;
   final void Function(String, int) onGo;
-  const _ChapterNav(
-      {required this.book, required this.chapter, required this.onGo});
+  const _ChapterNav({
+    required this.book,
+    required this.chapter,
+    required this.onGo,
+  });
   @override
   Widget build(BuildContext context) {
     final c = context.bt;
@@ -600,16 +682,20 @@ class _ChapterNav extends StatelessWidget {
             icon: const Icon(Icons.chevron_left),
             label: Text(context.l10n.previous),
             style: TextButton.styleFrom(
-                foregroundColor: hasPrev ? c.accent : c.textFaint),
+              foregroundColor: hasPrev ? c.accent : c.textFaint,
+            ),
           ),
-          Text('${book!.name} $chapter${_psalmSuffix(book!.id, chapter)}',
-              style: TextStyle(color: c.textFaint, fontSize: 12)),
+          Text(
+            '${book!.name} $chapter${_psalmSuffix(book!.id, chapter)}',
+            style: TextStyle(color: c.textFaint, fontSize: 12),
+          ),
           TextButton.icon(
             onPressed: hasNext ? () => onGo(book!.id, chapter + 1) : null,
             icon: const Icon(Icons.chevron_right),
             label: Text(context.l10n.next),
             style: TextButton.styleFrom(
-                foregroundColor: hasNext ? c.accent : c.textFaint),
+              foregroundColor: hasNext ? c.accent : c.textFaint,
+            ),
           ),
         ],
       ),
@@ -628,20 +714,29 @@ class _VerseNumber extends StatelessWidget {
     // The gold dot's footprint is always reserved (transparent when the verse
     // has no commentary) so verse numbers never shift horizontally as markers
     // appear/disappear.
-    return Row(mainAxisSize: MainAxisSize.min, children: [
-      Container(
-        width: 5,
-        height: 5,
-        margin: const EdgeInsets.only(top: 3),
-        decoration: BoxDecoration(
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 5,
+          height: 5,
+          margin: const EdgeInsets.only(top: 3),
+          decoration: BoxDecoration(
             color: hasCommentary ? _kGold : Colors.transparent,
-            shape: BoxShape.circle),
-      ),
-      const SizedBox(width: 4),
-      Text('$number',
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          '$number',
           style: TextStyle(
-              color: c.accent, fontSize: 12, fontWeight: FontWeight.w600)),
-    ]);
+            color: c.accent,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -654,15 +749,16 @@ class _VerseTile extends StatelessWidget {
   final String lang;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
-  const _VerseTile(
-      {required this.verse,
-      required this.hasCommentary,
-      required this.highlight,
-      required this.selected,
-      required this.focused,
-      required this.lang,
-      required this.onTap,
-      required this.onLongPress});
+  const _VerseTile({
+    required this.verse,
+    required this.hasCommentary,
+    required this.highlight,
+    required this.selected,
+    required this.focused,
+    required this.lang,
+    required this.onTap,
+    required this.onLongPress,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -677,37 +773,90 @@ class _VerseTile extends StatelessWidget {
                 color: c.accentSoft,
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                    color: c.accent.withValues(alpha: selected ? 0.5 : 0.3)))
+                  color: c.accent.withValues(alpha: selected ? 0.5 : 0.3),
+                ),
+              )
             : highlight == null
-                ? null
-                : BoxDecoration(
-                    color: highlight!.color.withValues(alpha: 0.22),
-                    borderRadius: BorderRadius.circular(6)),
+            ? null
+            : BoxDecoration(
+                color: highlight!.color.withValues(alpha: 0.22),
+                borderRadius: BorderRadius.circular(6),
+              ),
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         margin: const EdgeInsets.symmetric(vertical: 2),
-        // A Hebrew primary text reads right-to-left, verse number and all.
+        // The verse body is selectable like a printed reader: a short tap on
+        // the row still opens commentary, while a long press on the text lets
+        // the platform selection toolbar copy an exact excerpt.
         child: scriptDirectionality(
           lang: lang,
-          child: Text.rich(
-            TextSpan(children: [
-              WidgetSpan(
-                alignment: PlaceholderAlignment.top,
-                child: Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 8, top: 2),
-                  child: _VerseNumber(
-                      number: verse.number, hasCommentary: hasCommentary),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsetsDirectional.only(end: 8, top: 2),
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onLongPress: onLongPress,
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: _VerseNumber(
+                      number: verse.number,
+                      hasCommentary: hasCommentary,
+                    ),
+                  ),
                 ),
               ),
-              TextSpan(
-                  text: verse.text,
-                  style: scriptStyle(
-                      Theme.of(context).textTheme.bodyLarge, lang)),
-            ]),
-            textAlign: scriptAlign(lang),
+              Expanded(
+                child: SelectableText.rich(
+                  TextSpan(children: _verseSpans(context, verse, lang)),
+                  textAlign: scriptAlign(lang),
+                  onTap: onTap,
+                  onSelectionChanged: (selection, cause) {
+                    if (!selection.isCollapsed &&
+                        cause == SelectionChangedCause.longPress) {
+                      onLongPress();
+                    }
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
+  }
+
+  static const _nonLatin = {'he', 'hbo', 'arc', 'grc', 'el'};
+
+  /// Verse 1 opens with a raised initial in the accent colour, as a printed
+  /// chapter does. Only for Latin-script texts: a Hebrew or Greek initial is
+  /// shaped by its neighbours and must not be pulled out of the word.
+  static List<InlineSpan> _verseSpans(
+    BuildContext context,
+    Verse verse,
+    String lang,
+  ) {
+    final base = scriptStyle(Theme.of(context).textTheme.bodyLarge, lang);
+    final text = verse.text;
+    if (verse.number != 1 || _nonLatin.contains(lang) || text.isEmpty) {
+      return [TextSpan(text: text, style: base)];
+    }
+    final m = RegExp(r'\p{L}', unicode: true).firstMatch(text);
+    if (m == null || m.start > 2) return [TextSpan(text: text, style: base)];
+    final c = context.bt;
+    return [
+      if (m.start > 0) TextSpan(text: text.substring(0, m.start), style: base),
+      TextSpan(
+        text: text.substring(m.start, m.end),
+        style: base?.copyWith(
+          fontSize: (base.fontSize ?? 18) * 2.1,
+          height: 1.0,
+          color: c.accent,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      TextSpan(text: text.substring(m.end), style: base),
+    ];
   }
 }
 
@@ -741,8 +890,7 @@ class _ParallelVerseTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.bt;
-    final body =
-        sideBySide ? _sideBySide(context, c) : _stacked(context, c);
+    final body = sideBySide ? _sideBySide(context, c) : _stacked(context, c);
     return InkWell(
       onTap: onTap,
       onLongPress: onLongPress,
@@ -753,12 +901,15 @@ class _ParallelVerseTile extends StatelessWidget {
                 color: c.accentSoft,
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                    color: c.accent.withValues(alpha: selected ? 0.5 : 0.3)))
+                  color: c.accent.withValues(alpha: selected ? 0.5 : 0.3),
+                ),
+              )
             : highlight == null
-                ? null
-                : BoxDecoration(
-                    color: highlight!.color.withValues(alpha: 0.22),
-                    borderRadius: BorderRadius.circular(6)),
+            ? null
+            : BoxDecoration(
+                color: highlight!.color.withValues(alpha: 0.22),
+                borderRadius: BorderRadius.circular(6),
+              ),
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         margin: const EdgeInsets.symmetric(vertical: 2),
         child: body,
@@ -773,19 +924,22 @@ class _ParallelVerseTile extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.only(top: 2, right: 8),
-            child:
-                _VerseNumber(number: row.number, hasCommentary: hasCommentary),
+            child: _VerseNumber(
+              number: row.number,
+              hasCommentary: hasCommentary,
+            ),
           ),
           Expanded(
-              child: _columnText(context, c, row.primary?.text, primaryLang)),
+            child: _columnText(context, c, row.primary?.text, primaryLang),
+          ),
           Container(
             width: 1,
             margin: const EdgeInsets.symmetric(horizontal: 12),
             color: c.divider,
           ),
           Expanded(
-              child:
-                  _columnText(context, c, row.secondary?.text, secondaryLang)),
+            child: _columnText(context, c, row.secondary?.text, secondaryLang),
+          ),
         ],
       ),
     );
@@ -801,10 +955,13 @@ class _ParallelVerseTile extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 2, right: 8),
               child: _VerseNumber(
-                  number: row.number, hasCommentary: hasCommentary),
+                number: row.number,
+                hasCommentary: hasCommentary,
+              ),
             ),
             Expanded(
-                child: _columnText(context, c, row.primary?.text, primaryLang)),
+              child: _columnText(context, c, row.primary?.text, primaryLang),
+            ),
           ],
         ),
         const SizedBox(height: 8),
@@ -812,10 +969,17 @@ class _ParallelVerseTile extends StatelessWidget {
           margin: const EdgeInsetsDirectional.only(start: 4),
           padding: const EdgeInsetsDirectional.only(start: 12),
           decoration: BoxDecoration(
-              border: BorderDirectional(
-                  start: BorderSide(color: c.divider, width: 2))),
-          child: _columnText(context, c, row.secondary?.text, secondaryLang,
-              secondary: true),
+            border: BorderDirectional(
+              start: BorderSide(color: c.divider, width: 2),
+            ),
+          ),
+          child: _columnText(
+            context,
+            c,
+            row.secondary?.text,
+            secondaryLang,
+            secondary: true,
+          ),
         ),
       ],
     );
@@ -825,19 +989,35 @@ class _ParallelVerseTile extends StatelessWidget {
   /// its own [Directionality] so it can sit beside a left-to-right one without
   /// flipping the whole row.
   Widget _columnText(
-      BuildContext context, BtColors c, String? text, String lang,
-      {bool secondary = false}) {
+    BuildContext context,
+    BtColors c,
+    String? text,
+    String lang, {
+    bool secondary = false,
+  }) {
     if (text == null) {
-      return Text(context.l10n.verseNotInTranslation,
-          style: TextStyle(
-              color: c.textFaint, fontStyle: FontStyle.italic, fontSize: 14));
+      return Text(
+        context.l10n.verseNotInTranslation,
+        style: TextStyle(
+          color: c.textFaint,
+          fontStyle: FontStyle.italic,
+          fontSize: 14,
+        ),
+      );
     }
     final base = Theme.of(context).textTheme.bodyLarge;
     final style = scriptStyle(
-        secondary ? base?.copyWith(color: c.textSecondary) : base, lang);
+      secondary ? base?.copyWith(color: c.textSecondary) : base,
+      lang,
+    );
     return scriptDirectionality(
       lang: lang,
-      child: Text(text, style: style, textAlign: scriptAlign(lang)),
+      child: SelectableText(
+        text,
+        style: style,
+        textAlign: scriptAlign(lang),
+        onTap: onTap,
+      ),
     );
   }
 }
@@ -881,8 +1061,9 @@ class _SelectionBar extends StatelessWidget {
       top: false,
       child: Container(
         decoration: BoxDecoration(
-            color: c.surface,
-            border: Border(top: BorderSide(color: c.divider))),
+          color: c.surface,
+          border: Border(top: BorderSide(color: c.divider)),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -891,17 +1072,21 @@ class _SelectionBar extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text(l10n.selectionCount(count),
-                        style: TextStyle(
-                            color: c.textSecondary, fontSize: 12.5)),
+                    child: Text(
+                      l10n.selectionCount(count),
+                      style: TextStyle(color: c.textSecondary, fontSize: 12.5),
+                    ),
                   ),
                   TextButton(
                     onPressed: onClear,
                     style: TextButton.styleFrom(
-                        foregroundColor: c.textSecondary,
-                        visualDensity: VisualDensity.compact),
-                    child: Text(l10n.selectionClear,
-                        style: const TextStyle(fontSize: 12.5)),
+                      foregroundColor: c.textSecondary,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    child: Text(
+                      l10n.selectionClear,
+                      style: const TextStyle(fontSize: 12.5),
+                    ),
                   ),
                 ],
               ),
@@ -931,10 +1116,13 @@ class _SelectionBar extends StatelessWidget {
                                     width: 30,
                                     height: 30,
                                     decoration: BoxDecoration(
-                                        color: color.color,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                            color: c.divider, width: 0.5)),
+                                      color: color.color,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: c.divider,
+                                        width: 0.5,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -951,9 +1139,13 @@ class _SelectionBar extends StatelessWidget {
                 children: [
                   _act(c, Icons.copy, l10n.shareCopy, onCopy),
                   _act(c, Icons.ios_share, l10n.share, onShare),
-                  _act(c, Icons.format_color_fill, l10n.highlight,
-                      onToggleColors,
-                      active: showColors),
+                  _act(
+                    c,
+                    Icons.format_color_fill,
+                    l10n.highlight,
+                    onToggleColors,
+                    active: showColors,
+                  ),
                   _act(c, Icons.edit_note, l10n.note, onNote),
                   _act(c, Icons.favorite_border, l10n.favorite, onFavorite),
                 ],
@@ -965,30 +1157,37 @@ class _SelectionBar extends StatelessWidget {
     );
   }
 
-  Widget _act(BtColors c, IconData icon, String label, VoidCallback onTap,
-          {bool active = false}) =>
-      Expanded(
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: 21, color: active ? c.accent : c.textPrimary),
-                const SizedBox(height: 3),
-                Text(label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                        color: active ? c.accent : c.textSecondary,
-                        fontSize: 11)),
-              ],
+  Widget _act(
+    BtColors c,
+    IconData icon,
+    String label,
+    VoidCallback onTap, {
+    bool active = false,
+  }) => Expanded(
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 21, color: active ? c.accent : c.textPrimary),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: active ? c.accent : c.textSecondary,
+                fontSize: 11,
+              ),
             ),
-          ),
+          ],
         ),
-      );
+      ),
+    ),
+  );
 }
 
 /// Shown in the reader when the user has Parallel Reading on but no second
@@ -1008,13 +1207,17 @@ class _SecondaryMissingBanner extends StatelessWidget {
           Icon(Icons.view_column_outlined, size: 20, color: c.textSecondary),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(context.l10n.noSecondaryTranslation,
-                style: TextStyle(color: c.textSecondary, height: 1.3)),
+            child: Text(
+              context.l10n.noSecondaryTranslation,
+              style: TextStyle(color: c.textSecondary, height: 1.3),
+            ),
           ),
           TextButton(
             onPressed: () => context.push('/settings'),
-            child: Text(context.l10n.openOfflineResources,
-                style: TextStyle(color: c.accent)),
+            child: Text(
+              context.l10n.openOfflineResources,
+              style: TextStyle(color: c.accent),
+            ),
           ),
         ],
       ),
@@ -1045,22 +1248,29 @@ class _ParallelOptionsSheet extends ConsumerWidget {
             const SizedBox(height: 12),
             Center(
               child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                      color: c.divider,
-                      borderRadius: BorderRadius.circular(2))),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: c.divider,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
-              child: Text(l10n.parallelOptionsTitle,
-                  style: Theme.of(context).textTheme.titleMedium),
+              child: Text(
+                l10n.parallelOptionsTitle,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ),
             SwitchListTile(
               secondary: const Icon(Icons.view_column_outlined),
               title: Text(l10n.parallelReading),
               subtitle: Text(
-                  s.parallelReadingEnabled ? l10n.parallelReading : l10n.singleTranslation),
+                s.parallelReadingEnabled
+                    ? l10n.parallelReading
+                    : l10n.singleTranslation,
+              ),
               value: s.parallelReadingEnabled,
               onChanged: ctrl.setParallelReading,
             ),
@@ -1068,10 +1278,12 @@ class _ParallelOptionsSheet extends ConsumerWidget {
               const Divider(height: 1),
               _sectionLabel(c, l10n.secondaryTranslation),
               if (candidates.isEmpty)
-                _EmptySecondary(onOpenSettings: () {
-                  Navigator.pop(context);
-                  context.push('/settings');
-                })
+                _EmptySecondary(
+                  onOpenSettings: () {
+                    Navigator.pop(context);
+                    context.push('/settings');
+                  },
+                )
               else
                 for (final t in candidates)
                   ListTile(
@@ -1104,9 +1316,10 @@ class _ParallelOptionsSheet extends ConsumerWidget {
                         selectedColor: c.accentSoft,
                         side: BorderSide.none,
                         labelStyle: TextStyle(
-                            color: s.parallelLayout == entry.$1
-                                ? c.accent
-                                : c.textSecondary),
+                          color: s.parallelLayout == entry.$1
+                              ? c.accent
+                              : c.textSecondary,
+                        ),
                       ),
                   ],
                 ),
@@ -1120,14 +1333,17 @@ class _ParallelOptionsSheet extends ConsumerWidget {
   }
 
   Widget _sectionLabel(BtColors c, String title) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
-        child: Text(title.toUpperCase(),
-            style: TextStyle(
-                color: c.textFaint,
-                fontSize: 12,
-                letterSpacing: 1,
-                fontWeight: FontWeight.w600)),
-      );
+    padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
+    child: Text(
+      title.toUpperCase(),
+      style: TextStyle(
+        color: c.textFaint,
+        fontSize: 12,
+        letterSpacing: 1,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  );
 }
 
 class _EmptySecondary extends StatelessWidget {
@@ -1141,16 +1357,19 @@ class _EmptySecondary extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(context.l10n.noSecondaryTranslation,
-              style: TextStyle(color: c.textSecondary, height: 1.4)),
+          Text(
+            context.l10n.noSecondaryTranslation,
+            style: TextStyle(color: c.textSecondary, height: 1.4),
+          ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: onOpenSettings,
             icon: const Icon(Icons.download_outlined, size: 18),
             label: Text(context.l10n.openOfflineResources),
             style: OutlinedButton.styleFrom(
-                foregroundColor: c.accent,
-                side: BorderSide(color: c.accent.withValues(alpha: 0.5))),
+              foregroundColor: c.accent,
+              side: BorderSide(color: c.accent.withValues(alpha: 0.5)),
+            ),
           ),
         ],
       ),
@@ -1163,13 +1382,13 @@ class _NoText extends StatelessWidget {
   const _NoText(this.c);
   @override
   Widget build(BuildContext context) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Text(
-            context.l10n.scriptureNotInstalled,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: c.textSecondary, height: 1.5),
-          ),
-        ),
-      );
+    child: Padding(
+      padding: const EdgeInsets.all(32),
+      child: Text(
+        context.l10n.scriptureNotInstalled,
+        textAlign: TextAlign.center,
+        style: TextStyle(color: c.textSecondary, height: 1.5),
+      ),
+    ),
+  );
 }

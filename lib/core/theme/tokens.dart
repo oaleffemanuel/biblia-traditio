@@ -14,6 +14,12 @@ class BtColors {
   final Color textSecondary;
   final Color textFaint;
   final Color divider;
+  final Color gold; // illuminated-manuscript accent: ornaments, initials
+  final Color goldSoft;
+  final Color heroStart; // deep gradient behind the Gospel of the day
+  final Color heroEnd;
+  final Color onHero;
+  final Color onHeroMuted;
 
   const BtColors({
     required this.background,
@@ -25,6 +31,12 @@ class BtColors {
     required this.textSecondary,
     required this.textFaint,
     required this.divider,
+    required this.gold,
+    required this.goldSoft,
+    required this.heroStart,
+    required this.heroEnd,
+    required this.onHero,
+    required this.onHeroMuted,
   });
 
   static const dark = BtColors(
@@ -37,6 +49,12 @@ class BtColors {
     textSecondary: Color(0xFF9A9A9E),
     textFaint: Color(0xFF65656A),
     divider: Color(0xFF26262A),
+    gold: Color(0xFFD4A72C),
+    goldSoft: Color(0x26D4A72C),
+    heroStart: Color(0xFF3A1812),
+    heroEnd: Color(0xFF141212),
+    onHero: Color(0xFFF3EBDD),
+    onHeroMuted: Color(0xFFC9B8A6),
   );
 
   static const light = BtColors(
@@ -49,6 +67,12 @@ class BtColors {
     textSecondary: Color(0xFF5C574E),
     textFaint: Color(0xFF8A8377),
     divider: Color(0xFFE2DACd),
+    gold: Color(0xFFA8821A),
+    goldSoft: Color(0x22C9A227),
+    heroStart: Color(0xFF7A2A18),
+    heroEnd: Color(0xFF3B1A12),
+    onHero: Color(0xFFF6EFE2),
+    onHeroMuted: Color(0xFFD9C7B3),
   );
 }
 
