@@ -4,8 +4,6 @@ import 'package:biblia_traditio/features/bible/presentation/widgets/share_verse.
 import 'package:biblia_traditio/features/themes/domain/theme_library.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:flutter/services.dart';
-
 const _canon = {
   'gn',
   'ex',
