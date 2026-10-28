@@ -215,15 +215,16 @@ void main() {
   });
 
   group('language roadmap', () {
-    test('six languages are built for, two are shipped', () {
+    test('six languages are built for, five are shipped', () {
       expect(AppLanguage.values.map((l) => l.code).toSet(),
           {'pt', 'en', 'it', 'es', 'fr', 'la'});
-      expect(AppLanguage.implemented, [AppLanguage.pt, AppLanguage.en]);
+      expect(AppLanguage.implemented,
+          [AppLanguage.pt, AppLanguage.en, AppLanguage.es, AppLanguage.fr, AppLanguage.it]);
     });
 
     test('unfinished languages are never advertised to the platform', () {
       final advertised = AppLanguage.supportedLocales.map((l) => l.languageCode);
-      expect(advertised, ['pt', 'en']);
+      expect(advertised, ['pt', 'en', 'es', 'fr', 'it']);
       for (final planned in AppLanguage.planned) {
         expect(advertised.contains(planned.code), isFalse,
             reason: '${planned.code} is not translated yet');
@@ -232,8 +233,7 @@ void main() {
     });
 
     test('planned languages are exactly the untranslated ones', () {
-      expect(AppLanguage.planned.map((l) => l.code).toSet(),
-          {'it', 'es', 'fr', 'la'});
+      expect(AppLanguage.planned.map((l) => l.code).toSet(), {'la'});
     });
 
     test('each language carries a display label and a locale', () {

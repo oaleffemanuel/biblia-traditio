@@ -30,7 +30,7 @@ enum AppLanguage {
   Locale get locale => Locale(code);
 
   /// UI languages actually translated and selectable today.
-  static const List<AppLanguage> implemented = [pt, en];
+  static const List<AppLanguage> implemented = [pt, en, es, fr, it];
 
   /// Built but not yet translated — visible on the roadmap, never to a user.
   static List<AppLanguage> get planned =>

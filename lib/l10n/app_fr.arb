@@ -1,0 +1,584 @@
+{
+  "@@locale": "fr",
+  "appName": "Biblia Traditio",
+  "tagline": "L'Écriture à la lumière de la Tradition.",
+  "navHome": "Accueil",
+  "navLiturgy": "Liturgie",
+  "navBible": "Bible",
+  "actionSave": "Enregistrer",
+  "actionCancel": "Annuler",
+  "actionConfirm": "Confirmer",
+  "actionClose": "Fermer",
+  "actionDelete": "Supprimer",
+  "actionRemove": "Retirer",
+  "actionDownload": "Télécharger",
+  "removePackageTitle": "Supprimer le paquet ?",
+  "removePackageMessage": "Vous devrez le télécharger à nouveau pour le réinstaller.",
+  "deleteNoteTitle": "Supprimer la note ?",
+  "deleteNoteMessage": "Cela ne peut pas être annulé.",
+  "contactLaunchFailed": "Impossible d'ouvrir WhatsApp.",
+  "copied": "Copié",
+  "installSuccess": "Installé avec succès",
+  "removeSuccess": "Paquet supprimé",
+  "highlight": "Surligner",
+  "deuterocanonicalShort": "CC",
+  "greetingMorning": "Bonjour,",
+  "greetingAfternoon": "Bon après-midi,",
+  "greetingEvening": "Bonne soirée,",
+  "greetingFallback": "La paix soit avec toi",
+  "quickContinue": "Continuer",
+  "quickToday": "Aujourd'hui",
+  "quickFavorites": "Favoris",
+  "homeJourney": "Continuez votre voyage",
+  "readingPlan": "Plan de lecture",
+  "comingSoon": "À venir",
+  "planSubtitle": "Une année à travers l'Écriture Sainte",
+  "planToday": "Aujourd'hui",
+  "planDay": "Jour {day}",
+  "@planDay": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "planDayProgress": "Jour {day} de {total}",
+  "@planDayProgress": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "planProgress": "{done} sur {total} jours de lecture",
+  "@planProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "planMarkRead": "Marquer comme lu",
+  "notes": "Remarques",
+  "notesEmptySubtitle": "Vos réflexions personnelles",
+  "noteCount": "{count, plural, =1{1 note} other{{count} notes}}",
+  "@noteCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "liturgyToday": "La liturgie d'aujourd'hui",
+  "ordinaryTime": "Temps ordinaire",
+  "liturgicalYear": "Année {cycle}",
+  "@liturgicalYear": {
+    "placeholders": {
+      "cycle": {
+        "type": "String"
+      }
+    }
+  },
+  "readingFirst": "Première lecture",
+  "readingPsalm": "Psaume",
+  "readingSecond": "Deuxième lecture",
+  "readingGospel": "Gospel",
+  "onbNameTitle": "Comment devrions-nous vous appeler ?",
+  "onbNameSubtitle": "Nous utiliserons votre nom pour vous saluer.",
+  "namePlaceholder": "Votre nom",
+  "onbLanguageTitle": "Langue",
+  "onbLanguageSubtitle": "Quelle langue préférez-vous pour l’interface ?",
+  "onbTranslationTitle": "Traduction",
+  "onbTranslationSubtitle": "Choisissez votre traduction principale des Écritures.",
+  "onbNotificationsTitle": "Rappels quotidiens",
+  "onbNotificationsSubtitle": "Recevez une douce invitation à la lecture et à la liturgie du jour.",
+  "onbPlanTitle": "Plan de lecture",
+  "onbPlanSubtitle": "Souhaitez-vous suivre un plan pour lire les Écritures ?",
+  "onbContinue": "Continuer",
+  "onbEnter": "Entrer",
+  "onbSkip": "Ignorer",
+  "enable": "Activer",
+  "notNow": "Pas maintenant",
+  "bibleTitle": "Bible",
+  "search": "Recherche",
+  "oldTestament": "Ancien Testament",
+  "newTestament": "le Nouveau Testament",
+  "oldTestamentShort": "OT",
+  "newTestamentShort": "NT",
+  "noBooksFound": "Aucun livre trouvé.",
+  "contentNotInstalled": "Contenu pas encore installé.\n",
+  "chapterTitle": "Chapitre {number}",
+  "@chapterTitle": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "chapterPickerTitle": "{book} — chapitre",
+  "@chapterPickerTitle": {
+    "placeholders": {
+      "book": {
+        "type": "String"
+      }
+    }
+  },
+  "goToVerse": "Aller au verset",
+  "previous": "Précédent",
+  "next": "Suivant",
+  "scriptureNotInstalled": "Le texte biblique n'est pas encore installé.",
+  "share": "Partager",
+  "copyVerse": "Copier le verset",
+  "favorite": "Préféré",
+  "unfavorite": "Supprimer des favoris",
+  "bookmark": "Marque-page",
+  "unbookmark": "Supprimer le favori",
+  "note": "Note",
+  "notesWithCount": "Remarques ({count})",
+  "@notesWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "churchFathers": "Pères de l'Église",
+  "myNotes": "Mes notes",
+  "noCommentaryForVerse": "Aucun commentaire disponible pour ce verset pour l'instant.",
+  "patristicsNotInstalled": "Installez le commentaire des Pères de l'Église dans Paramètres pour lire ce verset avec l'Église.",
+  "noNotesForVerse": "Aucune note pour ce verset pour l'instant.",
+  "writeReflection": "Écrivez une réflexion",
+  "commentaryCount": "{count, plural, =1{1 commentaire} other{{count} commentaires}}",
+  "@commentaryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filterAll": "Tous",
+  "filterFathers": "Patristique",
+  "filterMedieval": "Médiéval",
+  "filterAugustine": "Saint Augustin",
+  "filterAquinas": "Saint Thomas d'Aquin",
+  "colorMode": "Mode couleur",
+  "fontSizeSoon": "Taille de la police (bientôt)",
+  "century": "siècle {value}",
+  "@century": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "machineTranslation": "traduction automatique",
+  "shareCopy": "Copie",
+  "shareText": "Texte",
+  "shareImage": "Image",
+  "noteEditorTitle": "Remarque — {reference}",
+  "@noteEditorTitle": {
+    "placeholders": {
+      "reference": {
+        "type": "String"
+      }
+    }
+  },
+  "noteHint": "Écrivez votre réflexion…",
+  "parallelReading": "Lecture parallèle",
+  "singleTranslation": "Traduction unique",
+  "parallelOptionsTitle": "Lecture parallèle",
+  "secondaryTranslation": "Traduction secondaire",
+  "noSecondaryTranslation": "Aucune traduction secondaire installée pour le moment.",
+  "openOfflineResources": "Ouvrir les ressources hors ligne",
+  "verseNotInTranslation": "Verset non disponible dans cette traduction.",
+  "parallelLayoutLabel": "Mise en page",
+  "layoutAuto": "Automatique",
+  "layoutStacked": "Empilé",
+  "layoutSideBySide": "Côte à côte",
+  "searchHint": "Rechercher dans les Écritures, la Patristique, les notes…",
+  "searchScopeAll": "Tous",
+  "searchScopeScripture": "Écriture",
+  "searchScopeFathers": "Patristique",
+  "searchScopeNotes": "Remarques",
+  "searchTypeMore": "Tapez au moins 2 lettres pour effectuer la recherche.",
+  "searchNoResults": "Aucun résultat pour « {query} ».",
+  "@searchNoResults": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "sectionScripture": "Écriture",
+  "notesScreenTitle": "Remarques",
+  "searchNotesHint": "Notes de recherche",
+  "noNotesYet": "Aucune note pour l'instant.",
+  "favoritesTitle": "Favoris",
+  "noFavoritesYet": "Pas encore de favoris.",
+  "highlightsTitle": "Points forts",
+  "noHighlightsYet": "Pas encore de faits saillants.",
+  "settingsTitle": "Paramètres",
+  "settingsAccount": "Compte",
+  "settingsName": "Nom",
+  "settingsReading": "En lisant",
+  "settingsTranslation": "Traduction",
+  "settingsAppLanguage": "Langue de l'application",
+  "settingsTheme": "Thème",
+  "themeLight": "Lumière",
+  "themeDark": "Sombre",
+  "themeSystem": "Système",
+  "settingsReminders": "Rappels quotidiens",
+  "settingsOfflineResources": "Ressources hors ligne",
+  "settingsAbout": "À propos",
+  "licensesTitle": "Licences et attributions",
+  "licensesIntro": "Biblia Traditio respecte les sources qu'elle utilise. ",
+  "licVulgataTitle": "Vulgate Clémentine (latin)",
+  "licVulgataBody": "Texte biblique latin dans le domaine public.",
+  "licPatristicsTitle": "Commentaire des Pères de l’Église",
+  "licPatristicsBody": "Sources patristiques du domaine public, traduites automatiquement et adaptées. ",
+  "licPortugueseTitle": "Bible portugaise (bêta)",
+  "licPortugueseBody": "Une version interne pour cette phase de test. ",
+  "licMatosTitle": "Padre Matos Soares (portugais)",
+  "licMatosBody": "Traduction catholique du P. ",
+  "ossLicenses": "Licences open source",
+  "settingsContact": "Contact / Commentaires",
+  "whatsappTitle": "Contactez-nous sur WhatsApp",
+  "whatsappSubtitle": "Envoyer des suggestions et signaler des problèmes",
+  "noTranslationInstalled": "Aucun installé",
+  "packageRequired": "Requis",
+  "packageInstalled": "Installé · {size}",
+  "@packageInstalled": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "packageDownload": "Télécharger {download} · {installed} installé",
+  "@packageDownload": {
+    "placeholders": {
+      "download": {
+        "type": "String"
+      },
+      "installed": {
+        "type": "String"
+      }
+    }
+  },
+  "installFailed": "Échec de l'installation : {error}",
+  "@installFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "liturgyTitle": "Liturgie",
+  "celebrationOfDay": "Célébration du jour",
+  "lectionaryNotice": "Les lectures de cette journée ne sont pas encore disponibles.",
+  "liturgyOpenInBible": "Ouvrir dans la Bible",
+  "readingTextUnavailable": "Texte de lecture non disponible.",
+  "preparingBible": "Préparer la Bible…",
+  "startupError": "Échec du démarrage.",
+  "seasonAdvent": "Avènement",
+  "seasonChristmas": "Période de Noël",
+  "seasonOrdinary": "Temps ordinaire",
+  "seasonLent": "Carême",
+  "seasonTriduum": "Triduum pascal",
+  "seasonEaster": "Pâques",
+  "rankSolemnity": "Solennité",
+  "rankFeast": "Festin",
+  "rankMemorial": "Mémorial",
+  "liturgyResponseWordOfLord": "La parole du Seigneur.",
+  "liturgyResponseThanksToGod": "Grâce à Dieu.",
+  "liturgyResponseGloryToYou": "Gloire à toi, ô Seigneur.",
+  "liturgyResponseWordOfSalvation": "L'Évangile du Seigneur.",
+  "liturgyGospelAccording": "Une lecture du saint Évangile selon {evangelist}",
+  "@liturgyGospelAccording": {
+    "placeholders": {
+      "evangelist": {
+        "type": "String"
+      }
+    }
+  },
+  "licGreekTitle": "Nouveau Testament grec (SBLGNT)",
+  "licGreekBody": "Le Nouveau Testament grec SBL (SBLGNT), © Société de littérature biblique et Logos Bible Software. ",
+  "pressBackAgainToExit": "Appuyez à nouveau pour quitter.",
+  "searchScopeBooks": "Livres",
+  "sectionBooks": "Livres",
+  "sectionGoTo": "Aller à",
+  "searchOpenBook": "Livre ouvert",
+  "commentaryTabPatristics": "Patristique",
+  "commentaryExpandAll": "Afficher tout",
+  "commentaryCollapseAll": "Tout réduire",
+  "commentaryCollapse": "Effondrement",
+  "shareCommentary": "Partager les commentaires",
+  "roleDoctor": "Docteur de l'Église",
+  "rolePope": "Pape",
+  "roleBishop": "Évêque",
+  "roleMonk": "Moine",
+  "rolePriest": "Prêtre",
+  "roleDeacon": "Diacre",
+  "roleExegete": "Exégète",
+  "roleTheologian": "Théologien",
+  "roleHistorian": "Historien",
+  "rolePoet": "Poète",
+  "rolePatristics": "Patristique",
+  "roleMedieval": "Médiéval",
+  "roleEarlyChristian": "Premier chrétien",
+  "roleSaint": "Saint",
+  "roleSaintFem": "Saint",
+  "roleLiturgy": "Liturgie",
+  "roleDocPatristic": "Document patristique",
+  "roleDocMedieval": "Document médiéval",
+  "roleDocHistorical": "Document historique",
+  "roleDocGeneral": "Document général",
+  "authorMeta": "{role} — {century} cent.",
+  "@authorMeta": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      },
+      "century": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCommentary": "Commentaire",
+  "commentaryPreferences": "Préférences de commentaires",
+  "commentaryPreferencesSubtitle": "Choisissez quels commentateurs apparaissent lorsque vous ouvrez un verset.",
+  "commentaryClassification": "Classification",
+  "commentaryCenturies": "Des siècles",
+  "filterScholastic": "Scolaire",
+  "filterSaints": "Saints",
+  "commentaryOnlySaints": "Saints seulement",
+  "commentaryOnlySaintsSubtitle": "Mode simplifié : afficher uniquement les saints.",
+  "commentaryResetDefaults": "Réinitialiser aux valeurs par défaut",
+  "commentaryPrefsAll": "Tous les commentateurs",
+  "commentaryPrefsFilters": "{count, plural, =1{1 filtre actif} other{{count} filtres actifs}}",
+  "@commentaryPrefsFilters": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "commentaryHiddenByPrefs": "{count, plural, =1{1 commentaire masqué par vos préférences} other{{count} commentaires masqués par vos préférences}}",
+  "@commentaryHiddenByPrefs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "commentaryShowHidden": "Montrer quand même",
+  "shareSelectVerses": "Sélectionnez des versets",
+  "shareSelectionTooLong": "Sélection trop longue pour une image (caractères {max} max). ",
+  "@shareSelectionTooLong": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "selectionCount": "{count, plural, =1{1 verset sélectionné} other{{count} versets sélectionnés}}",
+  "@selectionCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectionHint": "Appuyez sur les versets pour choisir un passage continu.",
+  "selectionClear": "Clair",
+  "shareSelection": "Sélection d'actions",
+  "planSectionBook": "En lisant",
+  "planSectionWisdom": "Sagesse",
+  "planCompleted": "Lire",
+  "onbStyleTitle": "Quel style de traduction préférez-vous ?",
+  "onbStyleSubtitle": "Nous l'utilisons pour suggérer une traduction. ",
+  "styleAcademic": "Plus académique",
+  "styleSimple": "Plus simple",
+  "styleBalanced": "Équilibré",
+  "styleLiturgical": "Liturgique",
+  "onbParallelTitle": "Souhaitez-vous un texte parallèle ?",
+  "onbParallelSubtitle": "Seuls les textes réellement installés sont affichés.",
+  "parallelLatin": "latin",
+  "parallelGreek": "grec",
+  "parallelHebrew": "Hébreu / original",
+  "parallelNone": "Non",
+  "langLatin": "latin",
+  "langGreek": "grec",
+  "langHebrew": "hébreu",
+  "langPortuguese": "portugais",
+  "langEnglish": "Anglais",
+  "langItalian": "italien",
+  "langSpanish": "Espagnol",
+  "langFrench": "Français",
+  "translationWithLanguage": "{language} — {title}",
+  "@translationWithLanguage": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "saintOfTheDay": "Saint du jour",
+  "saintReadMore": "En savoir plus",
+  "saintSource": "Source : {source}",
+  "@saintSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "saintDied": "†{year}",
+  "@saintDied": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "liturgicalDirectory": "Annuaire liturgique",
+  "directoryOpen": "Comprendre cette célébration",
+  "directorySeason": "Saison liturgique",
+  "directoryCelebration": "La célébration",
+  "directoryColor": "Couleur liturgique",
+  "directoryRank": "Niveau de célébration",
+  "directoryPractical": "Notes pratiques",
+  "directorySource": "Basé sur les Normes universelles sur l'année liturgique et le calendrier, l'Instruction générale du missel romain et le Code de droit canonique.",
+  "liturgyWeekOf": "semaine {week}",
+  "@liturgyWeekOf": {
+    "placeholders": {
+      "week": {
+        "type": "int"
+      }
+    }
+  },
+  "liturgyReadings": "Lectures du jour",
+  "rankOptionalMemorial": "Mémorial facultatif",
+  "rankCommemoration": "Commémoration",
+  "colorGreen": "Vert",
+  "colorRed": "Rouge",
+  "colorWhite": "Blanc",
+  "colorPurple": "Violet",
+  "colorRose": "Rose",
+  "actionUndo": "Défaire",
+  "favoriteRemoved": "Supprimé des favoris",
+  "highlightRemoved": "Surbrillance supprimée",
+  "liturgyReadingOf": "Une lecture {book}",
+  "@liturgyReadingOf": {
+    "placeholders": {
+      "book": {
+        "type": "String"
+      }
+    }
+  },
+  "liturgyGospelCross": "✠ Une lecture du saint Évangile selon {evangelist}",
+  "@liturgyGospelCross": {
+    "placeholders": {
+      "evangelist": {
+        "type": "String"
+      }
+    }
+  },
+  "psalmRefrain": "Réponse",
+  "psalmVerses": "Versets",
+  "psalmRefrainUnavailable": "La réponse appropriée pour cette journée est donnée dans le Lectionnaire.",
+  "directoryCardSeason": "Saison liturgique",
+  "directoryCardCelebration": "Célébration",
+  "directoryCardColor": "Couleur liturgique",
+  "directoryCardWeek": "Semaine",
+  "directoryCardYear": "Année liturgique",
+  "directoryCardCycle": "Faire du vélo",
+  "directoryCardPreface": "Préface",
+  "directoryCardObservances": "Célébrations",
+  "directoryCardEphemerides": "Aujourd'hui aussi",
+  "liturgicalCycle": "Cycle {cycle}",
+  "@liturgicalCycle": {
+    "placeholders": {
+      "cycle": {
+        "type": "String"
+      }
+    }
+  },
+  "commentaryExcerpt": "Commentaire {number}",
+  "@commentaryExcerpt": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "commentaryExcerptCount": "{count, plural, =1{1 extrait} other{{count} extraits}}",
+  "@commentaryExcerptCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homePsalmToday": "Le psaume d'aujourd'hui",
+  "homePsalmRefrain": "Psaume s'abstenir",
+  "homeReadPsalm": "Lire le psaume",
+  "homeGospelToday": "L'Évangile d'aujourd'hui",
+  "homeReadGospel": "Lire l'Evangile",
+  "homeSeeLiturgy": "Voir la liturgie",
+  "sectionPentateuch": "Pentateuque",
+  "sectionHistorical": "Livres historiques",
+  "sectionWisdom": "Livres de sagesse",
+  "sectionProphets": "Prophètes",
+  "sectionGospels": "Évangiles",
+  "sectionActs": "Actes des Apôtres",
+  "sectionPauline": "Lettres de saint Paul",
+  "sectionCatholicLetters": "Lettres catholiques",
+  "sectionApocalypse": "Apocalypse",
+  "themesTitle": "Bibliothèque thématique",
+  "themesSubtitle": "Écriture par thème, lue avec les Pères",
+  "themeLibraryLoadError": "La bibliothèque thématique n'a pas pu être chargée. ",
+  "themePassages": "Passages {n}",
+  "@themePassages": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "themePassagesLabel": "Passages",
+  "themeCommentaryCount": "{n} commentaires des Pères",
+  "@themeCommentaryCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "themeNoText": "Texte non disponible dans la traduction actuelle.",
+  "shareChooseExcerpt": "Choisissez l'extrait pour l'image",
+  "shareExcerptHint": "Appuyez sur les phrases qui doivent apparaître sur la carte. ",
+  "shareExcerptCount": "Caractères {n} sur {max}",
+  "@shareExcerptCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "shareContinue": "Continuer",
+  "shareExcerptTooLong": "Trop long pour une seule carte : désélectionnez une phrase.",
+  "shareExcerptNone": "Sélectionnez au moins une phrase."
+}

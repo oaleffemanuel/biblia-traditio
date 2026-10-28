@@ -13,11 +13,12 @@ void main() {
     expect(AppL10nEn().onbSkip, 'Skip');
   });
 
-  test('only implemented UI languages are exposed (pt, en)', () {
-    expect(AppLanguage.implemented, [AppLanguage.pt, AppLanguage.en]);
-    for (final unavailable in [AppLanguage.es, AppLanguage.it, AppLanguage.la]) {
+  test('implemented UI languages are exposed and Latin remains unavailable', () {
+    expect(AppLanguage.implemented,
+        [AppLanguage.pt, AppLanguage.en, AppLanguage.es, AppLanguage.fr, AppLanguage.it]);
+    for (final unavailable in [AppLanguage.la]) {
       expect(AppLanguage.implemented.contains(unavailable), isFalse,
-          reason: '${unavailable.code} has no ARB yet — must not be selectable');
+          reason: '${unavailable.code} has no translated UI — must not be selectable');
     }
   });
 
