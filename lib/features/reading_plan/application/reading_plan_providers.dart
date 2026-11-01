@@ -4,8 +4,9 @@ import '../../../core/di/providers.dart';
 import '../domain/reading_plan.dart';
 
 /// The bundled plan, loaded once from its asset.
-final readingPlanProvider =
-    FutureProvider<ReadingPlan>((ref) => ReadingPlan.loadDefault());
+final readingPlanProvider = FutureProvider<ReadingPlan>(
+  (ref) => ReadingPlan.loadDefault(),
+);
 
 int _todayEpochDay() {
   final n = DateTime.now();
@@ -34,23 +35,27 @@ class PlanState {
 /// user-data write via the shared revision.
 final planStateProvider =
     Provider.family<PlanState, ({String planId, int totalDays})>((ref, key) {
-  ref.watch(userDataRevisionProvider);
-  final db = ref.watch(userDbProvider);
-  if (db == null) {
-    return PlanState(
-        started: false, currentDay: 1, completed: const {}, totalDays: key.totalDays);
-  }
-  final start = db.readingPlanStart(key.planId);
-  final day = start == null
-      ? 1
-      : (_todayEpochDay() - start + 1).clamp(1, key.totalDays);
-  return PlanState(
-    started: start != null,
-    currentDay: day,
-    completed: db.completedPlanDays(key.planId),
-    totalDays: key.totalDays,
-  );
-});
+      ref.watch(userDataRevisionProvider);
+      final db = ref.watch(userDbProvider);
+      if (db == null) {
+        return PlanState(
+          started: false,
+          currentDay: 1,
+          completed: const {},
+          totalDays: key.totalDays,
+        );
+      }
+      final start = db.readingPlanStart(key.planId);
+      final day = start == null
+          ? 1
+          : (_todayEpochDay() - start + 1).clamp(1, key.totalDays);
+      return PlanState(
+        started: start != null,
+        currentDay: day,
+        completed: db.completedPlanDays(key.planId),
+        totalDays: key.totalDays,
+      );
+    });
 
 /// Writes plan state, then bumps the revision so reads refresh.
 class ReadingPlanController {
@@ -75,5 +80,6 @@ class ReadingPlanController {
   }
 }
 
-final readingPlanControllerProvider =
-    Provider((ref) => ReadingPlanController(ref));
+final readingPlanControllerProvider = Provider(
+  (ref) => ReadingPlanController(ref),
+);

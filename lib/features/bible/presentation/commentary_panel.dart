@@ -32,14 +32,24 @@ void showCommentaryPanel(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (_) => FractionallySizedBox(
-      heightFactor: 0.85,
-      child: _CommentaryPanel(
-        vref: vref,
-        bookName: bookName,
-        verseText: verseText,
-      ),
-    ),
+    builder: (ctx) {
+      // The reader's text size applies to the commentary too.
+      final scale = ref.read(settingsProvider).fontScale;
+      final mq = MediaQuery.of(ctx);
+      return MediaQuery(
+        data: mq.copyWith(
+          textScaler: TextScaler.linear(mq.textScaler.scale(1) * scale),
+        ),
+        child: FractionallySizedBox(
+          heightFactor: 0.85,
+          child: _CommentaryPanel(
+            vref: vref,
+            bookName: bookName,
+            verseText: verseText,
+          ),
+        ),
+      );
+    },
   );
 }
 

@@ -8,15 +8,17 @@ void main() {
   LiturgicalDay on(int y, int m, int d) => cal.resolve(DateTime(y, m, d));
 
   group('temporal cycle', () {
-    test('the screenshot day: 12 Jun 2026 = Sacred Heart, Tempo Comum, Ano A',
-        () {
-      final day = on(2026, 6, 12);
-      expect(day.celebration, 'Sagrado Coração de Jesus');
-      expect(day.season, LiturgicalSeason.ordinary);
-      expect(day.color, LiturgicalColor.white);
-      expect(day.sundayCycle, 'A');
-      expect(day.rank, LiturgicalRank.solemnity);
-    });
+    test(
+      'the screenshot day: 12 Jun 2026 = Sacred Heart, Tempo Comum, Ano A',
+      () {
+        final day = on(2026, 6, 12);
+        expect(day.celebration, 'Sagrado Coração de Jesus');
+        expect(day.season, LiturgicalSeason.ordinary);
+        expect(day.color, LiturgicalColor.white);
+        expect(day.sundayCycle, 'A');
+        expect(day.rank, LiturgicalRank.solemnity);
+      },
+    );
 
     test('Easter Sundays land correctly (computus)', () {
       for (final (y, m, d) in [
@@ -26,9 +28,11 @@ void main() {
         (2027, 3, 28),
         (2030, 4, 21),
       ]) {
-        expect(on(y, m, d).celebration,
-            'Domingo de Páscoa da Ressurreição do Senhor',
-            reason: '$y-$m-$d');
+        expect(
+          on(y, m, d).celebration,
+          'Domingo de Páscoa da Ressurreição do Senhor',
+          reason: '$y-$m-$d',
+        );
       }
     });
 
@@ -67,8 +71,10 @@ void main() {
     test('fixed solemnities', () {
       expect(on(2026, 8, 15).celebration, 'Assunção de Nossa Senhora');
       expect(on(2026, 11, 1).celebration, 'Todos os Santos');
-      expect(on(2026, 12, 8).celebration,
-          'Imaculada Conceição de Nossa Senhora');
+      expect(
+        on(2026, 12, 8).celebration,
+        'Imaculada Conceição de Nossa Senhora',
+      );
     });
   });
 
@@ -87,7 +93,10 @@ void main() {
       expect(on(2026, 3, 30).celebration, 'Segunda-feira da Semana Santa');
       expect(on(2026, 4, 1).celebration, 'Quarta-feira da Semana Santa');
       expect(on(2026, 4, 2).celebration, 'Quinta-feira Santa');
-      expect(on(2026, 4, 3).celebration, 'Sexta-feira Santa da Paixão do Senhor');
+      expect(
+        on(2026, 4, 3).celebration,
+        'Sexta-feira Santa da Paixão do Senhor',
+      );
       expect(on(2026, 4, 4).celebration, 'Sábado Santo');
     });
 
@@ -96,8 +105,10 @@ void main() {
       expect(monday.celebration, 'Segunda-feira da Oitava da Páscoa');
       expect(monday.rank, LiturgicalRank.solemnity);
       expect(monday.observance.isInOctave, isTrue);
-      expect(on(2026, 4, 12).celebration,
-          '2º Domingo da Páscoa (da Divina Misericórdia)');
+      expect(
+        on(2026, 4, 12).celebration,
+        '2º Domingo da Páscoa (da Divina Misericórdia)',
+      );
     });
 
     test('the Christmas Octave is named day by day', () {
@@ -114,14 +125,20 @@ void main() {
     test('Holy Family and the Baptism of the Lord are feasts of the Lord', () {
       // The Sunday inside the Octave takes precedence over a saint's feast:
       // in 2026 the 27th is a Sunday, so Holy Family wins over St John.
-      expect(on(2026, 12, 27).celebration,
-          'Sagrada Família de Jesus, Maria e José');
+      expect(
+        on(2026, 12, 27).celebration,
+        'Sagrada Família de Jesus, Maria e José',
+      );
       // 2025: Christmas Thursday → Holy Family Sunday 28 December.
-      expect(on(2025, 12, 28).celebration,
-          'Sagrada Família de Jesus, Maria e José');
+      expect(
+        on(2025, 12, 28).celebration,
+        'Sagrada Família de Jesus, Maria e José',
+      );
       // 2022: Christmas fell on a Sunday → Holy Family kept on 30 December.
-      expect(on(2022, 12, 30).celebration,
-          'Sagrada Família de Jesus, Maria e José');
+      expect(
+        on(2022, 12, 30).celebration,
+        'Sagrada Família de Jesus, Maria e José',
+      );
       final baptism = on(2026, 1, 11);
       expect(baptism.celebration, 'Batismo do Senhor');
       expect(baptism.rank, LiturgicalRank.feast);
@@ -137,8 +154,10 @@ void main() {
     });
 
     test('Christ the King closes the year', () {
-      expect(on(2026, 11, 22).celebration,
-          'Nosso Senhor Jesus Cristo, Rei do Universo');
+      expect(
+        on(2026, 11, 22).celebration,
+        'Nosso Senhor Jesus Cristo, Rei do Universo',
+      );
     });
   });
 
@@ -172,9 +191,11 @@ void main() {
 
     test('every Ordinary Time week stays within 1–34 for a decade', () {
       for (var y = 2024; y <= 2034; y++) {
-        for (var d = DateTime(y, 1, 1);
-            d.year == y;
-            d = DateTime(d.year, d.month, d.day + 1)) {
+        for (
+          var d = DateTime(y, 1, 1);
+          d.year == y;
+          d = DateTime(d.year, d.month, d.day + 1)
+        ) {
           final day = cal.resolve(d);
           if (day.season != LiturgicalSeason.ordinary) continue;
           expect(day.week, isNotNull, reason: '$d');
@@ -203,15 +224,19 @@ void main() {
       expect(on(2028, 8, 6).celebration, 'Transfiguração do Senhor');
     });
 
-    test('a Lenten weekday outranks an obligatory memorial, which stays optional',
-        () {
-      // 7 March 2026 (Ss Perpetua & Felicity, memorial) is a Lenten Saturday.
-      final day = on(2026, 3, 7);
-      expect(day.season, LiturgicalSeason.lent);
-      expect(day.rank, LiturgicalRank.weekday);
-      expect(day.optionalMemorials.map((m) => m.name),
-          contains('Santas Perpétua e Felicidade, mártires'));
-    });
+    test(
+      'a Lenten weekday outranks an obligatory memorial, which stays optional',
+      () {
+        // 7 March 2026 (Ss Perpetua & Felicity, memorial) is a Lenten Saturday.
+        final day = on(2026, 3, 7);
+        expect(day.season, LiturgicalSeason.lent);
+        expect(day.rank, LiturgicalRank.weekday);
+        expect(
+          day.optionalMemorials.map((m) => m.name),
+          contains('Santas Perpétua e Felicidade, mártires'),
+        );
+      },
+    );
 
     test('an obligatory memorial wins an ordinary weekday', () {
       // 28 January 2026 (St Thomas Aquinas) is an ordinary Wednesday.
@@ -220,30 +245,39 @@ void main() {
       expect(day.rank, LiturgicalRank.memorial);
     });
 
-    test('optional memorials on an ordinary weekday are offered, not imposed',
-        () {
-      // 20 January 2026: Ss Fabian and Sebastian, both optional.
-      final day = on(2026, 1, 20);
-      expect(day.rank, LiturgicalRank.weekday);
-      expect(day.optionalMemorials.map((m) => m.name),
-          containsAll(['São Fabiano, papa e mártir', 'São Sebastião, mártir']));
-    });
+    test(
+      'optional memorials on an ordinary weekday are offered, not imposed',
+      () {
+        // 20 January 2026: Ss Fabian and Sebastian, both optional.
+        final day = on(2026, 1, 20);
+        expect(day.rank, LiturgicalRank.weekday);
+        expect(
+          day.optionalMemorials.map((m) => m.name),
+          containsAll(['São Fabiano, papa e mártir', 'São Sebastião, mártir']),
+        );
+      },
+    );
   });
 
   group('transferred celebrations', () {
-    test('a solemnity inside the Easter Octave is not celebrated there (2008)',
-        () {
-      // Easter 2008 = 23 March, so both St Joseph (19 Mar, Holy Week) and the
-      // Annunciation (25 Mar, Octave) were impeded. Neither may be kept on its
-      // own date. Note the engine applies the general rule — postponement —
-      // while the Holy See that year *anticipated* St Joseph to 15 March.
-      expect(on(2008, 3, 25).celebration, isNot(contains('Anunciação')));
-      expect(on(2008, 3, 19).celebration, isNot(contains('São José')));
-    });
+    test(
+      'a solemnity inside the Easter Octave is not celebrated there (2008)',
+      () {
+        // Easter 2008 = 23 March, so both St Joseph (19 Mar, Holy Week) and the
+        // Annunciation (25 Mar, Octave) were impeded. Neither may be kept on its
+        // own date. Note the engine applies the general rule — postponement —
+        // while the Holy See that year *anticipated* St Joseph to 15 March.
+        expect(on(2008, 3, 25).celebration, isNot(contains('Anunciação')));
+        expect(on(2008, 3, 19).celebration, isNot(contains('São José')));
+      },
+    );
 
     test('the Annunciation moves out of Holy Week (2016)', () {
       // 25 March 2016 was Good Friday; the solemnity moved to 4 April.
-      expect(on(2016, 3, 25).celebration, 'Sexta-feira Santa da Paixão do Senhor');
+      expect(
+        on(2016, 3, 25).celebration,
+        'Sexta-feira Santa da Paixão do Senhor',
+      );
       expect(on(2016, 4, 4).celebration, 'Anunciação do Senhor');
     });
 
@@ -251,8 +285,11 @@ void main() {
       // 2008: both St Joseph (19 Mar, Holy Week) and the Annunciation are
       // impeded. They must occupy different days.
       final joseph = <DateTime>[];
-      for (var d = DateTime(2008, 3, 20); d.isBefore(DateTime(2008, 4, 15));
-          d = DateTime(d.year, d.month, d.day + 1)) {
+      for (
+        var d = DateTime(2008, 3, 20);
+        d.isBefore(DateTime(2008, 4, 15));
+        d = DateTime(d.year, d.month, d.day + 1)
+      ) {
         final c = cal.resolve(d).celebration;
         if (c.contains('São José') || c.contains('Anunciação')) joseph.add(d);
       }
@@ -275,13 +312,19 @@ void main() {
     });
 
     test('Fridays carry abstinence unless a solemnity falls on them', () {
-      expect(on(2026, 3, 6).observance.isAbstinenceDay, isTrue); // Lenten Friday
+      expect(
+        on(2026, 3, 6).observance.isAbstinenceDay,
+        isTrue,
+      ); // Lenten Friday
       // 25 December 2026 is a Friday and a solemnity.
       expect(on(2026, 12, 25).observance.isAbstinenceDay, isFalse);
     });
 
     test('Sundays and the universal holy days are days of obligation', () {
-      expect(on(2026, 6, 14).observance.isHolyDayOfObligation, isTrue); // Sunday
+      expect(
+        on(2026, 6, 14).observance.isHolyDayOfObligation,
+        isTrue,
+      ); // Sunday
       expect(on(2026, 8, 15).observance.isHolyDayOfObligation, isTrue);
       expect(on(2026, 1, 1).observance.isHolyDayOfObligation, isTrue);
       expect(on(2026, 6, 10).observance.isHolyDayOfObligation, isFalse);
@@ -289,18 +332,22 @@ void main() {
   });
 
   group('robustness', () {
-    test('resolving every day of a decade never throws and always names a day',
-        () {
-      for (var y = 2020; y <= 2035; y++) {
-        for (var d = DateTime(y, 1, 1);
+    test(
+      'resolving every day of a decade never throws and always names a day',
+      () {
+        for (var y = 2020; y <= 2035; y++) {
+          for (
+            var d = DateTime(y, 1, 1);
             d.year == y;
-            d = DateTime(d.year, d.month, d.day + 1)) {
-          final day = cal.resolve(d);
-          expect(day.celebration.trim(), isNotEmpty, reason: '$d');
-          expect(day.date, DateTime(d.year, d.month, d.day));
+            d = DateTime(d.year, d.month, d.day + 1)
+          ) {
+            final day = cal.resolve(d);
+            expect(day.celebration.trim(), isNotEmpty, reason: '$d');
+            expect(day.date, DateTime(d.year, d.month, d.day));
+          }
         }
-      }
-    });
+      },
+    );
 
     test('a DateTime carrying a time component resolves to the same day', () {
       final withTime = cal.resolve(DateTime(2026, 4, 5, 23, 59, 59));

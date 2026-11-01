@@ -51,7 +51,8 @@ class _ReadingPlanScreenState extends ConsumerState<ReadingPlanScreen> {
     if (!st.started && !_autostarted) {
       _autostarted = true;
       WidgetsBinding.instance.addPostFrameCallback(
-          (_) => ref.read(readingPlanControllerProvider).startIfNeeded(plan.id));
+        (_) => ref.read(readingPlanControllerProvider).startIfNeeded(plan.id),
+      );
     }
 
     final day = (_selected ?? st.currentDay).clamp(1, plan.days);
@@ -86,8 +87,10 @@ class _ReadingPlanScreenState extends ConsumerState<ReadingPlanScreen> {
         if (entry.readings.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(l10n.readingTextUnavailable,
-                style: TextStyle(color: c.textFaint)),
+            child: Text(
+              l10n.readingTextUnavailable,
+              style: TextStyle(color: c.textFaint),
+            ),
           )
         else
           _ReadingsSection(key: ValueKey(day), readings: entry.readings),
@@ -118,19 +121,25 @@ class _DayStrip extends StatefulWidget {
 
 class _DayStripState extends State<_DayStrip> {
   static const _itemExtent = 68.0; // width + horizontal margin
-  late final _controller =
-      ScrollController(initialScrollOffset: _offsetFor(widget.selected));
+  late final _controller = ScrollController(
+    initialScrollOffset: _offsetFor(widget.selected),
+  );
 
   double _offsetFor(int day) => ((day - 1) * _itemExtent - 120).clamp(
-      0, (widget.totalDays * _itemExtent - 200).clamp(0, double.infinity));
+    0,
+    (widget.totalDays * _itemExtent - 200).clamp(0, double.infinity),
+  );
 
   @override
   void didUpdateWidget(_DayStrip old) {
     super.didUpdateWidget(old);
     // Keep the selected day in view when it changes from outside the strip.
     if (old.selected != widget.selected && _controller.hasClients) {
-      _controller.animateTo(_offsetFor(widget.selected),
-          duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+      _controller.animateTo(
+        _offsetFor(widget.selected),
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
     }
   }
 
@@ -149,74 +158,80 @@ class _DayStripState extends State<_DayStrip> {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-          child: Text(l10n.planDayProgress(widget.selected, widget.totalDays),
-              style: TextStyle(color: c.textSecondary)),
+          child: Text(
+            l10n.planDayProgress(widget.selected, widget.totalDays),
+            style: TextStyle(color: c.textSecondary),
+          ),
         ),
         MediaQuery.withClampedTextScaling(
           maxScaleFactor: 1.2,
           child: SizedBox(
-          height: 84,
-          child: ListView.builder(
-            controller: _controller,
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: widget.totalDays,
-            itemBuilder: (_, i) {
-              final d = i + 1;
-              final on = d == widget.selected;
-              final read = widget.completed.contains(d);
-              return Semantics(
-                button: true,
-                selected: on,
-                child: GestureDetector(
-                onTap: () => widget.onSelect(d),
-                child: Container(
-                  width: 60,
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  decoration: BoxDecoration(
-                    color: on ? c.textPrimary : c.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: d == widget.today && !on
-                        ? Border.all(color: c.accent, width: 1.2)
-                        : null,
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // "Dia 5" / "Day 5" minus its number: the strip shows the
-                      // word once and the number large, like Liturgy's dates.
-                      Text(
-                          l10n
-                              .planDay(d)
-                              .replaceAll(RegExp(r'[\d\s]+$'), ''),
-                          style: TextStyle(
+            height: 84,
+            child: ListView.builder(
+              controller: _controller,
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: widget.totalDays,
+              itemBuilder: (_, i) {
+                final d = i + 1;
+                final on = d == widget.selected;
+                final read = widget.completed.contains(d);
+                return Semantics(
+                  button: true,
+                  selected: on,
+                  child: GestureDetector(
+                    onTap: () => widget.onSelect(d),
+                    child: Container(
+                      width: 60,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        color: on ? c.textPrimary : c.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: d == widget.today && !on
+                            ? Border.all(color: c.accent, width: 1.2)
+                            : null,
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // "Dia 5" / "Day 5" minus its number: the strip shows the
+                          // word once and the number large, like Liturgy's dates.
+                          Text(
+                            l10n.planDay(d).replaceAll(RegExp(r'[\d\s]+$'), ''),
+                            style: TextStyle(
                               color: on ? c.background : c.textSecondary,
-                              fontSize: 12)),
-                      const SizedBox(height: 4),
-                      Text('$d',
-                          style: TextStyle(
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '$d',
+                            style: TextStyle(
                               color: on ? c.background : c.textPrimary,
                               fontSize: 20,
-                              fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 5),
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                            color: read
-                                ? c.accent
-                                : (on ? c.background : c.surfaceHigh)
-                                    .withValues(alpha: 0.5),
-                            shape: BoxShape.circle),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: read
+                                  ? c.accent
+                                  : (on ? c.background : c.surfaceHigh)
+                                        .withValues(alpha: 0.5),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
-        ),
         ),
       ],
     );
@@ -249,45 +264,60 @@ class _DayCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-          color: c.surface, borderRadius: BorderRadius.circular(18)),
+        color: c.surface,
+        borderRadius: BorderRadius.circular(18),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
-            Expanded(
-              child: Text(l10n.planDay(day),
-                  style: Theme.of(context).textTheme.titleLarge),
-            ),
-            if (isToday)
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                    color: c.accentSoft,
-                    borderRadius: BorderRadius.circular(8)),
-                child: Text(l10n.planToday,
-                    style: TextStyle(
-                        color: c.accent,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600)),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.planDay(day),
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
               ),
-            Checkbox(
-              value: done,
-              onChanged: (v) => onToggle(v ?? false),
-              activeColor: c.accent,
-              visualDensity: VisualDensity.compact,
-            ),
-          ]),
+              if (isToday)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: c.accentSoft,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    l10n.planToday,
+                    style: TextStyle(
+                      color: c.accent,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              Checkbox(
+                value: done,
+                onChanged: (v) => onToggle(v ?? false),
+                activeColor: c.accent,
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+          ),
           const SizedBox(height: 4),
           Row(
             children: [
               Expanded(
-                child: Text(l10n.planProgress(completedCount, totalDays),
-                    style: TextStyle(color: c.textSecondary)),
+                child: Text(
+                  l10n.planProgress(completedCount, totalDays),
+                  style: TextStyle(color: c.textSecondary),
+                ),
               ),
-              Text('$percent%',
-                  style: TextStyle(
-                      color: c.accent, fontWeight: FontWeight.w600)),
+              Text(
+                '$percent%',
+                style: TextStyle(color: c.accent, fontWeight: FontWeight.w600),
+              ),
             ],
           ),
           const SizedBox(height: 10),
@@ -331,9 +361,11 @@ class _ReadingsSectionState extends State<_ReadingsSection> {
               child: _ReadingCard(
                 reading: widget.readings[i],
                 expanded: _expanded.contains(i),
-                onToggle: () => setState(() => _expanded.contains(i)
-                    ? _expanded.remove(i)
-                    : _expanded.add(i)),
+                onToggle: () => setState(
+                  () => _expanded.contains(i)
+                      ? _expanded.remove(i)
+                      : _expanded.add(i),
+                ),
               ),
             ),
         ],
@@ -346,8 +378,11 @@ class _ReadingCard extends ConsumerWidget {
   final PlanReading reading;
   final bool expanded;
   final VoidCallback onToggle;
-  const _ReadingCard(
-      {required this.reading, required this.expanded, required this.onToggle});
+  const _ReadingCard({
+    required this.reading,
+    required this.expanded,
+    required this.onToggle,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -361,7 +396,9 @@ class _ReadingCard extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-          color: c.surface, borderRadius: BorderRadius.circular(18)),
+        color: c.surface,
+        borderRadius: BorderRadius.circular(18),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -376,31 +413,42 @@ class _ReadingCard extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(label.toUpperCase(),
-                            style: TextStyle(
-                                color: c.accent,
-                                fontSize: 11,
-                                letterSpacing: 1,
-                                fontWeight: FontWeight.w600)),
+                        Text(
+                          label.toUpperCase(),
+                          style: TextStyle(
+                            color: c.accent,
+                            fontSize: 11,
+                            letterSpacing: 1,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         const SizedBox(height: 3),
-                        Text(reading.ref,
-                            style: Theme.of(context).textTheme.titleMedium),
+                        Text(
+                          reading.ref,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                       ],
                     ),
                   ),
                   if (first != null)
                     IconButton(
-                      icon: Icon(Icons.menu_book_outlined,
-                          size: 20, color: c.textSecondary),
+                      icon: Icon(
+                        Icons.menu_book_outlined,
+                        size: 20,
+                        color: c.textSecondary,
+                      ),
                       tooltip: l10n.liturgyOpenInBible,
                       // `go`, not `push`: opening a reading crosses from this
                       // top-level route into the Bible shell branch, and
                       // ?src=plan keeps it out of Home → "Continue reading".
                       onPressed: () => context.go(
-                          '/bible/${first.bookId}/${first.chapter}?src=plan'),
+                        '/bible/${first.bookId}/${first.chapter}?src=plan',
+                      ),
                     ),
-                  Icon(expanded ? Icons.expand_less : Icons.expand_more,
-                      color: c.textFaint),
+                  Icon(
+                    expanded ? Icons.expand_less : Icons.expand_more,
+                    color: c.textFaint,
+                  ),
                 ],
               ),
             ),
@@ -431,13 +479,16 @@ class _PassageText extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.bt;
     final content = ref.watch(
-        chapterProvider((bookId: target.bookId, chapter: target.chapter)));
+      chapterProvider((bookId: target.bookId, chapter: target.chapter)),
+    );
     final verses = (content?.verses ?? const <Verse>[])
         .where((v) => target.includes(v.number))
         .toList();
     if (verses.isEmpty) {
-      return Text(context.l10n.readingTextUnavailable,
-          style: TextStyle(color: c.textFaint));
+      return Text(
+        context.l10n.readingTextUnavailable,
+        style: TextStyle(color: c.textFaint),
+      );
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -450,8 +501,9 @@ class _PassageText extends ConsumerWidget {
                 style: Theme.of(context).textTheme.bodyLarge,
                 children: [
                   TextSpan(
-                      text: '${v.number}  ',
-                      style: TextStyle(color: c.accent, fontSize: 12)),
+                    text: '${v.number}  ',
+                    style: TextStyle(color: c.accent, fontSize: 12),
+                  ),
                   TextSpan(text: v.text),
                 ],
               ),

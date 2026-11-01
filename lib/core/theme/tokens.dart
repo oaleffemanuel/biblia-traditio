@@ -51,8 +51,10 @@ class BtColors {
     divider: Color(0xFF26262A),
     gold: Color(0xFFD4A72C),
     goldSoft: Color(0x26D4A72C),
-    heroStart: Color(0xFF3A1812),
-    heroEnd: Color(0xFF141212),
+    // Deep terracotta — a card that reads as a card against the black canvas
+    // (the earlier near-black brown made the psalm hero muddy in dark mode).
+    heroStart: Color(0xFF5B2419),
+    heroEnd: Color(0xFF2B1511),
     onHero: Color(0xFFF3EBDD),
     onHeroMuted: Color(0xFFC9B8A6),
   );
@@ -85,13 +87,13 @@ class LiturgicalPalette {
   static const rose = Color(0xFFD98CA6); // Gaudete, Laetare
 
   static Color of(String key) => switch (key.toLowerCase()) {
-        'green' || 'verde' => green,
-        'red' || 'vermelho' => red,
-        'white' || 'branco' => white,
-        'purple' || 'roxo' || 'violeta' => purple,
-        'rose' || 'rosa' => rose,
-        _ => green,
-      };
+    'green' || 'verde' => green,
+    'red' || 'vermelho' => red,
+    'white' || 'branco' => white,
+    'purple' || 'roxo' || 'violeta' => purple,
+    'rose' || 'rosa' => rose,
+    _ => green,
+  };
 }
 
 /// Typography: a refined serif for Scripture, a quiet sans for chrome.
@@ -102,19 +104,33 @@ class BtTypography {
     return TextTheme(
       // Scripture & titles — serif
       displaySmall: serif.displaySmall?.copyWith(
-          color: c.textPrimary, fontWeight: FontWeight.w600, letterSpacing: 0.2),
-      headlineMedium: serif.headlineMedium
-          ?.copyWith(color: c.textPrimary, fontWeight: FontWeight.w600),
-      titleLarge: serif.titleLarge
-          ?.copyWith(color: c.textPrimary, fontWeight: FontWeight.w600),
+        color: c.textPrimary,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.2,
+      ),
+      headlineMedium: serif.headlineMedium?.copyWith(
+        color: c.textPrimary,
+        fontWeight: FontWeight.w600,
+      ),
+      titleLarge: serif.titleLarge?.copyWith(
+        color: c.textPrimary,
+        fontWeight: FontWeight.w600,
+      ),
       bodyLarge: serif.bodyLarge?.copyWith(
-          color: c.textPrimary, height: 1.55, fontSize: 18), // verse body
+        color: c.textPrimary,
+        height: 1.55,
+        fontSize: 18,
+      ), // verse body
       // Chrome — sans
-      titleMedium: sans.titleMedium
-          ?.copyWith(color: c.textPrimary, fontWeight: FontWeight.w600),
+      titleMedium: sans.titleMedium?.copyWith(
+        color: c.textPrimary,
+        fontWeight: FontWeight.w600,
+      ),
       bodyMedium: sans.bodyMedium?.copyWith(color: c.textSecondary),
-      labelLarge: sans.labelLarge
-          ?.copyWith(color: c.textPrimary, fontWeight: FontWeight.w600),
+      labelLarge: sans.labelLarge?.copyWith(
+        color: c.textPrimary,
+        fontWeight: FontWeight.w600,
+      ),
       labelSmall: sans.labelSmall?.copyWith(color: c.textSecondary),
     );
   }

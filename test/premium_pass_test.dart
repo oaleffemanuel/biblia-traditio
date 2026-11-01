@@ -14,52 +14,75 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('share cards are light and printable', () {
-    testWidgets('the card sits on paper, not on the app\'s dark ground',
-        (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.dark(),
-        locale: const Locale('pt'),
-        localizationsDelegates: AppL10n.localizationsDelegates,
-        supportedLocales: AppL10n.supportedLocales,
-        home: Builder(
-          builder: (context) => Scaffold(
-            body: Center(
-              child: ElevatedButton(
-                onPressed: () => showShareVerse(context,
-                    reference: 'João 1,1', text: 'No princípio era o Verbo'),
-                child: const Text('abrir'),
+    testWidgets('the card sits on paper, not on the app\'s dark ground', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.dark(),
+          locale: const Locale('pt'),
+          localizationsDelegates: AppL10n.localizationsDelegates,
+          supportedLocales: AppL10n.supportedLocales,
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  onPressed: () => showShareVerse(
+                    context,
+                    reference: 'João 1,1',
+                    text: 'No princípio era o Verbo',
+                  ),
+                  child: const Text('abrir'),
+                ),
               ),
             ),
           ),
         ),
-      ));
+      );
       await tester.tap(find.text('abrir'));
       await tester.pumpAndSettle();
 
       // Inspect only the card — the sheet behind it is legitimately dark.
       final cardColours = tester
-          .widgetList<Container>(find.ancestor(
-              of: find.text('BIBLIA TRADITIO'), matching: find.byType(Container)))
-          .where((w) =>
-              w.decoration is BoxDecoration &&
-              (w.decoration as BoxDecoration).color != null)
+          .widgetList<Container>(
+            find.ancestor(
+              of: find.text('BIBLIA TRADITIO'),
+              matching: find.byType(Container),
+            ),
+          )
+          .where(
+            (w) =>
+                w.decoration is BoxDecoration &&
+                (w.decoration as BoxDecoration).color != null,
+          )
           .map((w) => (w.decoration as BoxDecoration).color!)
           .toList();
 
       expect(cardColours, isNotEmpty);
       // The card's own ground is paper, and nothing inside it is the app's
       // near-black surface.
-      expect(cardColours.first.computeLuminance(), greaterThan(0.85),
-          reason: 'an exported card must be on a light ground');
-      expect(cardColours.where((c) => c.computeLuminance() < 0.02), isEmpty,
-          reason: 'the dark theme must never be exported');
+      expect(
+        cardColours.first.computeLuminance(),
+        greaterThan(0.85),
+        reason: 'an exported card must be on a light ground',
+      );
+      expect(
+        cardColours.where((c) => c.computeLuminance() < 0.02),
+        isEmpty,
+        reason: 'the dark theme must never be exported',
+      );
     });
   });
 
   group('highlight colours', () {
     test('the bar paints yellow, green, blue, pink, purple in that order', () {
-      expect(HighlightColor.values.map((c) => c.key).toList(),
-          ['gold', 'sage', 'sky', 'rose', 'lilac']);
+      expect(HighlightColor.values.map((c) => c.key).toList(), [
+        'gold',
+        'sage',
+        'sky',
+        'rose',
+        'lilac',
+      ]);
     });
 
     test('stored keys are unchanged, so existing highlights survive', () {
@@ -87,31 +110,33 @@ void main() {
       tester.view.physicalSize = const Size(1000, 1800);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
-      await tester.pumpWidget(ProviderScope(
-        overrides: [
-          contentDatabaseProvider.overrideWithValue(null),
-          userDbProvider.overrideWithValue(null),
-          booksProvider.overrideWithValue([book]),
-          chapterProvider.overrideWith((ref, key) => bible.ChapterContent(
-                'jn',
-                1,
-                [
-                  for (var i = 1; i <= 10; i++)
-                    bible.Verse(i, 'Versículo $i do capítulo.'),
-                ],
-                const [],
-              )),
-          commentaryMarkersProvider.overrideWith((ref, key) => const <int>{}),
-        ],
-        child: MaterialApp(
-          theme: AppTheme.dark(),
-          locale: const Locale('pt'),
-          localizationsDelegates: AppL10n.localizationsDelegates,
-          supportedLocales: AppL10n.supportedLocales,
-          home: const ReaderScreen(
-              bookId: 'jn', chapter: 1, recordProgress: false),
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            contentDatabaseProvider.overrideWithValue(null),
+            userDbProvider.overrideWithValue(null),
+            booksProvider.overrideWithValue([book]),
+            chapterProvider.overrideWith(
+              (ref, key) => bible.ChapterContent('jn', 1, [
+                for (var i = 1; i <= 10; i++)
+                  bible.Verse(i, 'Versículo $i do capítulo.'),
+              ], const []),
+            ),
+            commentaryMarkersProvider.overrideWith((ref, key) => const <int>{}),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.dark(),
+            locale: const Locale('pt'),
+            localizationsDelegates: AppL10n.localizationsDelegates,
+            supportedLocales: AppL10n.supportedLocales,
+            home: const ReaderScreen(
+              bookId: 'jn',
+              chapter: 1,
+              recordProgress: false,
+            ),
+          ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
     }
 
@@ -126,13 +151,20 @@ void main() {
       await tester.longPress(verseNumber(2));
       await tester.pumpAndSettle();
 
-      for (final label in ['Copiar', 'Partilhar', 'Destacar', 'Nota', 'Favoritar']) {
+      for (final label in [
+        'Copiar',
+        'Partilhar',
+        'Destacar',
+        'Nota',
+        'Favoritar',
+      ]) {
         expect(find.text(label), findsOneWidget, reason: label);
       }
     });
 
-    testWidgets('Destacar opens the colour bar, and closes it again',
-        (tester) async {
+    testWidgets('Destacar opens the colour bar, and closes it again', (
+      tester,
+    ) async {
       await pump(tester);
       await tester.longPress(verseNumber(2));
       await tester.pumpAndSettle();
@@ -144,9 +176,11 @@ void main() {
       // Five swatches, one per colour.
       final swatches = tester
           .widgetList<Container>(find.byType(Container))
-          .where((w) =>
-              w.decoration is BoxDecoration &&
-              (w.decoration as BoxDecoration).shape == BoxShape.circle)
+          .where(
+            (w) =>
+                w.decoration is BoxDecoration &&
+                (w.decoration as BoxDecoration).shape == BoxShape.circle,
+          )
           .toList();
       expect(swatches.length, greaterThanOrEqualTo(5));
 
@@ -156,8 +190,9 @@ void main() {
       expect(find.text('Destacar'), findsOneWidget);
     });
 
-    testWidgets('the bar acts on the whole selection, not just the anchor',
-        (tester) async {
+    testWidgets('the bar acts on the whole selection, not just the anchor', (
+      tester,
+    ) async {
       await pump(tester);
       await tester.longPress(verseNumber(2));
       await tester.pumpAndSettle();
@@ -183,30 +218,104 @@ void main() {
   group('liturgical book titles', () {
     test('every canonical book can be announced by name', () {
       const canon = [
-        'gn','ex','lv','nm','dt','jo','jgs','rt','1sm','2sm','1kgs','2kgs',
-        '1chr','2chr','ezr','neh','tb','jdt','est','1mac','2mac','jb','ps',
-        'prv','eccl','sg','ws','sir','is','jer','lam','bar','ez','dn','hos',
-        'jl','am','ob','jon','mi','na','hb','zep','hg','zec','mal','mt','mk',
-        'lk','jn','acts','rom','1cor','2cor','gal','eph','phil','col','1thes',
-        '2thes','1tm','2tm','tit','phlm','heb','jas','1pt','2pt','1jn','2jn',
-        '3jn','jud','rv',
+        'gn',
+        'ex',
+        'lv',
+        'nm',
+        'dt',
+        'jo',
+        'jgs',
+        'rt',
+        '1sm',
+        '2sm',
+        '1kgs',
+        '2kgs',
+        '1chr',
+        '2chr',
+        'ezr',
+        'neh',
+        'tb',
+        'jdt',
+        'est',
+        '1mac',
+        '2mac',
+        'jb',
+        'ps',
+        'prv',
+        'eccl',
+        'sg',
+        'ws',
+        'sir',
+        'is',
+        'jer',
+        'lam',
+        'bar',
+        'ez',
+        'dn',
+        'hos',
+        'jl',
+        'am',
+        'ob',
+        'jon',
+        'mi',
+        'na',
+        'hb',
+        'zep',
+        'hg',
+        'zec',
+        'mal',
+        'mt',
+        'mk',
+        'lk',
+        'jn',
+        'acts',
+        'rom',
+        '1cor',
+        '2cor',
+        'gal',
+        'eph',
+        'phil',
+        'col',
+        '1thes',
+        '2thes',
+        '1tm',
+        '2tm',
+        'tit',
+        'phlm',
+        'heb',
+        'jas',
+        '1pt',
+        '2pt',
+        '1jn',
+        '2jn',
+        '3jn',
+        'jud',
+        'rv',
       ];
       expect(canon.length, 73);
       for (final id in canon) {
         final p = proclamationFor(id);
         expect(p, isNotNull, reason: id);
         expect(p!.title.trim(), isNotEmpty, reason: id);
-        expect(p.ofForm.startsWith('do ') || p.ofForm.startsWith('da '), isTrue,
-            reason: '$id → "${p.ofForm}"');
+        expect(
+          p.ofForm.startsWith('do ') || p.ofForm.startsWith('da '),
+          isTrue,
+          reason: '$id → "${p.ofForm}"',
+        );
       }
     });
 
     test('the prophets and letters read as a lector would say them', () {
       expect(proclamationFor('na')!.title, 'Livro do Profeta Naum');
       expect(proclamationFor('na')!.ofForm, 'do Livro do Profeta Naum');
-      expect(proclamationFor('rom')!.ofForm, 'da Carta de São Paulo aos Romanos');
-      expect(proclamationFor('1cor')!.title,
-          'Primeira Carta de São Paulo aos Coríntios');
+      expect(
+        proclamationFor('rom')!.ofForm,
+        'da Carta de São Paulo aos Romanos',
+      );
+      expect(
+        proclamationFor('1cor')!.title,
+        'Primeira Carta de São Paulo aos Coríntios',
+      );
     });
 
     test('an unknown id yields nothing rather than an invented title', () {
@@ -216,18 +325,34 @@ void main() {
 
   group('language roadmap', () {
     test('six languages are built for, five are shipped', () {
-      expect(AppLanguage.values.map((l) => l.code).toSet(),
-          {'pt', 'en', 'it', 'es', 'fr', 'la'});
-      expect(AppLanguage.implemented,
-          [AppLanguage.pt, AppLanguage.en, AppLanguage.es, AppLanguage.fr, AppLanguage.it]);
+      expect(AppLanguage.values.map((l) => l.code).toSet(), {
+        'pt',
+        'en',
+        'it',
+        'es',
+        'fr',
+        'la',
+      });
+      expect(AppLanguage.implemented, [
+        AppLanguage.pt,
+        AppLanguage.en,
+        AppLanguage.es,
+        AppLanguage.fr,
+        AppLanguage.it,
+      ]);
     });
 
     test('unfinished languages are never advertised to the platform', () {
-      final advertised = AppLanguage.supportedLocales.map((l) => l.languageCode);
+      final advertised = AppLanguage.supportedLocales.map(
+        (l) => l.languageCode,
+      );
       expect(advertised, ['pt', 'en', 'es', 'fr', 'it']);
       for (final planned in AppLanguage.planned) {
-        expect(advertised.contains(planned.code), isFalse,
-            reason: '${planned.code} is not translated yet');
+        expect(
+          advertised.contains(planned.code),
+          isFalse,
+          reason: '${planned.code} is not translated yet',
+        );
         expect(AppLanguage.implemented.contains(planned), isFalse);
       }
     });

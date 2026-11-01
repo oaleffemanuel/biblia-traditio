@@ -6,10 +6,12 @@ import 'liturgical_day.dart';
 /// two things that would otherwise be recomputed for every one of them — the
 /// MM-DD index over ~200 entries, and the year's transfer map — are memoised.
 /// Both are pure functions of the sanctoral list and the year.
-final _sanctoralIndexCache =
-    Expando<Map<int, List<SanctoralEntry>>>('sanctoralIndex');
-final _transferCache =
-    Expando<Map<int, Map<String, SanctoralEntry>>>('sanctoralTransfers');
+final _sanctoralIndexCache = Expando<Map<int, List<SanctoralEntry>>>(
+  'sanctoralIndex',
+);
+final _transferCache = Expando<Map<int, Map<String, SanctoralEntry>>>(
+  'sanctoralTransfers',
+);
 
 /// A candidate celebration for a date, with its place in the Table of
 /// Liturgical Days. Lower [precedence] wins.
@@ -119,59 +121,131 @@ class LiturgicalCalendar {
         candidates.add(_Candidate(n, r, c, p));
 
     if (date == holyThu) {
-      temporal('Quinta-feira Santa', LiturgicalRank.solemnity,
-          LiturgicalColor.white, _P.triduum);
+      temporal(
+        'Quinta-feira Santa',
+        LiturgicalRank.solemnity,
+        LiturgicalColor.white,
+        _P.triduum,
+      );
     } else if (date == goodFri) {
-      temporal('Sexta-feira Santa da Paixão do Senhor',
-          LiturgicalRank.solemnity, LiturgicalColor.red, _P.triduum);
+      temporal(
+        'Sexta-feira Santa da Paixão do Senhor',
+        LiturgicalRank.solemnity,
+        LiturgicalColor.red,
+        _P.triduum,
+      );
     } else if (date == holySat) {
-      temporal('Sábado Santo', LiturgicalRank.solemnity, LiturgicalColor.white,
-          _P.triduum);
+      temporal(
+        'Sábado Santo',
+        LiturgicalRank.solemnity,
+        LiturgicalColor.white,
+        _P.triduum,
+      );
     } else if (date == easter) {
-      temporal('Domingo de Páscoa da Ressurreição do Senhor',
-          LiturgicalRank.solemnity, LiturgicalColor.white, _P.triduum);
+      temporal(
+        'Domingo de Páscoa da Ressurreição do Senhor',
+        LiturgicalRank.solemnity,
+        LiturgicalColor.white,
+        _P.triduum,
+      );
     } else if (date.isAfter(easter) && date.isBefore(easterOctaveEnd)) {
-      temporal('${_weekdayNamePt(date)} da Oitava da Páscoa',
-          LiturgicalRank.solemnity, LiturgicalColor.white, _P.principal);
+      temporal(
+        '${_weekdayNamePt(date)} da Oitava da Páscoa',
+        LiturgicalRank.solemnity,
+        LiturgicalColor.white,
+        _P.principal,
+      );
     } else if (date == easterOctaveEnd) {
-      temporal('2º Domingo da Páscoa (da Divina Misericórdia)',
-          LiturgicalRank.solemnity, LiturgicalColor.white, _P.principal);
+      temporal(
+        '2º Domingo da Páscoa (da Divina Misericórdia)',
+        LiturgicalRank.solemnity,
+        LiturgicalColor.white,
+        _P.principal,
+      );
     } else if (date == palmSun) {
-      temporal('Domingo de Ramos na Paixão do Senhor',
-          LiturgicalRank.solemnity, LiturgicalColor.red, _P.principal);
+      temporal(
+        'Domingo de Ramos na Paixão do Senhor',
+        LiturgicalRank.solemnity,
+        LiturgicalColor.red,
+        _P.principal,
+      );
     } else if (date.isAfter(palmSun) && date.isBefore(holyThu)) {
-      temporal('${_weekdayNamePt(date)} da Semana Santa',
-          LiturgicalRank.weekday, LiturgicalColor.purple, _P.principal);
+      temporal(
+        '${_weekdayNamePt(date)} da Semana Santa',
+        LiturgicalRank.weekday,
+        LiturgicalColor.purple,
+        _P.principal,
+      );
     } else if (date == ashWed) {
-      temporal('Quarta-feira de Cinzas', LiturgicalRank.weekday,
-          LiturgicalColor.purple, _P.principal);
+      temporal(
+        'Quarta-feira de Cinzas',
+        LiturgicalRank.weekday,
+        LiturgicalColor.purple,
+        _P.principal,
+      );
     } else if (date == pentecost) {
-      temporal('Domingo de Pentecostes', LiturgicalRank.solemnity,
-          LiturgicalColor.red, _P.principal);
+      temporal(
+        'Domingo de Pentecostes',
+        LiturgicalRank.solemnity,
+        LiturgicalColor.red,
+        _P.principal,
+      );
     } else if (date == ascension) {
-      temporal('Ascensão do Senhor', LiturgicalRank.solemnity,
-          LiturgicalColor.white, _P.principal);
+      temporal(
+        'Ascensão do Senhor',
+        LiturgicalRank.solemnity,
+        LiturgicalColor.white,
+        _P.principal,
+      );
     } else if (date == trinity) {
-      temporal('Santíssima Trindade', LiturgicalRank.solemnity,
-          LiturgicalColor.white, _P.solemnity);
+      temporal(
+        'Santíssima Trindade',
+        LiturgicalRank.solemnity,
+        LiturgicalColor.white,
+        _P.solemnity,
+      );
     } else if (date == corpusChristi) {
-      temporal('Santíssimo Corpo e Sangue de Cristo', LiturgicalRank.solemnity,
-          LiturgicalColor.white, _P.solemnity);
+      temporal(
+        'Santíssimo Corpo e Sangue de Cristo',
+        LiturgicalRank.solemnity,
+        LiturgicalColor.white,
+        _P.solemnity,
+      );
     } else if (date == sacredHeart) {
-      temporal('Sagrado Coração de Jesus', LiturgicalRank.solemnity,
-          LiturgicalColor.white, _P.solemnity);
+      temporal(
+        'Sagrado Coração de Jesus',
+        LiturgicalRank.solemnity,
+        LiturgicalColor.white,
+        _P.solemnity,
+      );
     } else if (date == christKing) {
-      temporal('Nosso Senhor Jesus Cristo, Rei do Universo',
-          LiturgicalRank.solemnity, LiturgicalColor.white, _P.solemnity);
+      temporal(
+        'Nosso Senhor Jesus Cristo, Rei do Universo',
+        LiturgicalRank.solemnity,
+        LiturgicalColor.white,
+        _P.solemnity,
+      );
     } else if (date == holyFamily) {
-      temporal('Sagrada Família de Jesus, Maria e José', LiturgicalRank.feast,
-          LiturgicalColor.white, _P.lordFeast);
+      temporal(
+        'Sagrada Família de Jesus, Maria e José',
+        LiturgicalRank.feast,
+        LiturgicalColor.white,
+        _P.lordFeast,
+      );
     } else if (date == baptism) {
-      temporal('Batismo do Senhor', LiturgicalRank.feast,
-          LiturgicalColor.white, _P.lordFeast);
+      temporal(
+        'Batismo do Senhor',
+        LiturgicalRank.feast,
+        LiturgicalColor.white,
+        _P.lordFeast,
+      );
     } else if (date == immaculateHeart) {
-      temporal('Imaculado Coração de Maria', LiturgicalRank.memorial,
-          LiturgicalColor.white, _P.memorial);
+      temporal(
+        'Imaculado Coração de Maria',
+        LiturgicalRank.memorial,
+        LiturgicalColor.white,
+        _P.memorial,
+      );
     } else {
       temporal(
         _ferialName(season, date, easter, ashWed, firstAdvent, isSunday),
@@ -183,18 +257,15 @@ class LiturgicalCalendar {
 
     // ── Sanctoral cycle (fixed dates + anything transferred onto this day) ──
     for (final e in _sanctoralFor(date, easter, firstAdvent)) {
-      candidates.add(_Candidate(
-        e.name,
-        e.rank,
-        e.color,
-        switch (e.rank) {
+      candidates.add(
+        _Candidate(e.name, e.rank, e.color, switch (e.rank) {
           LiturgicalRank.solemnity => _P.solemnity,
           LiturgicalRank.feast => e.ofTheLord ? _P.lordFeast : _P.saintFeast,
           LiturgicalRank.memorial => _P.memorial,
           LiturgicalRank.commemoration => _P.solemnity, // All Souls
           _ => _P.optionalMemorial,
-        },
-      ));
+        }),
+      );
     }
 
     // ── Resolve ─────────────────────────────────────────────────────────────
@@ -211,8 +282,16 @@ class LiturgicalCalendar {
           OptionalMemorial(c.name, c.color),
     ];
 
-    final week = _week(season, date, easter, ashWed, firstAdvent, baptism,
-        pentecost, christKing);
+    final week = _week(
+      season,
+      date,
+      easter,
+      ashWed,
+      firstAdvent,
+      baptism,
+      pentecost,
+      christKing,
+    );
 
     return LiturgicalDay(
       date: date,
@@ -267,8 +346,12 @@ class LiturgicalCalendar {
   }
 
   // ── Colour ────────────────────────────────────────────────────────────────
-  LiturgicalColor _seasonColour(LiturgicalSeason s, DateTime date,
-      DateTime ashWed, DateTime firstAdvent) {
+  LiturgicalColor _seasonColour(
+    LiturgicalSeason s,
+    DateTime date,
+    DateTime ashWed,
+    DateTime firstAdvent,
+  ) {
     switch (s) {
       case LiturgicalSeason.advent:
         // Gaudete — 3rd Sunday of Advent.
@@ -289,8 +372,14 @@ class LiturgicalCalendar {
   }
 
   // ── Ferial naming & precedence ────────────────────────────────────────────
-  String _ferialName(LiturgicalSeason s, DateTime date, DateTime easter,
-      DateTime ashWed, DateTime firstAdvent, bool isSunday) {
+  String _ferialName(
+    LiturgicalSeason s,
+    DateTime date,
+    DateTime easter,
+    DateTime ashWed,
+    DateTime firstAdvent,
+    bool isSunday,
+  ) {
     switch (s) {
       case LiturgicalSeason.advent:
         final w = (_diffDays(firstAdvent, date) ~/ 7) + 1;
@@ -321,7 +410,11 @@ class LiturgicalCalendar {
   }
 
   String _christmasFerialName(DateTime date) {
-    final christmas = DateTime(date.month == 1 ? date.year - 1 : date.year, 12, 25);
+    final christmas = DateTime(
+      date.month == 1 ? date.year - 1 : date.year,
+      12,
+      25,
+    );
     final n = _diffDays(christmas, date) + 1; // 1 = Christmas Day
     if (n >= 2 && n <= 8) return '$nº dia da Oitava do Natal';
     if (date.month == 1 && date.day >= 2 && date.day <= 5) {
@@ -330,14 +423,18 @@ class LiturgicalCalendar {
     return '${_weekdayNamePt(date)} do Tempo do Natal';
   }
 
-  int _ferialPrecedence(LiturgicalSeason s, DateTime date, bool isSunday,
-      DateTime firstAdvent, DateTime christmas) {
+  int _ferialPrecedence(
+    LiturgicalSeason s,
+    DateTime date,
+    bool isSunday,
+    DateTime firstAdvent,
+    DateTime christmas,
+  ) {
     if (isSunday) {
       return switch (s) {
         LiturgicalSeason.advent ||
         LiturgicalSeason.lent ||
-        LiturgicalSeason.easter =>
-          _P.principal,
+        LiturgicalSeason.easter => _P.principal,
         _ => _P.sundayOrdinary,
       };
     }
@@ -348,8 +445,8 @@ class LiturgicalCalendar {
             ? _P.privilegedWeekday
             : _P.weekday;
       case LiturgicalSeason.christmas:
-        final inOctave = !date.isBefore(christmas) &&
-            _diffDays(christmas, date) <= 7;
+        final inOctave =
+            !date.isBefore(christmas) && _diffDays(christmas, date) <= 7;
         return inOctave ? _P.privilegedWeekday : _P.weekday;
       case LiturgicalSeason.lent:
         return _P.privilegedWeekday;
@@ -360,20 +457,22 @@ class LiturgicalCalendar {
 
   // ── Week of the season ────────────────────────────────────────────────────
   int? _week(
-      LiturgicalSeason s,
-      DateTime date,
-      DateTime easter,
-      DateTime ashWed,
-      DateTime firstAdvent,
-      DateTime baptism,
-      DateTime pentecost,
-      DateTime christKing) {
+    LiturgicalSeason s,
+    DateTime date,
+    DateTime easter,
+    DateTime ashWed,
+    DateTime firstAdvent,
+    DateTime baptism,
+    DateTime pentecost,
+    DateTime christKing,
+  ) {
     switch (s) {
       case LiturgicalSeason.advent:
         return (_diffDays(firstAdvent, date) ~/ 7) + 1;
       case LiturgicalSeason.lent:
         final firstLentSun = _firstSundayAfter(ashWed);
-        if (date.isBefore(firstLentSun)) return null; // days after Ash Wednesday
+        if (date.isBefore(firstLentSun))
+          return null; // days after Ash Wednesday
         return (_diffDays(firstLentSun, date) ~/ 7) + 1;
       case LiturgicalSeason.easter:
         return (_diffDays(easter, date) ~/ 7) + 1;
@@ -402,7 +501,10 @@ class LiturgicalCalendar {
   /// Holy Week). This engine applies the general rule — postponement — so such
   /// a year will differ from the decree by a few days.
   List<SanctoralEntry> _sanctoralFor(
-      DateTime date, DateTime easter, DateTime firstAdvent) {
+    DateTime date,
+    DateTime easter,
+    DateTime firstAdvent,
+  ) {
     final out = <SanctoralEntry>[];
     if (!_isImpeded(date, easter)) {
       out.addAll(_index()[date.month * 100 + date.day] ?? const []);
@@ -467,7 +569,8 @@ class LiturgicalCalendar {
     if (d.weekday != DateTime.sunday) return false;
     final ashWed = _add(easter, -46);
     final pentecost = _add(easter, 49);
-    if (!d.isBefore(ashWed) && d.isBefore(easter)) return true; // Sundays of Lent
+    if (!d.isBefore(ashWed) && d.isBefore(easter))
+      return true; // Sundays of Lent
     if (!d.isBefore(easter) && !d.isAfter(pentecost)) return true; // of Easter
     final adventStart = _firstSundayOfAdvent(d.year);
     final christmas = DateTime(d.year, 12, 25);
@@ -491,9 +594,14 @@ class LiturgicalCalendar {
     // Canon 1251: abstinence on every Friday unless a solemnity falls on it.
     final abstinence = fast || (isFriday && !isSolemnity);
 
-    final holyDay = date.weekday == DateTime.sunday ||
-        sanctoral.any((e) =>
-            e.holyDayOfObligation && e.month == date.month && e.day == date.day);
+    final holyDay =
+        date.weekday == DateTime.sunday ||
+        sanctoral.any(
+          (e) =>
+              e.holyDayOfObligation &&
+              e.month == date.month &&
+              e.day == date.day,
+        );
 
     final inEasterOctave =
         !date.isBefore(easter) && !date.isAfter(easterOctaveEnd);
@@ -573,12 +681,12 @@ class LiturgicalCalendar {
 
   /// Portuguese weekday, as the Roman calendar names ferias.
   static String _weekdayNamePt(DateTime d) => switch (d.weekday) {
-        DateTime.monday => 'Segunda-feira',
-        DateTime.tuesday => 'Terça-feira',
-        DateTime.wednesday => 'Quarta-feira',
-        DateTime.thursday => 'Quinta-feira',
-        DateTime.friday => 'Sexta-feira',
-        DateTime.saturday => 'Sábado',
-        _ => 'Domingo',
-      };
+    DateTime.monday => 'Segunda-feira',
+    DateTime.tuesday => 'Terça-feira',
+    DateTime.wednesday => 'Quarta-feira',
+    DateTime.thursday => 'Quinta-feira',
+    DateTime.friday => 'Sexta-feira',
+    DateTime.saturday => 'Sábado',
+    _ => 'Domingo',
+  };
 }

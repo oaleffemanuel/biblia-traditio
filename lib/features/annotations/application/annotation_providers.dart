@@ -8,11 +8,18 @@ class AnnotationController {
   final Ref _ref;
   AnnotationController(this._ref);
 
-  void _bump() =>
-      _ref.read(userDataRevisionProvider.notifier).state++;
+  void _bump() => _ref.read(userDataRevisionProvider.notifier).state++;
 
-  void setHighlight(VerseRef r, HighlightColor c) {
-    _ref.read(userDbProvider)?.setHighlight(r, c);
+  void setHighlight(
+    VerseRef r,
+    HighlightColor c, {
+    int? start,
+    int? end,
+    String? excerpt,
+  }) {
+    _ref
+        .read(userDbProvider)
+        ?.setHighlight(r, c, start: start, end: end, excerpt: excerpt);
     _bump();
   }
 
@@ -53,8 +60,9 @@ class AnnotationController {
   }
 }
 
-final annotationControllerProvider =
-    Provider((ref) => AnnotationController(ref));
+final annotationControllerProvider = Provider(
+  (ref) => AnnotationController(ref),
+);
 
 // ── Read providers (re-query whenever the revision changes) ────────────────
 T _read<T>(Ref ref, T Function() compute, T fallback) {
@@ -63,43 +71,64 @@ T _read<T>(Ref ref, T Function() compute, T fallback) {
   return db == null ? fallback : compute();
 }
 
-final highlightsForChapterProvider = Provider.family<Map<int, HighlightColor>,
-    ({String bookId, int chapter})>((ref, key) {
-  return _read(ref,
-      () => ref.read(userDbProvider)!.highlightsForChapter(key.bookId, key.chapter),
-      const {});
-});
+final highlightsForChapterProvider =
+    Provider.family<Map<int, HighlightMark>, ({String bookId, int chapter})>((
+      ref,
+      key,
+    ) {
+      return _read(
+        ref,
+        () => ref
+            .read(userDbProvider)!
+            .highlightsForChapter(key.bookId, key.chapter),
+        const {},
+      );
+    });
 
-final isBookmarkedProvider = Provider.family<bool, VerseRef>((ref, r) =>
-    _read(ref, () => ref.read(userDbProvider)!.isBookmarked(r), false));
+final isBookmarkedProvider = Provider.family<bool, VerseRef>(
+  (ref, r) =>
+      _read(ref, () => ref.read(userDbProvider)!.isBookmarked(r), false),
+);
 
-final isFavoriteProvider = Provider.family<bool, VerseRef>((ref, r) =>
-    _read(ref, () => ref.read(userDbProvider)!.isFavorite(r), false));
+final isFavoriteProvider = Provider.family<bool, VerseRef>(
+  (ref, r) => _read(ref, () => ref.read(userDbProvider)!.isFavorite(r), false),
+);
 
-final notesForVerseProvider = Provider.family<List<Note>, VerseRef>((ref, r) =>
-    _read(ref, () => ref.read(userDbProvider)!.notesForVerse(r), const []));
+final notesForVerseProvider = Provider.family<List<Note>, VerseRef>(
+  (ref, r) =>
+      _read(ref, () => ref.read(userDbProvider)!.notesForVerse(r), const []),
+);
 
-final allNotesProvider = Provider.family<List<Note>, String?>((ref, query) =>
-    _read(ref, () => ref.read(userDbProvider)!.allNotes(query: query), const []));
+final allNotesProvider = Provider.family<List<Note>, String?>(
+  (ref, query) => _read(
+    ref,
+    () => ref.read(userDbProvider)!.allNotes(query: query),
+    const [],
+  ),
+);
 
-final allFavoritesProvider = Provider<List<Favorite>>((ref) =>
-    _read(ref, () => ref.read(userDbProvider)!.allFavorites(), const []));
+final allFavoritesProvider = Provider<List<Favorite>>(
+  (ref) => _read(ref, () => ref.read(userDbProvider)!.allFavorites(), const []),
+);
 
-final allHighlightsProvider = Provider<List<Highlight>>((ref) =>
-    _read(ref, () => ref.read(userDbProvider)!.allHighlights(), const []));
+final allHighlightsProvider = Provider<List<Highlight>>(
+  (ref) =>
+      _read(ref, () => ref.read(userDbProvider)!.allHighlights(), const []),
+);
 
-final latestProgressProvider = Provider<ReadingPosition?>((ref) =>
-    _read(ref, () => ref.read(userDbProvider)!.latestProgress(), null));
+final latestProgressProvider = Provider<ReadingPosition?>(
+  (ref) => _read(ref, () => ref.read(userDbProvider)!.latestProgress(), null),
+);
 
 /// Counts for Home quick-action badges.
 final userCountsProvider =
     Provider<({int notes, int favorites, int highlights})>((ref) {
-  return _read(ref, () {
-    final db = ref.read(userDbProvider)!;
-    return (
-      notes: db.countFor('note'),
-      favorites: db.countFor('favorite'),
-      highlights: db.countFor('highlight'),
-    );
-  }, (notes: 0, favorites: 0, highlights: 0));
-});
+      return _read(ref, () {
+        final db = ref.read(userDbProvider)!;
+        return (
+          notes: db.countFor('note'),
+          favorites: db.countFor('favorite'),
+          highlights: db.countFor('highlight'),
+        );
+      }, (notes: 0, favorites: 0, highlights: 0));
+    });

@@ -63,8 +63,10 @@ class ContentPackageManager {
         ok.readAsStringSync().trim() == '${pkg.version}';
   }
 
-  Future<void> ensureRequiredInstalled(List<ContentPackage> packages,
-      {void Function(String id, double progress)? onProgress}) async {
+  Future<void> ensureRequiredInstalled(
+    List<ContentPackage> packages, {
+    void Function(String id, double progress)? onProgress,
+  }) async {
     await _contentDir();
     for (final pkg in packages.where((p) => p.required)) {
       if (!isInstalled(pkg)) await install(pkg, onProgress: onProgress);
@@ -86,16 +88,22 @@ class ContentPackageManager {
   /// increased (e.g. corrected commentary). Never installs a package the user
   /// never chose — optional packs stay opt-in; this only keeps existing ones
   /// current so a content update can't strand availability (e.g. gold dots).
-  Future<void> refreshOutdatedBundled(List<ContentPackage> packages,
-      {void Function(String id, double progress)? onProgress}) async {
+  Future<void> refreshOutdatedBundled(
+    List<ContentPackage> packages, {
+    void Function(String id, double progress)? onProgress,
+  }) async {
     await _contentDir();
-    for (final pkg in packages.where((p) => p.isBundled && _presentButStale(p))) {
+    for (final pkg in packages.where(
+      (p) => p.isBundled && _presentButStale(p),
+    )) {
       await install(pkg, onProgress: onProgress);
     }
   }
 
-  Future<void> install(ContentPackage pkg,
-      {void Function(String id, double progress)? onProgress}) async {
+  Future<void> install(
+    ContentPackage pkg, {
+    void Function(String id, double progress)? onProgress,
+  }) async {
     await _contentDir();
     onProgress?.call(pkg.id, 0);
 
@@ -106,7 +114,8 @@ class ContentPackageManager {
     } else {
       // Remote packages (future): download pkg.url here. Not yet enabled.
       throw PackageInstallException(
-          'Remote package "${pkg.id}" requires download (not enabled).');
+        'Remote package "${pkg.id}" requires download (not enabled).',
+      );
     }
     onProgress?.call(pkg.id, 0.4);
 
@@ -122,7 +131,8 @@ class ContentPackageManager {
     if (pkg.sha256.isNotEmpty && sha != pkg.sha256) {
       File(dest).deleteSync();
       throw PackageInstallException(
-          'Checksum mismatch for "${pkg.id}" (expected ${pkg.sha256}, got $sha).');
+        'Checksum mismatch for "${pkg.id}" (expected ${pkg.sha256}, got $sha).',
+      );
     }
     await _okMarker(pkg.id).writeAsString('${pkg.version}');
     onProgress?.call(pkg.id, 1);

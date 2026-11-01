@@ -1132,4 +1132,82 @@ class AppL10nPt extends AppL10n {
 
   @override
   String get shareExcerptNone => 'Selecione ao menos uma frase.';
+
+  @override
+  String get navThemes => 'Temas';
+
+  @override
+  String get themeComments => 'Comentários';
+
+  @override
+  String get themeReadMore => 'Ler mais';
+
+  @override
+  String get parallelPresetLabel => 'Padrão do texto paralelo';
+
+  @override
+  String get presetCustom => 'Escolher manualmente';
+
+  @override
+  String get presetLatin => 'Antigo e Novo Testamento — Latim';
+
+  @override
+  String get presetGreek => 'Antigo e Novo Testamento — Grego';
+
+  @override
+  String get presetHebrewGreek =>
+      'Antigo Testamento hebraico | Novo Testamento grego';
+
+  @override
+  String get presetLatinGreek =>
+      'Antigo Testamento latim | Novo Testamento grego';
+
+  @override
+  String get presetLatinHint => 'Vulgata Clementina nos dois Testamentos';
+
+  @override
+  String get presetGreekHint => 'Septuaginta (Swete) no AT, SBLGNT no NT';
+
+  @override
+  String get presetHebrewGreekHint =>
+      'Códice de Leningrado no AT, SBLGNT no NT';
+
+  @override
+  String get presetLatinGreekHint => 'Vulgata Clementina no AT, SBLGNT no NT';
+
+  @override
+  String get settingsFont => 'Fonte';
+
+  @override
+  String get settingsFontSize => 'Tamanho da letra';
+
+  @override
+  String get fontGaramond => 'EB Garamond (serifada)';
+
+  @override
+  String get fontInter => 'Inter (sem serifa)';
+
+  @override
+  String get fontSystem => 'Fonte do sistema';
+
+  @override
+  String get fontSizeSmall => 'Pequena';
+
+  @override
+  String get fontSizeNormal => 'Normal';
+
+  @override
+  String get fontSizeLarge => 'Grande';
+
+  @override
+  String get fontSizeLarger => 'Maior';
+
+  @override
+  String get fontSizeMax => 'Máxima';
+
+  @override
+  String get highlightExcerpt => 'Grifar trecho';
+
+  @override
+  String get highlightPickColor => 'Cor do grifo';
 }

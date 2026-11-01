@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/di/providers.dart';
+import '../../bible/domain/entities.dart';
 import '../domain/settings.dart';
 
 /// Current settings, read from the user DB and refreshed via the revision
@@ -31,8 +32,7 @@ class SettingsController {
   void completeOnboarding() => _set('onboardingCompleted', 'true');
 
   void setParallelReading(bool v) => _set('parallelReadingEnabled', '$v');
-  void setSecondaryTranslation(String id) =>
-      _set('secondaryTranslationId', id);
+  void setSecondaryTranslation(String id) => _set('secondaryTranslationId', id);
   void setParallelLayout(ParallelLayout l) =>
       _set('parallelLayout', Settings.parallelLayoutKey(l));
 
@@ -40,6 +40,9 @@ class SettingsController {
       _set('translationStyle', s.key);
   void setParallelPreference(ParallelPreference p) =>
       _set('parallelPreference', p.langCode);
+  void setParallelPreset(ParallelPreset p) => _set('parallelPreset', p.key);
+  void setFontScale(double v) => _set('fontScale', v.toStringAsFixed(2));
+  void setReadingFont(ReadingFont f) => _set('readingFont', f.key);
 
   /// Commentary display preferences are written as one unit so a partial write
   /// can never leave, say, a century filter on with its classification gone.
@@ -47,7 +50,9 @@ class SettingsController {
     final db = _ref.read(userDbProvider);
     db?.setSetting('commentaryClasses', CommentaryPrefs.joinStrings(p.classes));
     db?.setSetting(
-        'commentaryCenturies', CommentaryPrefs.joinInts(p.centuries));
+      'commentaryCenturies',
+      CommentaryPrefs.joinInts(p.centuries),
+    );
     db?.setSetting('commentaryOnlySaints', '${p.onlySaints}');
     _ref.read(userDataRevisionProvider.notifier).state++;
   }
@@ -55,14 +60,13 @@ class SettingsController {
   void resetCommentaryPrefs() => setCommentaryPrefs(CommentaryPrefs.defaults);
 }
 
-final settingsControllerProvider =
-    Provider((ref) => SettingsController(ref));
+final settingsControllerProvider = Provider((ref) => SettingsController(ref));
 
 /// Translations actually available in the bundled content DB.
 final availableTranslationsProvider =
     Provider<List<({String id, String lang, String title})>>((ref) {
-  return ref.watch(contentDatabaseProvider)?.listTranslations() ?? const [];
-});
+      return ref.watch(contentDatabaseProvider)?.listTranslations() ?? const [];
+    });
 
 /// The translation to actually query: the user's preference if it exists in the
 /// DB, otherwise the first available one (e.g. falls back to `vulgata` in a
@@ -80,12 +84,12 @@ final resolvedTranslationIdProvider = Provider<String>((ref) {
 /// is installed (the common case today, where only the Vulgate ships).
 final secondaryTranslationCandidatesProvider =
     Provider<List<({String id, String lang, String title})>>((ref) {
-  final primary = ref.watch(resolvedTranslationIdProvider);
-  return ref
-      .watch(availableTranslationsProvider)
-      .where((t) => t.id != primary)
-      .toList();
-});
+      final primary = ref.watch(resolvedTranslationIdProvider);
+      return ref
+          .watch(availableTranslationsProvider)
+          .where((t) => t.id != primary)
+          .toList();
+    });
 
 /// The translation to render in the secondary column, or `null` when the user
 /// hasn't chosen one, it isn't installed, or it collides with the primary.
@@ -97,40 +101,96 @@ final resolvedSecondaryTranslationIdProvider = Provider<String?>((ref) {
   return candidates.any((t) => t.id == pref) ? pref : null;
 });
 
+/// The secondary column for the book being read. With a [ParallelPreset] the
+/// companion text is chosen per Testament (Septuagint for Genesis, SBLGNT for
+/// Matthew…) among the installed translations that actually carry that book;
+/// with [ParallelPreset.custom] it is whatever the reader picked by hand.
+/// Never the primary, never a text that would be empty for this book.
+final secondaryTranslationForBookProvider = Provider.family<String?, String>((
+  ref,
+  bookId,
+) {
+  final s = ref.watch(settingsProvider);
+  if (s.parallelPreset == ParallelPreset.custom) {
+    return ref.watch(resolvedSecondaryTranslationIdProvider);
+  }
+  final db = ref.watch(contentDatabaseProvider);
+  if (db == null) return null;
+  final isOt = db.listBooks().any(
+    (b) => b.id == bookId && b.testament == Testament.ot,
+  );
+  final want = switch (s.parallelPreset) {
+    ParallelPreset.latin => ParallelPreference.latin,
+    ParallelPreset.greek => ParallelPreference.greek,
+    ParallelPreset.hebrewGreek =>
+      isOt ? ParallelPreference.hebrew : ParallelPreference.greek,
+    ParallelPreset.latinGreek =>
+      isOt ? ParallelPreference.latin : ParallelPreference.greek,
+    ParallelPreset.custom => ParallelPreference.none,
+  };
+  for (final t in ref.watch(secondaryTranslationCandidatesProvider)) {
+    if (_langMatches(t.lang, want) && db.translationHasBook(t.id, bookId)) {
+      return t.id;
+    }
+  }
+  return null;
+});
+
+/// Presets that can be honoured with what is installed. A preset is listed
+/// only when every language it needs is present — never as a promise.
+final availableParallelPresetsProvider = Provider<List<ParallelPreset>>((ref) {
+  final installed = ref.watch(availableTranslationsProvider);
+  bool has(ParallelPreference p) =>
+      installed.any((t) => _langMatches(t.lang, p));
+  return [
+    ParallelPreset.custom,
+    if (has(ParallelPreference.latin)) ParallelPreset.latin,
+    if (has(ParallelPreference.greek)) ParallelPreset.greek,
+    if (has(ParallelPreference.hebrew) && has(ParallelPreference.greek))
+      ParallelPreset.hebrewGreek,
+    if (has(ParallelPreference.latin) && has(ParallelPreference.greek))
+      ParallelPreset.latinGreek,
+  ];
+});
+
 /// The reader's commentary display preferences.
 final commentaryPrefsProvider = Provider<CommentaryPrefs>(
-    (ref) => ref.watch(settingsProvider).commentaryPrefs);
+  (ref) => ref.watch(settingsProvider).commentaryPrefs,
+);
 
 /// Centuries actually represented in the installed patristics pack, so the
 /// filter chips never offer one that would return nothing. Empty when the pack
 /// isn't installed.
 final commentaryCenturiesProvider = Provider<List<int>>(
-    (ref) => ref.watch(contentDatabaseProvider)?.commentaryCenturies() ?? const []);
+  (ref) =>
+      ref.watch(contentDatabaseProvider)?.commentaryCenturies() ?? const [],
+);
 
 /// Original-language options that are genuinely available: a [ParallelPreference]
 /// is listed only when an installed translation carries its language code.
 /// Greek and Hebrew therefore appear in onboarding exactly when their text
 /// ships — never as a promise.
-final availableParallelPreferencesProvider =
-    Provider<List<ParallelPreference>>((ref) {
-  final installed = ref.watch(availableTranslationsProvider);
-  return [
-    ParallelPreference.none,
-    for (final p in [
-      ParallelPreference.latin,
-      ParallelPreference.greek,
-      ParallelPreference.hebrew,
-    ])
-      if (installed.any((t) => _langMatches(t.lang, p))) p,
-  ];
-});
+final availableParallelPreferencesProvider = Provider<List<ParallelPreference>>(
+  (ref) {
+    final installed = ref.watch(availableTranslationsProvider);
+    return [
+      ParallelPreference.none,
+      for (final p in [
+        ParallelPreference.latin,
+        ParallelPreference.greek,
+        ParallelPreference.hebrew,
+      ])
+        if (installed.any((t) => _langMatches(t.lang, p))) p,
+    ];
+  },
+);
 
 bool _langMatches(String lang, ParallelPreference p) => switch (p) {
-      ParallelPreference.latin => lang == 'la',
-      ParallelPreference.greek => lang == 'grc' || lang == 'el',
-      ParallelPreference.hebrew => lang == 'he' || lang == 'hbo',
-      ParallelPreference.none => false,
-    };
+  ParallelPreference.latin => lang == 'la',
+  ParallelPreference.greek => lang == 'grc' || lang == 'el',
+  ParallelPreference.hebrew => lang == 'he' || lang == 'hbo',
+  ParallelPreference.none => false,
+};
 
 /// Turns the onboarding style answer into a *suggestion* — the first of the
 /// preferred editions that is actually installed. It only preselects the next
@@ -141,8 +201,10 @@ bool _langMatches(String lang, ParallelPreference p) => switch (p) {
 /// The orderings reflect what each edition is: Matos Soares is the annotated
 /// Catholic Portuguese translation, the internal Portuguese text is the plainer
 /// reading, and the Clementine Vulgate is the Church's liturgical Latin.
-String? suggestedTranslationId(TranslationStyle style,
-    List<({String id, String lang, String title})> installed) {
+String? suggestedTranslationId(
+  TranslationStyle style,
+  List<({String id, String lang, String title})> installed,
+) {
   const preference = {
     TranslationStyle.academic: ['pt_matos_soares', 'vulgata', 'pt_beta'],
     TranslationStyle.simple: ['pt_beta', 'pt_matos_soares', 'vulgata'],
@@ -158,8 +220,9 @@ String? suggestedTranslationId(TranslationStyle style,
 /// The installed translation that satisfies [p], or null. Used to turn the
 /// onboarding answer into a concrete secondary column.
 ({String id, String lang, String title})? translationForParallel(
-    List<({String id, String lang, String title})> installed,
-    ParallelPreference p) {
+  List<({String id, String lang, String title})> installed,
+  ParallelPreference p,
+) {
   for (final t in installed) {
     if (_langMatches(t.lang, p)) return t;
   }

@@ -10,18 +10,17 @@ Commentary _c({
   String century = 'V',
   String role = 'doutor-da-igreja',
   Set<String> groups = const {'patristica', 'santos'},
-}) =>
-    Commentary(
-      id: 1,
-      ref: const VerseRef('jn', 1, 1),
-      fatherName: name,
-      century: century,
-      source: null,
-      isMachineTranslation: true,
-      text: 'texto',
-      rolePrimary: role,
-      roleGroups: groups,
-    );
+}) => Commentary(
+  id: 1,
+  ref: const VerseRef('jn', 1, 1),
+  fatherName: name,
+  century: century,
+  source: null,
+  isMachineTranslation: true,
+  text: 'texto',
+  rolePrimary: role,
+  roleGroups: groups,
+);
 
 void main() {
   group('defaults', () {
@@ -63,7 +62,10 @@ void main() {
 
   test('"saints only" overrides the other filters', () {
     const p = CommentaryPrefs(
-        classes: {'escolastica'}, centuries: {13}, onlySaints: true);
+      classes: {'escolastica'},
+      centuries: {13},
+      onlySaints: true,
+    );
     expect(p.allows(_c(groups: const {'santos'}, century: 'V')), isTrue);
     expect(p.allows(_c(groups: const {'patristica'}, century: 'V')), isFalse);
   });
@@ -90,13 +92,17 @@ void main() {
     });
 
     test('a fresh install reads back the permissive default', () {
-      expect(Settings.fromMap(db.allSettings()).commentaryPrefs,
-          CommentaryPrefs.defaults);
+      expect(
+        Settings.fromMap(db.allSettings()).commentaryPrefs,
+        CommentaryPrefs.defaults,
+      );
     });
 
     test('preferences survive a round trip through the user DB', () {
-      db.setSetting('commentaryClasses',
-          CommentaryPrefs.joinStrings({'patristica', 'santos'}));
+      db.setSetting(
+        'commentaryClasses',
+        CommentaryPrefs.joinStrings({'patristica', 'santos'}),
+      );
       db.setSetting('commentaryCenturies', CommentaryPrefs.joinInts({4, 13}));
       db.setSetting('commentaryOnlySaints', 'true');
 
@@ -113,11 +119,20 @@ void main() {
       db.setSetting('commentaryOnlySaints', 'true');
 
       const reset = CommentaryPrefs.defaults;
-      db.setSetting('commentaryClasses', CommentaryPrefs.joinStrings(reset.classes));
-      db.setSetting('commentaryCenturies', CommentaryPrefs.joinInts(reset.centuries));
+      db.setSetting(
+        'commentaryClasses',
+        CommentaryPrefs.joinStrings(reset.classes),
+      );
+      db.setSetting(
+        'commentaryCenturies',
+        CommentaryPrefs.joinInts(reset.centuries),
+      );
       db.setSetting('commentaryOnlySaints', '${reset.onlySaints}');
 
-      expect(Settings.fromMap(db.allSettings()).commentaryPrefs.isDefault, isTrue);
+      expect(
+        Settings.fromMap(db.allSettings()).commentaryPrefs.isDefault,
+        isTrue,
+      );
     });
   });
 

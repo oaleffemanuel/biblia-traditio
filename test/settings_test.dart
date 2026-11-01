@@ -33,7 +33,10 @@ void main() {
   test('parallel reading preferences persist and reconstruct', () {
     db.setSetting('parallelReadingEnabled', 'true');
     db.setSetting('secondaryTranslationId', 'drb');
-    db.setSetting('parallelLayout', Settings.parallelLayoutKey(ParallelLayout.sideBySide));
+    db.setSetting(
+      'parallelLayout',
+      Settings.parallelLayoutKey(ParallelLayout.sideBySide),
+    );
 
     final s = Settings.fromMap(db.allSettings());
     expect(s.parallelReadingEnabled, isTrue);

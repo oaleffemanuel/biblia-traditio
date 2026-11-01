@@ -13,7 +13,9 @@ final contentDatabaseProvider = Provider<ContentDatabase?>((ref) {
   final paths = ref.watch(contentPathsProvider);
   if (paths.bible == null) return null;
   final db = ContentDatabase.open(
-      biblePath: paths.bible!, patristicsPath: paths.patristics);
+    biblePath: paths.bible!,
+    patristicsPath: paths.patristics,
+  );
   ref.onDispose(db.dispose);
   return db;
 });
@@ -28,7 +30,8 @@ final userDatabaseProvider = FutureProvider<UserDatabase>((ref) async {
 
 /// Synchronous handle to the user DB once opened (null during the brief open).
 final userDbProvider = Provider<UserDatabase?>(
-    (ref) => ref.watch(userDatabaseProvider).value);
+  (ref) => ref.watch(userDatabaseProvider).value,
+);
 
 /// Bumped after every user-data write so read providers re-query.
 final userDataRevisionProvider = StateProvider<int>((_) => 0);

@@ -148,6 +148,36 @@ opening verse from the installed Bible and the count of patristic commentaries i
 `ContentDatabase.commentaryCountInRange`) → tap opens the Reader at the first verse. Routes `/themes`, `/themes/:id`.
 The dataset is a first tranche for review by the owner and Rômulo; adding a theme is a JSON edit.
 
+**Team request batch (2026-10-31).** (1) **Septuagint** (Swete 1930, PD) imported as `grc_lxx` from the team's
+per-book JSON via `tool/importer/convert_bt_json.py` (text only; LXX Ps 151 dropped; psalms already in LXX/Vulgate
+numbering). Their SBLGNT and Hebrew (WLC) folders are the same sources the app already ships, so ours were kept.
+(2) **Parallel presets** (`ParallelPreset`: Latin both / Greek both / Hebrew OT + Greek NT / Latin OT + Greek NT /
+custom): the primary stays the reader's translation; `secondaryTranslationForBookProvider` chooses the companion per
+Testament among installed texts that actually carry the book (`ContentDatabase.translationHasBook`), offered only when
+the needed languages are installed (`availableParallelPresetsProvider`); radio group in the Parallel sheet, onboarding
+maps its answer to a preset. (3) **Typeface + text size** in Settings (`ReadingFont` EB Garamond/Inter/system via
+`readingTextStyle`; `fontScale` 0.85–1.5 applied as a MediaQuery text scaler to the reader and the commentary panel).
+(4) **Themes tab**: the thematic library is the 4th bottom tab (`/themes`, `/themes/:id` as a shell branch).
+(5) **Complete thematic library** from the team's Apologistas Católicos compilation: `tool/build_themes.py` turns
+`secoes/temas/referencias/subtopicos/comentarios` into `assets/themes/themes.json` v2 — 12 groups, 82 themes, 2,158
+passages (incl. subtopics), 39 commentaries; references parsed with aliases (2mc→2mac, jude→jud, ru→rt, ti→tit),
+psalms converted from Hebrew to Vulgate numbering verse-aware and labelled "Sl 89(90)", every range checked against the
+Vulgate (10 end-verses clamped, 0 dropped). **Caution:** 30 of the 39 commentaries cite "2014 (© da edição digital)" /
+"2016 (ed. digital)" — a copyrighted modern translation; they are shown with that provenance line but must be
+replaced with public-domain translations or licensed before store release. The hand-made 33-theme set was superseded.
+
+**Same batch, later the same day.** (6) **Excerpt highlights** ("grifo de trecho", as in Play Books): long-press-and-drag
+selects words inside a verse; the selection toolbar gains "Grifar trecho"; a colour sheet stores the range
+(`highlight.start_offset/end_offset/excerpt`, added by migration on first open) and the reader paints only that span
+(`applyHighlightRange`, which splits the existing spans so the raised initial survives). One highlight per verse: a new
+one replaces the old; whole-verse highlights from the verse-number long press still work and clear any range. The
+Highlights list shows the excerpt. Long-pressing the verse *text* no longer starts whole-verse selection — that gesture
+now belongs to word selection; whole-verse selection lives on the verse number. (7) **Opening animation** (Rômulo):
+the in-app splash became an animated sequence — gold ring draws itself around the emblem, which scales and fades in
+with a breathing glow, then the wordmark and tagline rise, then a thin gold progress line pulses — with a 2.2 s minimum
+so it plays even when content is already installed. (8) **Dark-theme psalm hero**: hero gradient on dark raised from
+near-black brown to deep terracotta (`heroStart #5B2419 → heroEnd #2B1511`) so the card reads as a card.
+
 **Pending next:** a Brazilian (CNBB) refrain source to fill `refrain_for()` — a US-lectionary refrain would be wrong on the days where CNBB differs, and the refrain is not derivable from the psalm text; lectionary beyond 2026; at-rest encryption; Septuagint/Hebrew packs (not shipped — see §16); extending the Saints dataset beyond its first tranche; translating the four planned languages; **and the Android upload keystore, which still does not exist.**
 
 ---

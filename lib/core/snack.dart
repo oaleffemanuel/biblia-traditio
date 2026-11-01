@@ -12,10 +12,12 @@ void showSnack(String message, {SnackBarAction? action}) {
   if (messenger == null) return;
   messenger
     ..clearSnackBars()
-    ..showSnackBar(SnackBar(
-      content: Text(message),
-      behavior: SnackBarBehavior.floating,
-      duration: const Duration(seconds: 2),
-      action: action,
-    ));
+    ..showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+        action: action,
+      ),
+    );
 }

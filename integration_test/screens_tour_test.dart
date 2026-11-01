@@ -80,16 +80,22 @@ void main() {
     await tap(tester, find.byIcon(Icons.view_column_outlined));
     await until(tester, find.byType(SwitchListTile));
     await tap(tester, find.byType(SwitchListTile));
-    final hasHebrew = await until(tester, find.textContaining('Hebraico'),
+    // Preset: Hebrew OT | Greek NT — the companion column follows the Testament.
+    final hasHebrew = await until(
+        tester, find.textContaining('hebraico | Novo Testamento grego'),
         limit: const Duration(seconds: 4));
     if (hasHebrew) {
-      await tap(tester, find.textContaining('Hebraico').last);
+      await hold(tester, 'parallel_presets');
+      await tap(tester, find.textContaining('hebraico | Novo Testamento grego'));
       await tester.tapAt(const Offset(200, 60));
       await tester.pump(const Duration(milliseconds: 600));
       await hold(tester, 'parallel_hebrew');
       await tap(tester, find.byIcon(Icons.view_column_outlined));
-      await until(tester, find.byType(SwitchListTile));
-      await tap(tester, find.byType(SwitchListTile));
+      if (await until(tester, find.byType(SwitchListTile),
+          limit: const Duration(seconds: 4))) {
+        await hold(tester, 'parallel_sheet_presets');
+        await tap(tester, find.byType(SwitchListTile));
+      }
       await tester.tapAt(const Offset(200, 60));
       await tester.pump(const Duration(milliseconds: 600));
     } else {
@@ -102,11 +108,15 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
     expect(await until(tester, find.text('Biblioteca temática')), isTrue);
     await tap(tester, find.text('Biblioteca temática'));
-    expect(await until(tester, find.text('Eucaristia')), isTrue,
+    expect(await until(tester, find.textContaining('Santíssima Trindade')),
+        isTrue,
         reason: 'themes screen did not open');
     await hold(tester, 'themes');
-    await tap(tester, find.text('Eucaristia'));
-    await until(tester, find.text('Jo 6,22-59'));
+    await tester.scrollUntilVisible(find.textContaining('Eucaristia'), 300,
+        scrollable: find.byType(Scrollable).last);
+    await tester.pump(const Duration(milliseconds: 400));
+    await tap(tester, find.textContaining('Eucaristia').first);
+    await until(tester, find.textContaining('Jo 6'));
     await hold(tester, 'theme_eucaristia');
     await tap(tester, find.byType(BackButton));
     await tester.pump(const Duration(milliseconds: 500));
@@ -124,5 +134,16 @@ void main() {
     await tap(tester, back);
     await tap(tester, find.byIcon(Icons.settings_outlined));
     await hold(tester, 'settings');
+    await tap(tester, find.text('Tamanho da letra'));
+    await until(tester, find.text('Máxima'));
+    await hold(tester, 'settings_font_size');
+    await tap(tester, find.text('Grande'));
+    await tester.pump(const Duration(milliseconds: 500));
+    // Back to the reader to see the larger type with the preset column.
+    await tap(tester, find.byType(BackButton));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tap(tester, navItem('Bíblia'));
+    await until(tester, find.textContaining('No princípio'));
+    await hold(tester, 'reader_large');
   }, timeout: const Timeout(Duration(minutes: 6)));
 }

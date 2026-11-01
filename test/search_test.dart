@@ -2,18 +2,22 @@ import 'package:biblia_traditio/features/bible/domain/entities.dart';
 import 'package:biblia_traditio/features/search/application/search_providers.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-BibleBook _book(String id, String name, String abbrev,
-        {int chapters = 30, Testament t = Testament.nt}) =>
-    BibleBook(
-      id: id,
-      testament: t,
-      order: 1,
-      isDeutero: false,
-      chapterCount: chapters,
-      emblemAsset: '',
-      name: name,
-      abbrev: abbrev,
-    );
+BibleBook _book(
+  String id,
+  String name,
+  String abbrev, {
+  int chapters = 30,
+  Testament t = Testament.nt,
+}) => BibleBook(
+  id: id,
+  testament: t,
+  order: 1,
+  isDeutero: false,
+  chapterCount: chapters,
+  emblemAsset: '',
+  name: name,
+  abbrev: abbrev,
+);
 
 final _books = [
   _book('gn', 'Gênesis', 'Gn', chapters: 50, t: Testament.ot),
@@ -69,12 +73,14 @@ void main() {
       expect(r.chapter, 13);
     });
 
-    test('plain words are not citations and fall through to full-text search',
-        () {
-      for (final raw in ['amor', 'Espírito Santo', 'pastor']) {
-        expect(parseReference(raw), isNull, reason: raw);
-      }
-    });
+    test(
+      'plain words are not citations and fall through to full-text search',
+      () {
+        for (final raw in ['amor', 'Espírito Santo', 'pastor']) {
+          expect(parseReference(raw), isNull, reason: raw);
+        }
+      },
+    );
   });
 
   group('search results', () {
@@ -92,7 +98,10 @@ void main() {
       final hit = ReferenceHit(_books[3], 3, 16);
       expect(hit.label, 'João 3,16');
       expect(ReferenceHit(_books[3], 3, null).label, 'João 3');
-      expect(SearchResults(hit, const [], const [], const [], const []).total, 1);
+      expect(
+        SearchResults(hit, const [], const [], const [], const []).total,
+        1,
+      );
     });
   });
 }

@@ -9,6 +9,7 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/snack.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/reading_style.dart';
 import '../../annotations/application/annotation_providers.dart';
 import '../../annotations/domain/entities.dart';
 import '../../settings/application/settings_providers.dart';
@@ -156,6 +157,92 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       );
     }
     _clearSelection();
+  }
+
+  /// Excerpt highlight: the reader selected words inside one verse and chose
+  /// "Grifar trecho" from the selection toolbar. Offers the colours, then
+  /// stores the range (and the words, for the Highlights list).
+  Future<void> _highlightRange(
+    int number,
+    String text,
+    int start,
+    int end,
+  ) async {
+    final a = start.clamp(0, text.length);
+    final b = end.clamp(0, text.length);
+    if (b <= a) return;
+    final c = context.bt;
+    final l10n = context.l10n;
+    final vref = VerseRef(widget.bookId, widget.chapter, number);
+    final color = await showModalBottomSheet<HighlightColor>(
+      context: context,
+      backgroundColor: c.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.highlightPickColor,
+                style: Theme.of(ctx).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '“${text.substring(a, b)}”',
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  ctx,
+                ).textTheme.bodyLarge?.copyWith(fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  for (final hc in HighlightColor.values)
+                    Semantics(
+                      button: true,
+                      label: hc.key,
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(ctx, hc),
+                        behavior: HitTestBehavior.opaque,
+                        child: Padding(
+                          padding: const EdgeInsets.all(7),
+                          child: Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: hc.color,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: c.divider, width: 0.5),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (color == null || !mounted) return;
+    HapticFeedback.lightImpact();
+    ref
+        .read(annotationControllerProvider)
+        .setHighlight(
+          vref,
+          color,
+          start: a,
+          end: b,
+          excerpt: text.substring(a, b),
+        );
   }
 
   void _noteSelection(List<({int number, String text})> picked) {
@@ -353,7 +440,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     );
 
     final settings = ref.watch(settingsProvider);
-    final secondaryId = ref.watch(resolvedSecondaryTranslationIdProvider);
+    final secondaryId = ref.watch(secondaryTranslationForBookProvider(bookId));
     final parallelWanted = settings.parallelReadingEnabled;
     final parallelActive = parallelWanted && secondaryId != null;
     final parallel = parallelActive
@@ -381,101 +468,109 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final rows = parallel?.rows ?? const <ParallelVerse>[];
     final verseCount = parallelActive ? rows.length : verses.length;
 
-    return Scaffold(
-      appBar: AppBar(
-        titleSpacing: 0,
-        title: Row(
-          children: [
-            _pill(
-              c,
-              book?.testament == Testament.nt
-                  ? context.l10n.newTestamentShort
-                  : context.l10n.oldTestamentShort,
-              onTap: _pickBook,
+    final mq = MediaQuery.of(context);
+    return MediaQuery(
+      data: mq.copyWith(
+        textScaler: TextScaler.linear(
+          mq.textScaler.scale(1) * settings.fontScale,
+        ),
+      ),
+      child: Scaffold(
+        appBar: AppBar(
+          titleSpacing: 0,
+          title: Row(
+            children: [
+              _pill(
+                c,
+                book?.testament == Testament.nt
+                    ? context.l10n.newTestamentShort
+                    : context.l10n.oldTestamentShort,
+                onTap: _pickBook,
+              ),
+              const SizedBox(width: 6),
+              Flexible(child: _pill(c, book?.name ?? bookId, onTap: _pickBook)),
+            ],
+          ),
+          actions: [
+            if (book != null)
+              _pill(
+                c,
+                '$chapter${_psalmSuffix(bookId, chapter)}',
+                onTap: () => _pickChapter(book),
+              ),
+            IconButton(
+              icon: Icon(
+                Icons.view_column_outlined,
+                color: parallelActive ? c.accent : c.textSecondary,
+                size: 20,
+              ),
+              tooltip: context.l10n.parallelReading,
+              onPressed: _showParallelOptions,
             ),
-            const SizedBox(width: 6),
-            Flexible(child: _pill(c, book?.name ?? bookId, onTap: _pickBook)),
+            IconButton(
+              icon: Icon(
+                Icons.format_list_numbered,
+                color: c.textSecondary,
+                size: 20,
+              ),
+              tooltip: context.l10n.goToVerse,
+              onPressed: verseCount == 0 ? null : () => _pickVerse(verseCount),
+            ),
           ],
         ),
-        actions: [
-          if (book != null)
-            _pill(
-              c,
-              '$chapter${_psalmSuffix(bookId, chapter)}',
-              onTap: () => _pickChapter(book),
-            ),
-          IconButton(
-            icon: Icon(
-              Icons.view_column_outlined,
-              color: parallelActive ? c.accent : c.textSecondary,
-              size: 20,
-            ),
-            tooltip: context.l10n.parallelReading,
-            onPressed: _showParallelOptions,
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.format_list_numbered,
-              color: c.textSecondary,
-              size: 20,
-            ),
-            tooltip: context.l10n.goToVerse,
-            onPressed: verseCount == 0 ? null : () => _pickVerse(verseCount),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: (content == null)
-            ? _NoText(c)
-            : Column(
-                children: [
-                  // Parallel requested but no second translation is installed:
-                  // keep the primary readable, point the user to Settings.
-                  if (parallelWanted && secondaryId == null)
-                    const _SecondaryMissingBanner(),
-                  Expanded(
-                    child: _buildList(
-                      context: context,
-                      book: book,
-                      bookId: bookId,
-                      chapter: chapter,
-                      verses: verses,
-                      rows: rows,
-                      parallelActive: parallelActive,
-                      headingByVerse: headingByVerse,
-                      markers: markers,
-                      highlights: highlights,
-                      primaryLang: primaryLang,
-                      secondaryLang: secondaryLang,
-                    ),
-                  ),
-                  if (_selecting)
-                    _SelectionBar(
-                      count: _selTo - _selFrom + 1,
-                      showColors: _showColors,
-                      onClear: _clearSelection,
-                      onToggleColors: () =>
-                          setState(() => _showColors = !_showColors),
-                      onCopy: () => _copySelection(
-                        book,
-                        _selectedVerses(verses, rows, parallelActive),
-                      ),
-                      onShare: () =>
-                          _shareSelection(book, verses, rows, parallelActive),
-                      onNote: () => _noteSelection(
-                        _selectedVerses(verses, rows, parallelActive),
-                      ),
-                      onFavorite: () => _favoriteSelection(
-                        book,
-                        _selectedVerses(verses, rows, parallelActive),
-                      ),
-                      onPickColor: (color) => _highlightSelection(
-                        _selectedVerses(verses, rows, parallelActive),
-                        color,
+        body: SafeArea(
+          child: (content == null)
+              ? _NoText(c)
+              : Column(
+                  children: [
+                    // Parallel requested but no second translation is installed:
+                    // keep the primary readable, point the user to Settings.
+                    if (parallelWanted && secondaryId == null)
+                      const _SecondaryMissingBanner(),
+                    Expanded(
+                      child: _buildList(
+                        context: context,
+                        book: book,
+                        bookId: bookId,
+                        chapter: chapter,
+                        verses: verses,
+                        rows: rows,
+                        parallelActive: parallelActive,
+                        headingByVerse: headingByVerse,
+                        markers: markers,
+                        highlights: highlights,
+                        primaryLang: primaryLang,
+                        secondaryLang: secondaryLang,
                       ),
                     ),
-                ],
-              ),
+                    if (_selecting)
+                      _SelectionBar(
+                        count: _selTo - _selFrom + 1,
+                        showColors: _showColors,
+                        onClear: _clearSelection,
+                        onToggleColors: () =>
+                            setState(() => _showColors = !_showColors),
+                        onCopy: () => _copySelection(
+                          book,
+                          _selectedVerses(verses, rows, parallelActive),
+                        ),
+                        onShare: () =>
+                            _shareSelection(book, verses, rows, parallelActive),
+                        onNote: () => _noteSelection(
+                          _selectedVerses(verses, rows, parallelActive),
+                        ),
+                        onFavorite: () => _favoriteSelection(
+                          book,
+                          _selectedVerses(verses, rows, parallelActive),
+                        ),
+                        onPickColor: (color) => _highlightSelection(
+                          _selectedVerses(verses, rows, parallelActive),
+                          color,
+                        ),
+                      ),
+                  ],
+                ),
+        ),
       ),
     );
   }
@@ -490,10 +585,14 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     required bool parallelActive,
     required Map<int, SectionHeading> headingByVerse,
     required Set<int> markers,
-    required Map<int, HighlightColor> highlights,
+    required Map<int, HighlightMark> highlights,
     required String primaryLang,
     required String secondaryLang,
   }) {
+    final readingStyle = readingTextStyle(
+      context,
+      ref.watch(settingsProvider).readingFont,
+    );
     final count = parallelActive ? rows.length : verses.length;
     final sideBySide = parallelActive && _sideBySide(context);
 
@@ -531,8 +630,15 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             if (parallelActive)
               _ParallelVerseTile(
                 row: rows[index - 1],
+                baseStyle: readingStyle,
                 hasCommentary: markers.contains(number),
                 highlight: highlights[number],
+                onHighlightRange: (a, b) => _highlightRange(
+                  number,
+                  rows[index - 1].canonicalText,
+                  a,
+                  b,
+                ),
                 selected: _isSelected(number),
                 focused: number == _focused,
                 sideBySide: sideBySide,
@@ -552,8 +658,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             else
               _VerseTile(
                 verse: verses[index - 1],
+                baseStyle: readingStyle,
                 hasCommentary: markers.contains(number),
                 highlight: highlights[number],
+                onHighlightRange: (a, b) =>
+                    _highlightRange(number, verses[index - 1].text, a, b),
                 selected: _isSelected(number),
                 focused: number == _focused,
                 lang: primaryLang,
@@ -742,8 +851,10 @@ class _VerseNumber extends StatelessWidget {
 
 class _VerseTile extends StatelessWidget {
   final Verse verse;
+  final TextStyle? baseStyle;
   final bool hasCommentary;
-  final HighlightColor? highlight;
+  final HighlightMark? highlight;
+  final void Function(int start, int end)? onHighlightRange;
   final bool selected;
   final bool focused;
   final String lang;
@@ -751,8 +862,10 @@ class _VerseTile extends StatelessWidget {
   final VoidCallback onLongPress;
   const _VerseTile({
     required this.verse,
+    this.baseStyle,
     required this.hasCommentary,
     required this.highlight,
+    this.onHighlightRange,
     required this.selected,
     required this.focused,
     required this.lang,
@@ -776,10 +889,10 @@ class _VerseTile extends StatelessWidget {
                   color: c.accent.withValues(alpha: selected ? 0.5 : 0.3),
                 ),
               )
-            : highlight == null
+            : highlight == null || highlight!.isPartial
             ? null
             : BoxDecoration(
-                color: highlight!.color.withValues(alpha: 0.22),
+                color: highlight!.color.color.withValues(alpha: 0.22),
                 borderRadius: BorderRadius.circular(6),
               ),
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
@@ -808,15 +921,19 @@ class _VerseTile extends StatelessWidget {
               ),
               Expanded(
                 child: SelectableText.rich(
-                  TextSpan(children: _verseSpans(context, verse, lang)),
+                  TextSpan(
+                    children: applyHighlightRange(
+                      _verseSpans(context, verse, lang, baseStyle),
+                      highlight,
+                    ),
+                  ),
                   textAlign: scriptAlign(lang),
                   onTap: onTap,
-                  onSelectionChanged: (selection, cause) {
-                    if (!selection.isCollapsed &&
-                        cause == SelectionChangedCause.longPress) {
-                      onLongPress();
-                    }
-                  },
+                  // Long-press-and-drag selects words, as in a printed reader;
+                  // the toolbar then offers "Grifar trecho" for that span.
+                  // Whole-verse selection lives on the verse number.
+                  contextMenuBuilder: (ctx, state) =>
+                      verseContextMenu(ctx, state, onHighlightRange),
                 ),
               ),
             ],
@@ -835,8 +952,12 @@ class _VerseTile extends StatelessWidget {
     BuildContext context,
     Verse verse,
     String lang,
+    TextStyle? baseStyle,
   ) {
-    final base = scriptStyle(Theme.of(context).textTheme.bodyLarge, lang);
+    final base = scriptStyle(
+      baseStyle ?? Theme.of(context).textTheme.bodyLarge,
+      lang,
+    );
     final text = verse.text;
     if (verse.number != 1 || _nonLatin.contains(lang) || text.isEmpty) {
       return [TextSpan(text: text, style: base)];
@@ -865,8 +986,10 @@ class _VerseTile extends StatelessWidget {
 /// which column the user looks at.
 class _ParallelVerseTile extends StatelessWidget {
   final ParallelVerse row;
+  final TextStyle? baseStyle;
   final bool hasCommentary;
-  final HighlightColor? highlight;
+  final HighlightMark? highlight;
+  final void Function(int start, int end)? onHighlightRange;
   final bool selected;
   final bool focused;
   final bool sideBySide;
@@ -876,8 +999,10 @@ class _ParallelVerseTile extends StatelessWidget {
   final VoidCallback onLongPress;
   const _ParallelVerseTile({
     required this.row,
+    this.baseStyle,
     required this.hasCommentary,
     required this.highlight,
+    this.onHighlightRange,
     required this.selected,
     required this.focused,
     required this.sideBySide,
@@ -904,10 +1029,10 @@ class _ParallelVerseTile extends StatelessWidget {
                   color: c.accent.withValues(alpha: selected ? 0.5 : 0.3),
                 ),
               )
-            : highlight == null
+            : highlight == null || highlight!.isPartial
             ? null
             : BoxDecoration(
-                color: highlight!.color.withValues(alpha: 0.22),
+                color: highlight!.color.color.withValues(alpha: 0.22),
                 borderRadius: BorderRadius.circular(6),
               ),
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
@@ -1005,18 +1130,24 @@ class _ParallelVerseTile extends StatelessWidget {
         ),
       );
     }
-    final base = Theme.of(context).textTheme.bodyLarge;
+    final base = baseStyle ?? Theme.of(context).textTheme.bodyLarge;
     final style = scriptStyle(
       secondary ? base?.copyWith(color: c.textSecondary) : base,
       lang,
     );
     return scriptDirectionality(
       lang: lang,
-      child: SelectableText(
-        text,
-        style: style,
+      child: SelectableText.rich(
+        TextSpan(
+          children: applyHighlightRange([
+            TextSpan(text: text, style: style),
+          ], secondary ? null : highlight),
+        ),
         textAlign: scriptAlign(lang),
         onTap: onTap,
+        contextMenuBuilder: secondary
+            ? null
+            : (ctx, state) => verseContextMenu(ctx, state, onHighlightRange),
       ),
     );
   }
@@ -1238,6 +1369,7 @@ class _ParallelOptionsSheet extends ConsumerWidget {
     final ctrl = ref.read(settingsControllerProvider);
     final candidates = ref.watch(secondaryTranslationCandidatesProvider);
     final secondaryId = ref.watch(resolvedSecondaryTranslationIdProvider);
+    final presets = ref.watch(availableParallelPresetsProvider);
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -1276,6 +1408,27 @@ class _ParallelOptionsSheet extends ConsumerWidget {
             ),
             if (s.parallelReadingEnabled) ...[
               const Divider(height: 1),
+              _sectionLabel(c, l10n.parallelPresetLabel),
+              for (final p in presets)
+                RadioListTile<ParallelPreset>(
+                  value: p,
+                  groupValue: s.parallelPreset,
+                  onChanged: (v) =>
+                      ctrl.setParallelPreset(v ?? ParallelPreset.custom),
+                  activeColor: c.accent,
+                  dense: true,
+                  title: Text(presetLabel(l10n, p)),
+                  subtitle: presetHint(l10n, p) == null
+                      ? null
+                      : Text(
+                          presetHint(l10n, p)!,
+                          style: TextStyle(color: c.textFaint, fontSize: 12),
+                        ),
+                ),
+            ],
+            if (s.parallelReadingEnabled &&
+                s.parallelPreset == ParallelPreset.custom) ...[
+              const Divider(height: 1),
               _sectionLabel(c, l10n.secondaryTranslation),
               if (candidates.isEmpty)
                 _EmptySecondary(
@@ -1296,6 +1449,8 @@ class _ParallelOptionsSheet extends ConsumerWidget {
                         : null,
                     onTap: () => ctrl.setSecondaryTranslation(t.id),
                   ),
+            ],
+            if (s.parallelReadingEnabled) ...[
               const Divider(height: 1),
               _sectionLabel(c, l10n.parallelLayoutLabel),
               Padding(
@@ -1390,5 +1545,87 @@ class _NoText extends StatelessWidget {
         style: TextStyle(color: c.textSecondary, height: 1.5),
       ),
     ),
+  );
+}
+
+String presetLabel(AppL10n l10n, ParallelPreset p) => switch (p) {
+  ParallelPreset.custom => l10n.presetCustom,
+  ParallelPreset.latin => l10n.presetLatin,
+  ParallelPreset.greek => l10n.presetGreek,
+  ParallelPreset.hebrewGreek => l10n.presetHebrewGreek,
+  ParallelPreset.latinGreek => l10n.presetLatinGreek,
+};
+
+String? presetHint(AppL10n l10n, ParallelPreset p) => switch (p) {
+  ParallelPreset.custom => null,
+  ParallelPreset.latin => l10n.presetLatinHint,
+  ParallelPreset.greek => l10n.presetGreekHint,
+  ParallelPreset.hebrewGreek => l10n.presetHebrewGreekHint,
+  ParallelPreset.latinGreek => l10n.presetLatinGreekHint,
+};
+
+/// Paints an excerpt highlight over already-built verse spans by splitting
+/// them at the range boundaries. Spans outside the range are untouched, so
+/// the raised initial and script styling survive.
+List<InlineSpan> applyHighlightRange(
+  List<InlineSpan> spans,
+  HighlightMark? mark,
+) {
+  if (mark == null || !mark.isPartial) return spans;
+  final start = mark.start!, end = mark.end!;
+  final bg = mark.color.color.withValues(alpha: 0.38);
+  final out = <InlineSpan>[];
+  var pos = 0;
+  for (final sp in spans) {
+    if (sp is! TextSpan || sp.text == null) {
+      out.add(sp);
+      continue;
+    }
+    final t = sp.text!;
+    final a = pos, b = pos + t.length;
+    pos = b;
+    final s0 = start.clamp(a, b) - a, s1 = end.clamp(a, b) - a;
+    if (s1 <= s0) {
+      out.add(sp);
+      continue;
+    }
+    if (s0 > 0) out.add(TextSpan(text: t.substring(0, s0), style: sp.style));
+    out.add(
+      TextSpan(
+        text: t.substring(s0, s1),
+        style: (sp.style ?? const TextStyle()).copyWith(backgroundColor: bg),
+      ),
+    );
+    if (s1 < t.length) {
+      out.add(TextSpan(text: t.substring(s1), style: sp.style));
+    }
+  }
+  return out;
+}
+
+/// The platform selection toolbar plus "Grifar trecho" when words are
+/// selected. The offsets are character offsets into the verse text (the
+/// verse number is laid out outside the selectable text).
+Widget verseContextMenu(
+  BuildContext context,
+  EditableTextState state,
+  void Function(int start, int end)? onHighlightRange,
+) {
+  final sel = state.textEditingValue.selection;
+  final items = [...state.contextMenuButtonItems];
+  if (onHighlightRange != null && sel.isValid && !sel.isCollapsed) {
+    items.add(
+      ContextMenuButtonItem(
+        label: context.l10n.highlightExcerpt,
+        onPressed: () {
+          ContextMenuController.removeAny();
+          onHighlightRange(sel.start, sel.end);
+        },
+      ),
+    );
+  }
+  return AdaptiveTextSelectionToolbar.buttonItems(
+    anchors: state.contextMenuAnchors,
+    buttonItems: items,
   );
 }

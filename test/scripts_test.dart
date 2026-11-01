@@ -31,8 +31,10 @@ void main() {
     });
 
     test('Greek gets a fallback too', () {
-      expect(scriptStyle(const TextStyle(), 'grc')!.fontFamilyFallback,
-          isNotEmpty);
+      expect(
+        scriptStyle(const TextStyle(), 'grc')!.fontFamilyFallback,
+        isNotEmpty,
+      );
     });
 
     test('the vernacular is left exactly as the theme styled it', () {
@@ -41,55 +43,88 @@ void main() {
     });
   });
 
-  testWidgets('an RTL text lays out inside its own Directionality',
-      (tester) async {
-    await tester.pumpWidget(Directionality(
-      textDirection: TextDirection.ltr,
-      child: scriptDirectionality(
-        lang: 'he',
-        child: const Text('בְּרֵאשִׁית'),
+  testWidgets('an RTL text lays out inside its own Directionality', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: scriptDirectionality(
+          lang: 'he',
+          child: const Text('בְּרֵאשִׁית'),
+        ),
       ),
-    ));
-    final d = tester.widget<Directionality>(
-        find.byType(Directionality).last);
+    );
+    final d = tester.widget<Directionality>(find.byType(Directionality).last);
     expect(d.textDirection, TextDirection.rtl);
   });
 
-  testWidgets('an LTR text does not add a Directionality of its own',
-      (tester) async {
-    await tester.pumpWidget(Directionality(
-      textDirection: TextDirection.ltr,
-      child: scriptDirectionality(lang: 'la', child: const Text('In principio')),
-    ));
+  testWidgets('an LTR text does not add a Directionality of its own', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: scriptDirectionality(
+          lang: 'la',
+          child: const Text('In principio'),
+        ),
+      ),
+    );
     expect(find.byType(Directionality), findsOneWidget);
   });
 
   group('translation labelling', () {
     test('names the script before the edition', () {
       final pt = AppL10nPt();
-      expect(translationLabel(pt, 'la', 'Vulgata Clementina'),
-          'Latim — Vulgata Clementina');
-      expect(translationLabel(pt, 'grc', 'Novo Testamento Grego (SBLGNT)'),
-          'Grego — Novo Testamento Grego (SBLGNT)');
-      expect(translationLabel(pt, 'he', 'Texto Massorético'),
-          'Hebraico — Texto Massorético');
-      expect(translationLabel(AppL10nEn(), 'la', 'Clementine Vulgate'),
-          'Latin — Clementine Vulgate');
+      expect(
+        translationLabel(pt, 'la', 'Vulgata Clementina'),
+        'Latim — Vulgata Clementina',
+      );
+      expect(
+        translationLabel(pt, 'grc', 'Novo Testamento Grego (SBLGNT)'),
+        'Grego — Novo Testamento Grego (SBLGNT)',
+      );
+      expect(
+        translationLabel(pt, 'he', 'Texto Massorético'),
+        'Hebraico — Texto Massorético',
+      );
+      expect(
+        translationLabel(AppL10nEn(), 'la', 'Clementine Vulgate'),
+        'Latin — Clementine Vulgate',
+      );
     });
 
     test('an unknown language keeps the bare title rather than a raw code', () {
-      expect(translationLabel(AppL10nPt(), 'xx', 'Alguma Edição'),
-          'Alguma Edição');
+      expect(
+        translationLabel(AppL10nPt(), 'xx', 'Alguma Edição'),
+        'Alguma Edição',
+      );
     });
   });
 
   group('commentator role labels', () {
     test('every slug the importer can emit has a localised label', () {
       const slugs = [
-        'doutor-da-igreja', 'papa', 'bispo', 'monge', 'sacerdote', 'diacono',
-        'exegeta', 'teologo', 'historiador', 'poeta', 'patristica', 'medieval',
-        'cristao-primitivo', 'santo', 'santa', 'liturgia',
-        'documento-patristico', 'documento-medieval', 'documento-historico',
+        'doutor-da-igreja',
+        'papa',
+        'bispo',
+        'monge',
+        'sacerdote',
+        'diacono',
+        'exegeta',
+        'teologo',
+        'historiador',
+        'poeta',
+        'patristica',
+        'medieval',
+        'cristao-primitivo',
+        'santo',
+        'santa',
+        'liturgia',
+        'documento-patristico',
+        'documento-medieval',
+        'documento-historico',
         'documento-geral',
       ];
       for (final slug in slugs) {

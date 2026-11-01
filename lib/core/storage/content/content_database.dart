@@ -19,8 +19,10 @@ class ContentDatabase {
 
   ContentDatabase._(this._bible, this._patristics, this._hasRoles);
 
-  static ContentDatabase open(
-      {required String biblePath, String? patristicsPath}) {
+  static ContentDatabase open({
+    required String biblePath,
+    String? patristicsPath,
+  }) {
     final bible = sqlite3.open(biblePath, mode: OpenMode.readOnly);
     bible.execute('PRAGMA query_only = ON;');
     Database? patr;
@@ -44,18 +46,22 @@ class ContentDatabase {
 
   // ── Library (Scripture DB) ───────────────────────────────────────────────
   List<BibleBook> listBooks({String lang = 'pt'}) {
-    final rows = _bible.select('''
+    final rows = _bible.select(
+      '''
       SELECT b.id, b.testament, b.canon_order, b.is_deutero, b.chapter_count,
              b.emblem_asset, n.name, n.abbrev
       FROM book b
       LEFT JOIN book_name n ON n.book_id = b.id AND n.lang = ?
       ORDER BY b.canon_order
-    ''', [lang]);
+    ''',
+      [lang],
+    );
     return rows.map((r) {
       return BibleBook(
         id: r['id'] as String,
-        testament:
-            (r['testament'] as String) == 'OT' ? Testament.ot : Testament.nt,
+        testament: (r['testament'] as String) == 'OT'
+            ? Testament.ot
+            : Testament.nt,
         order: r['canon_order'] as int,
         isDeutero: (r['is_deutero'] as int) == 1,
         chapterCount: r['chapter_count'] as int,
@@ -66,77 +72,127 @@ class ContentDatabase {
     }).toList();
   }
 
+  /// Whether [translationId] carries any text for [bookId] — the Septuagint
+  /// has no New Testament, the SBLGNT no Old; a preset must not pick a column
+  /// that would be empty for the book being read.
+  bool translationHasBook(String translationId, String bookId) {
+    final rows = _bible.select(
+      'SELECT 1 FROM verse WHERE translation_id = ? AND book_id = ? LIMIT 1',
+      [translationId, bookId],
+    );
+    return rows.isNotEmpty;
+  }
+
   List<({String id, String lang, String title})> listTranslations() {
     return _bible
         .select('SELECT id, lang, title FROM translation ORDER BY id')
-        .map((r) => (
-              id: r['id'] as String,
-              lang: r['lang'] as String,
-              title: r['title'] as String,
-            ))
+        .map(
+          (r) => (
+            id: r['id'] as String,
+            lang: r['lang'] as String,
+            title: r['title'] as String,
+          ),
+        )
         .toList();
   }
 
   ChapterContent getChapter(String translationId, String bookId, int chapter) {
-    final vRows = _bible.select('''
+    final vRows = _bible.select(
+      '''
       SELECT verse, verse_suffix, text FROM verse
       WHERE translation_id = ? AND book_id = ? AND chapter = ?
       ORDER BY verse, verse_suffix
-    ''', [translationId, bookId, chapter]);
-    final hRows = _bible.select('''
+    ''',
+      [translationId, bookId, chapter],
+    );
+    final hRows = _bible.select(
+      '''
       SELECT before_verse, kind, text FROM section_heading
       WHERE translation_id = ? AND book_id = ? AND chapter = ?
       ORDER BY before_verse
-    ''', [translationId, bookId, chapter]);
+    ''',
+      [translationId, bookId, chapter],
+    );
     return ChapterContent(
       bookId,
       chapter,
       vRows
-          .map((r) => Verse(r['verse'] as int, r['text'] as String,
-              suffix: (r['verse_suffix'] as String?) ?? ''))
+          .map(
+            (r) => Verse(
+              r['verse'] as int,
+              r['text'] as String,
+              suffix: (r['verse_suffix'] as String?) ?? '',
+            ),
+          )
           .toList(),
       hRows
-          .map((r) => SectionHeading(r['before_verse'] as int,
-              r['kind'] as String, r['text'] as String))
+          .map(
+            (r) => SectionHeading(
+              r['before_verse'] as int,
+              r['kind'] as String,
+              r['text'] as String,
+            ),
+          )
           .toList(),
     );
   }
 
   List<({VerseRef ref, String text})> searchVerses(
-      String translationId, String query,
-      {int limit = 50}) {
+    String translationId,
+    String query, {
+    int limit = 50,
+  }) {
     if (query.trim().isEmpty) return const [];
-    final rows = _bible.select('''
+    final rows = _bible.select(
+      '''
       SELECT v.book_id, v.chapter, v.verse, v.text
       FROM verse_fts ft JOIN verse v ON v.rowid = ft.rowid
       WHERE verse_fts MATCH ? AND v.translation_id = ?
       LIMIT ?
-    ''', [_ftsQuery(query), translationId, limit]);
+    ''',
+      [_ftsQuery(query), translationId, limit],
+    );
     return rows
-        .map((r) => (
-              ref: VerseRef(r['book_id'] as String, r['chapter'] as int,
-                  r['verse'] as int),
-              text: r['text'] as String,
-            ))
+        .map(
+          (r) => (
+            ref: VerseRef(
+              r['book_id'] as String,
+              r['chapter'] as int,
+              r['verse'] as int,
+            ),
+            text: r['text'] as String,
+          ),
+        )
         .toList();
   }
 
-  List<VerseHit> searchVerseHits(String translationId, String query,
-      {int limit = 40}) {
+  List<VerseHit> searchVerseHits(
+    String translationId,
+    String query, {
+    int limit = 40,
+  }) {
     if (query.trim().isEmpty) return const [];
-    final rows = _bible.select('''
+    final rows = _bible.select(
+      '''
       SELECT v.book_id, v.chapter, v.verse,
              snippet(verse_fts, 0, char(8296), char(8297), char(8230), 14) AS snip
       FROM verse_fts ft JOIN verse v ON v.rowid = ft.rowid
       WHERE verse_fts MATCH ? AND v.translation_id = ?
       LIMIT ?
-    ''', [_ftsQuery(query), translationId, limit]);
+    ''',
+      [_ftsQuery(query), translationId, limit],
+    );
     return rows
-        .map((r) => VerseHit(
-              VerseRef(r['book_id'] as String, r['chapter'] as int,
-                  r['verse'] as int),
-              r['snip'] as String,
-            ))
+        .map(
+          (r) => VerseHit(
+            VerseRef(
+              r['book_id'] as String,
+              r['chapter'] as int,
+              r['verse'] as int,
+            ),
+            r['snip'] as String,
+          ),
+        )
         .toList();
   }
 
@@ -153,13 +209,16 @@ class ContentDatabase {
   List<Commentary> commentariesFor(VerseRef ref) {
     final db = _patristics;
     if (db == null) return const [];
-    final rows = db.select('''
+    final rows = db.select(
+      '''
       SELECT c.id, c.book_id, c.chapter, c.verse, c.source, c.is_machine_translation,
              c.text, f.name AS father, f.century$_roleCols
       FROM commentary c JOIN father f ON f.id = c.father_id
       WHERE c.book_id = ? AND c.chapter = ? AND c.verse = ?
       ORDER BY f.century, f.name
-    ''', [ref.bookId, ref.chapter, ref.verse]);
+    ''',
+      [ref.bookId, ref.chapter, ref.verse],
+    );
     return rows.map(_toCommentary).toList();
   }
 
@@ -169,8 +228,9 @@ class ContentDatabase {
   List<int> commentaryCenturies() {
     final db = _patristics;
     if (db == null) return const [];
-    final rows =
-        db.select("SELECT DISTINCT century FROM father WHERE century <> ''");
+    final rows = db.select(
+      "SELECT DISTINCT century FROM father WHERE century <> ''",
+    );
     final out = <int>{};
     for (final r in rows) {
       final n = Commentary.romanToInt(r['century'] as String);
@@ -185,9 +245,10 @@ class ContentDatabase {
     final db = _patristics;
     if (db == null) return 0;
     final rows = db.select(
-        'SELECT COUNT(*) AS n FROM commentary WHERE book_id = ? AND chapter = ? '
-        'AND verse BETWEEN ? AND ?',
-        [bookId, chapter, vStart, vEnd]);
+      'SELECT COUNT(*) AS n FROM commentary WHERE book_id = ? AND chapter = ? '
+      'AND verse BETWEEN ? AND ?',
+      [bookId, chapter, vStart, vEnd],
+    );
     return rows.isEmpty ? 0 : (rows.first['n'] as int);
   }
 
@@ -195,15 +256,17 @@ class ContentDatabase {
     final db = _patristics;
     if (db == null) return const {};
     final rows = db.select(
-        'SELECT DISTINCT verse FROM commentary WHERE book_id = ? AND chapter = ?',
-        [bookId, chapter]);
+      'SELECT DISTINCT verse FROM commentary WHERE book_id = ? AND chapter = ?',
+      [bookId, chapter],
+    );
     return rows.map((r) => r['verse'] as int).toSet();
   }
 
   List<Commentary> searchCommentary(String query, {int limit = 50}) {
     final db = _patristics;
     if (db == null || query.trim().isEmpty) return const [];
-    final rows = db.select('''
+    final rows = db.select(
+      '''
       SELECT c.id, c.book_id, c.chapter, c.verse, c.source, c.is_machine_translation,
              c.text, f.name AS father, f.century$_roleCols
       FROM commentary_fts ft
@@ -211,14 +274,17 @@ class ContentDatabase {
       JOIN father f ON f.id = c.father_id
       WHERE commentary_fts MATCH ?
       LIMIT ?
-    ''', [_ftsQuery(query), limit]);
+    ''',
+      [_ftsQuery(query), limit],
+    );
     return rows.map(_toCommentary).toList();
   }
 
   List<CommentaryHit> searchCommentaryHits(String query, {int limit = 40}) {
     final db = _patristics;
     if (db == null || query.trim().isEmpty) return const [];
-    final rows = db.select('''
+    final rows = db.select(
+      '''
       SELECT c.book_id, c.chapter, c.verse, f.name AS father, f.century,
              snippet(commentary_fts, 0, char(8296), char(8297), char(8230), 14) AS snip
       FROM commentary_fts ft
@@ -226,36 +292,45 @@ class ContentDatabase {
       JOIN father f ON f.id = c.father_id
       WHERE commentary_fts MATCH ?
       LIMIT ?
-    ''', [_ftsQuery(query), limit]);
+    ''',
+      [_ftsQuery(query), limit],
+    );
     return rows
-        .map((r) => CommentaryHit(
-              VerseRef(r['book_id'] as String, r['chapter'] as int,
-                  r['verse'] as int),
-              r['father'] as String,
-              (r['century'] as String?) ?? '',
-              r['snip'] as String,
-            ))
+        .map(
+          (r) => CommentaryHit(
+            VerseRef(
+              r['book_id'] as String,
+              r['chapter'] as int,
+              r['verse'] as int,
+            ),
+            r['father'] as String,
+            (r['century'] as String?) ?? '',
+            r['snip'] as String,
+          ),
+        )
         .toList();
   }
 
   Commentary _toCommentary(Row r) => Commentary(
-        id: r['id'] as int,
-        ref: VerseRef(
-            r['book_id'] as String, r['chapter'] as int, r['verse'] as int),
-        fatherName: r['father'] as String,
-        century: (r['century'] as String?) ?? '',
-        source: r['source'] as String?,
-        isMachineTranslation: (r['is_machine_translation'] as int) == 1,
-        text: r['text'] as String,
-        rolePrimary:
-            _hasRoles ? ((r['role_primary'] as String?) ?? '') : '',
-        roleGroups: _hasRoles
-            ? ((r['role_groups'] as String?) ?? '')
-                .split(';')
-                .where((s) => s.isNotEmpty)
-                .toSet()
-            : const {},
-      );
+    id: r['id'] as int,
+    ref: VerseRef(
+      r['book_id'] as String,
+      r['chapter'] as int,
+      r['verse'] as int,
+    ),
+    fatherName: r['father'] as String,
+    century: (r['century'] as String?) ?? '',
+    source: r['source'] as String?,
+    isMachineTranslation: (r['is_machine_translation'] as int) == 1,
+    text: r['text'] as String,
+    rolePrimary: _hasRoles ? ((r['role_primary'] as String?) ?? '') : '',
+    roleGroups: _hasRoles
+        ? ((r['role_groups'] as String?) ?? '')
+              .split(';')
+              .where((s) => s.isNotEmpty)
+              .toSet()
+        : const {},
+  );
 
   static String? _metaOf(Database db, String key) {
     final rows = db.select('SELECT value FROM meta WHERE key = ?', [key]);

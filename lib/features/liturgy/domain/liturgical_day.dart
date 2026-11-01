@@ -7,20 +7,21 @@ enum LiturgicalColor { green, red, white, purple, rose }
 
 extension LiturgicalColorX on LiturgicalColor {
   Color get color => switch (this) {
-        LiturgicalColor.green => LiturgicalPalette.green,
-        LiturgicalColor.red => LiturgicalPalette.red,
-        LiturgicalColor.white => LiturgicalPalette.white,
-        LiturgicalColor.purple => LiturgicalPalette.purple,
-        LiturgicalColor.rose => LiturgicalPalette.rose,
-      };
+    LiturgicalColor.green => LiturgicalPalette.green,
+    LiturgicalColor.red => LiturgicalPalette.red,
+    LiturgicalColor.white => LiturgicalPalette.white,
+    LiturgicalColor.purple => LiturgicalPalette.purple,
+    LiturgicalColor.rose => LiturgicalPalette.rose,
+  };
+
   /// Dot fill that stays visible on both themes. Liturgical white (#EDE9E3) is
   /// nearly invisible on the light ivory canvas, so on light themes the white
   /// (solemnity) dot renders as a warm gold; every other colour reads fine on
   /// both backgrounds, and the dark theme is unchanged.
   Color dotColor({required bool light}) =>
       (this == LiturgicalColor.white && light)
-          ? const Color(0xFFC9A227)
-          : color;
+      ? const Color(0xFFC9A227)
+      : color;
 
   /// Stable slug for localisation (the human label lives in the ARB).
   String get key => name;
@@ -126,6 +127,6 @@ class LiturgicalDay {
   /// and solemnities follow A/B/C, weekdays follow I/II.
   String get activeCycle =>
       date.weekday == DateTime.sunday || rank == LiturgicalRank.solemnity
-          ? sundayCycle
-          : weekdayCycle;
+      ? sundayCycle
+      : weekdayCycle;
 }

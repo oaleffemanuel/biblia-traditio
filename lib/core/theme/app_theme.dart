@@ -59,7 +59,8 @@ class BtColorsExt extends ThemeExtension<BtColorsExt> {
   const BtColorsExt(this.colors);
 
   @override
-  BtColorsExt copyWith({BtColors? colors}) => BtColorsExt(colors ?? this.colors);
+  BtColorsExt copyWith({BtColors? colors}) =>
+      BtColorsExt(colors ?? this.colors);
 
   @override
   BtColorsExt lerp(ThemeExtension<BtColorsExt>? other, double t) => this;

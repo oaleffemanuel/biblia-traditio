@@ -31,23 +31,34 @@ class LiturgicalDirectory {
   /// Labels are supplied by the caller so the sheet stays localisable.
   DirectoryEntry explain(LiturgicalDay day, DirectoryLabels l) {
     return DirectoryEntry([
-      DirectoryCard(l.season, _seasonName(day.season, l), _seasonNote(day.season)),
+      DirectoryCard(
+        l.season,
+        _seasonName(day.season, l),
+        _seasonNote(day.season),
+      ),
       DirectoryCard(l.celebration, day.celebration, _rankNote(day.rank, l)),
       DirectoryCard(l.color, _colorName(day.color, l), _colorNote(day.color)),
       // "19ª semana do Tempo Comum" — the number alone doesn't say of what.
       if (day.week != null)
-        DirectoryCard(l.week, '${l.weekOf(day.week!)} do ${_seasonName(day.season, l)}'),
-      DirectoryCard(l.year, l.yearOf(day.sundayCycle),
-          _cycleNote(day, l)),
-      DirectoryCard(l.cycle, l.cycleOf(day.weekdayCycle),
-          'Rege as leituras das férias; os domingos seguem o ano A/B/C.'),
+        DirectoryCard(
+          l.week,
+          '${l.weekOf(day.week!)} do ${_seasonName(day.season, l)}',
+        ),
+      DirectoryCard(l.year, l.yearOf(day.sundayCycle), _cycleNote(day, l)),
+      DirectoryCard(
+        l.cycle,
+        l.cycleOf(day.weekdayCycle),
+        'Rege as leituras das férias; os domingos seguem o ano A/B/C.',
+      ),
       DirectoryCard(l.preface, _preface(day)),
       if (_observances(day).isNotEmpty)
         DirectoryCard(l.observances, _observances(day).join('\n')),
       if (day.optionalMemorials.isNotEmpty)
-        DirectoryCard(l.ephemerides,
-            day.optionalMemorials.map((m) => m.name).join('\n'),
-            'Memórias facultativas: podem ser celebradas ou omitidas.'),
+        DirectoryCard(
+          l.ephemerides,
+          day.optionalMemorials.map((m) => m.name).join('\n'),
+          'Memórias facultativas: podem ser celebradas ou omitidas.',
+        ),
     ]);
   }
 
@@ -55,49 +66,50 @@ class LiturgicalDirectory {
   String _seasonName(LiturgicalSeason s, DirectoryLabels l) => l.seasonName(s);
 
   String _seasonNote(LiturgicalSeason s) => switch (s) {
-        LiturgicalSeason.advent =>
-          'Quatro semanas de espera: preparam o Natal e despertam a expectativa da vinda gloriosa. Não é uma segunda Quaresma.',
-        LiturgicalSeason.christmas =>
-          'Do Natal ao Batismo do Senhor. Celebra a manifestação de Deus feito homem; os oito primeiros dias formam a Oitava.',
-        LiturgicalSeason.lent =>
-          'Quarenta dias de oração, jejum e esmola que preparam a Páscoa e renovam o batismo.',
-        LiturgicalSeason.triduum =>
-          'O centro do ano litúrgico: uma só celebração distribuída da Ceia do Senhor às Vésperas do Domingo de Páscoa.',
-        LiturgicalSeason.easter =>
-          'Cinquenta dias celebrados “como um só dia de festa”, da Páscoa ao Pentecostes.',
-        LiturgicalSeason.ordinary =>
-          'As trinta e quatro semanas em que a Igreja percorre o mistério de Cristo na sua totalidade.',
-      };
+    LiturgicalSeason.advent =>
+      'Quatro semanas de espera: preparam o Natal e despertam a expectativa da vinda gloriosa. Não é uma segunda Quaresma.',
+    LiturgicalSeason.christmas =>
+      'Do Natal ao Batismo do Senhor. Celebra a manifestação de Deus feito homem; os oito primeiros dias formam a Oitava.',
+    LiturgicalSeason.lent =>
+      'Quarenta dias de oração, jejum e esmola que preparam a Páscoa e renovam o batismo.',
+    LiturgicalSeason.triduum =>
+      'O centro do ano litúrgico: uma só celebração distribuída da Ceia do Senhor às Vésperas do Domingo de Páscoa.',
+    LiturgicalSeason.easter =>
+      'Cinquenta dias celebrados “como um só dia de festa”, da Páscoa ao Pentecostes.',
+    LiturgicalSeason.ordinary =>
+      'As trinta e quatro semanas em que a Igreja percorre o mistério de Cristo na sua totalidade.',
+  };
 
   // ── Rank ──────────────────────────────────────────────────────────────────
   String _rankNote(LiturgicalRank r, DirectoryLabels l) => switch (r) {
-        LiturgicalRank.solemnity =>
-          '${l.rankName(r)} — o grau mais alto: com Glória e Credo, e transferida se um tempo forte a impedir.',
-        LiturgicalRank.feast =>
-          '${l.rankName(r)} — celebra-se com Glória, dentro do dia. As festas do Senhor precedem o domingo do Tempo Comum.',
-        LiturgicalRank.memorial =>
-          '${l.rankName(r)} — insere-se no dia sem o substituir; nos tempos fortes cede lugar à féria.',
-        LiturgicalRank.optionalMemorial =>
-          '${l.rankName(r)} — pode ser celebrada ou omitida.',
-        LiturgicalRank.commemoration =>
-          '${l.rankName(r)} — entra na oração do dia sem mudar o resto da liturgia.',
-        LiturgicalRank.weekday =>
-          '${l.rankName(r)} — dia sem celebração própria, em que a liturgia percorre a Escritura continuamente.',
-      };
+    LiturgicalRank.solemnity =>
+      '${l.rankName(r)} — o grau mais alto: com Glória e Credo, e transferida se um tempo forte a impedir.',
+    LiturgicalRank.feast =>
+      '${l.rankName(r)} — celebra-se com Glória, dentro do dia. As festas do Senhor precedem o domingo do Tempo Comum.',
+    LiturgicalRank.memorial =>
+      '${l.rankName(r)} — insere-se no dia sem o substituir; nos tempos fortes cede lugar à féria.',
+    LiturgicalRank.optionalMemorial =>
+      '${l.rankName(r)} — pode ser celebrada ou omitida.',
+    LiturgicalRank.commemoration =>
+      '${l.rankName(r)} — entra na oração do dia sem mudar o resto da liturgia.',
+    LiturgicalRank.weekday =>
+      '${l.rankName(r)} — dia sem celebração própria, em que a liturgia percorre a Escritura continuamente.',
+  };
 
   // ── Colour ────────────────────────────────────────────────────────────────
   String _colorName(LiturgicalColor c, DirectoryLabels l) => l.colorName(c);
 
   String _colorNote(LiturgicalColor c) => switch (c) {
-        LiturgicalColor.green => 'Esperança e crescimento — o Tempo Comum.',
-        LiturgicalColor.white =>
-          'Luz e alegria — Natal, Páscoa, festas do Senhor, de Nossa Senhora, dos anjos e dos santos não mártires.',
-        LiturgicalColor.red =>
-          'Fogo e sangue — Pentecostes, Ramos, Sexta-feira Santa, Apóstolos e mártires.',
-        LiturgicalColor.purple => 'Preparação e conversão — Advento e Quaresma; também nas exéquias.',
-        LiturgicalColor.rose =>
-          'Permitido só dois dias no ano: Gaudete, no Advento, e Laetare, na Quaresma.',
-      };
+    LiturgicalColor.green => 'Esperança e crescimento — o Tempo Comum.',
+    LiturgicalColor.white =>
+      'Luz e alegria — Natal, Páscoa, festas do Senhor, de Nossa Senhora, dos anjos e dos santos não mártires.',
+    LiturgicalColor.red =>
+      'Fogo e sangue — Pentecostes, Ramos, Sexta-feira Santa, Apóstolos e mártires.',
+    LiturgicalColor.purple =>
+      'Preparação e conversão — Advento e Quaresma; também nas exéquias.',
+    LiturgicalColor.rose =>
+      'Permitido só dois dias no ano: Gaudete, no Advento, e Laetare, na Quaresma.',
+  };
 
   String _cycleNote(LiturgicalDay day, DirectoryLabels l) =>
       'Rege as leituras dos domingos e das solenidades.';
@@ -115,11 +127,14 @@ class LiturgicalDirectory {
     if (has('Ascensão')) return 'Prefácio da Ascensão (I ou II)';
     if (has('Pentecostes')) return 'Prefácio do Pentecostes';
     if (has('Trindade')) return 'Prefácio da Santíssima Trindade';
-    if (has('Corpo e Sangue')) return 'Prefácio da Santíssima Eucaristia (I ou II)';
+    if (has('Corpo e Sangue'))
+      return 'Prefácio da Santíssima Eucaristia (I ou II)';
     if (has('Sagrado Coração')) return 'Prefácio do Sagrado Coração';
     if (has('Rei do Universo')) return 'Prefácio de Cristo Rei';
-    if (has('Ramos') || has('Semana Santa')) return 'Prefácio da Paixão do Senhor (I ou II)';
-    if (has('Sexta-feira Santa')) return 'Sem prefácio — não há Missa neste dia';
+    if (has('Ramos') || has('Semana Santa'))
+      return 'Prefácio da Paixão do Senhor (I ou II)';
+    if (has('Sexta-feira Santa'))
+      return 'Sem prefácio — não há Missa neste dia';
     if (has('Cinzas')) return 'Prefácio da Quaresma (I–IV)';
 
     if (day.rank == LiturgicalRank.solemnity ||

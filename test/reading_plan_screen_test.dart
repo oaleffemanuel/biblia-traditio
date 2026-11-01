@@ -22,46 +22,55 @@ final _plan = ReadingPlan(
         PlanTarget('prv', 1, verseStart: 1, verseEnd: 3),
       ], section: PlanSection.wisdom),
     ]),
-    PlanDay(2, [PlanReading('São Marcos 2', [PlanTarget('mk', 2)])]),
-    PlanDay(3, [PlanReading('São Marcos 3', [PlanTarget('mk', 3)])]),
+    PlanDay(2, [
+      PlanReading('São Marcos 2', [PlanTarget('mk', 2)]),
+    ]),
+    PlanDay(3, [
+      PlanReading('São Marcos 3', [PlanTarget('mk', 3)]),
+    ]),
   ],
 );
 
 /// A chapter with far more verses than the plan assigns, so the screen is
 /// forced to prove it renders only the assigned span.
 ChapterContent _chapter(String bookId, int chapter) => ChapterContent(
-      bookId,
-      chapter,
-      [for (var i = 1; i <= 12; i++) Verse(i, 'Versículo $i de $bookId')],
-      const [],
-    );
+  bookId,
+  chapter,
+  [for (var i = 1; i <= 12; i++) Verse(i, 'Versículo $i de $bookId')],
+  const [],
+);
 
 Future<void> _pump(WidgetTester tester) async {
   tester.view.physicalSize = const Size(1000, 2200);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
 
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      contentDatabaseProvider.overrideWithValue(null),
-      userDbProvider.overrideWithValue(null),
-      readingPlanProvider.overrideWith((ref) async => _plan),
-      chapterProvider.overrideWith((ref, key) => _chapter(key.bookId, key.chapter)),
-    ],
-    child: MaterialApp(
-      theme: AppTheme.dark(),
-      locale: const Locale('pt'),
-      localizationsDelegates: AppL10n.localizationsDelegates,
-      supportedLocales: AppL10n.supportedLocales,
-      home: const ReadingPlanScreen(),
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        contentDatabaseProvider.overrideWithValue(null),
+        userDbProvider.overrideWithValue(null),
+        readingPlanProvider.overrideWith((ref) async => _plan),
+        chapterProvider.overrideWith(
+          (ref, key) => _chapter(key.bookId, key.chapter),
+        ),
+      ],
+      child: MaterialApp(
+        theme: AppTheme.dark(),
+        locale: const Locale('pt'),
+        localizationsDelegates: AppL10n.localizationsDelegates,
+        supportedLocales: AppL10n.supportedLocales,
+        home: const ReadingPlanScreen(),
+      ),
     ),
-  ));
+  );
   await tester.pumpAndSettle();
 }
 
 void main() {
-  testWidgets('opens with a day strip, the day card and collapsed readings',
-      (tester) async {
+  testWidgets('opens with a day strip, the day card and collapsed readings', (
+    tester,
+  ) async {
     await _pump(tester);
 
     // Liturgy-style day selector across the top.
@@ -79,40 +88,57 @@ void main() {
     expect(find.textContaining('Versículo', findRichText: true), findsNothing);
   });
 
-  testWidgets('expanding a partial reading shows only the assigned verses',
-      (tester) async {
+  testWidgets('expanding a partial reading shows only the assigned verses', (
+    tester,
+  ) async {
     await _pump(tester);
 
     await tester.tap(find.text('Provérbios 1,1-3'));
     await tester.pumpAndSettle();
 
     for (final n in [1, 2, 3]) {
-      expect(find.textContaining('Versículo $n de prv', findRichText: true), findsOneWidget);
+      expect(
+        find.textContaining('Versículo $n de prv', findRichText: true),
+        findsOneWidget,
+      );
     }
     // The rest of the chapter stays out of it — this is the whole point.
     for (final n in [4, 8, 12]) {
-      expect(find.textContaining('Versículo $n de prv', findRichText: true), findsNothing);
+      expect(
+        find.textContaining('Versículo $n de prv', findRichText: true),
+        findsNothing,
+      );
     }
   });
 
-  testWidgets('expanding a whole-chapter reading shows the chapter',
-      (tester) async {
+  testWidgets('expanding a whole-chapter reading shows the chapter', (
+    tester,
+  ) async {
     await _pump(tester);
 
     await tester.tap(find.text('São Marcos 1'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Versículo 12 de mk', findRichText: true), findsOneWidget);
+    expect(
+      find.textContaining('Versículo 12 de mk', findRichText: true),
+      findsOneWidget,
+    );
   });
 
   testWidgets('a reading collapses again on a second tap', (tester) async {
     await _pump(tester);
     await tester.tap(find.text('São Marcos 1'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Versículo 1 de mk', findRichText: true), findsOneWidget);
+    expect(
+      find.textContaining('Versículo 1 de mk', findRichText: true),
+      findsOneWidget,
+    );
 
     await tester.tap(find.text('São Marcos 1'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Versículo 1 de mk', findRichText: true), findsNothing);
+    expect(
+      find.textContaining('Versículo 1 de mk', findRichText: true),
+      findsNothing,
+    );
   });
 
   testWidgets('every reading offers "open in Bible"', (tester) async {
@@ -120,8 +146,9 @@ void main() {
     expect(find.byIcon(Icons.menu_book_outlined), findsNWidgets(2));
   });
 
-  testWidgets('picking another day in the strip swaps the readings',
-      (tester) async {
+  testWidgets('picking another day in the strip swaps the readings', (
+    tester,
+  ) async {
     await _pump(tester);
     expect(find.text('São Marcos 1'), findsOneWidget);
 

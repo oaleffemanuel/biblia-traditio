@@ -54,18 +54,94 @@ class ThemeDetailScreen extends ConsumerWidget {
               ).textTheme.bodyLarge?.copyWith(fontSize: 18, height: 1.45),
             ),
           const SizedBox(height: 20),
-          Text(
-            l10n.themePassagesLabel.toUpperCase(),
-            style: TextStyle(
-              color: c.gold,
-              fontSize: 11,
-              letterSpacing: 1.6,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 10),
-          for (final p in theme.passages) _PassageCard(passage: p),
+          if (theme.passages.isNotEmpty) ...[
+            _label(c, l10n.themePassagesLabel),
+            const SizedBox(height: 10),
+            for (final p in theme.passages) _PassageCard(passage: p),
+          ],
+          for (final st in theme.subtopics) ...[
+            const SizedBox(height: 10),
+            _label(c, st.title),
+            const SizedBox(height: 10),
+            for (final p in st.passages) _PassageCard(passage: p),
+          ],
+          if (theme.comments.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            _label(c, l10n.themeComments),
+            const SizedBox(height: 10),
+            for (final cm in theme.comments) _CommentCard(comment: cm),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+Widget _label(BtColors c, String text) => Text(
+  text.toUpperCase(),
+  style: TextStyle(
+    color: c.gold,
+    fontSize: 11,
+    letterSpacing: 1.6,
+    fontWeight: FontWeight.w700,
+  ),
+);
+
+/// A commentary on the theme: author and provenance always visible, the text
+/// folded to a few lines until tapped.
+class _CommentCard extends StatefulWidget {
+  final ThemeComment comment;
+  const _CommentCard({required this.comment});
+  @override
+  State<_CommentCard> createState() => _CommentCardState();
+}
+
+class _CommentCardState extends State<_CommentCard> {
+  bool _open = false;
+  @override
+  Widget build(BuildContext context) {
+    final c = context.bt;
+    final cm = widget.comment;
+    final meta = [cm.role, cm.edition].where((x) => x.isNotEmpty).join(' · ');
+    return InkWell(
+      onTap: () => setState(() => _open = !_open),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        decoration: BoxDecoration(
+          color: c.surface,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              cm.author,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            if (meta.isNotEmpty)
+              Text(meta, style: TextStyle(color: c.textFaint, fontSize: 12)),
+            const SizedBox(height: 8),
+            Text(
+              cm.text,
+              maxLines: _open ? null : 5,
+              overflow: _open ? null : TextOverflow.ellipsis,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(fontSize: 16.5, height: 1.45),
+            ),
+            if (!_open) ...[
+              const SizedBox(height: 6),
+              Text(
+                context.l10n.themeReadMore,
+                style: TextStyle(color: c.accent, fontSize: 12.5),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

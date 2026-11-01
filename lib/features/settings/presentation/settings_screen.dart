@@ -24,16 +24,29 @@ class SettingsScreen extends ConsumerWidget {
     final available = ref.watch(availableTranslationsProvider);
     final resolvedId = ref.watch(resolvedTranslationIdProvider);
     final l10n = context.l10n;
-    final translationTitle = available
+    final translationTitle =
+        available
             .where((t) => t.id == resolvedId)
             .map((t) => translationLabel(l10n, t.lang, t.title))
             .firstOrNull ??
         l10n.noTranslationInstalled;
+    String fontLabel(ReadingFont f) => switch (f) {
+      ReadingFont.garamond => l10n.fontGaramond,
+      ReadingFont.inter => l10n.fontInter,
+      ReadingFont.system => l10n.fontSystem,
+    };
+    String scaleLabel(double v) => switch (v) {
+      0.85 => l10n.fontSizeSmall,
+      1.15 => l10n.fontSizeLarge,
+      1.3 => l10n.fontSizeLarger,
+      1.5 => l10n.fontSizeMax,
+      _ => l10n.fontSizeNormal,
+    };
     String themeLabel(ThemeMode m) => switch (m) {
-          ThemeMode.light => l10n.themeLight,
-          ThemeMode.system => l10n.themeSystem,
-          ThemeMode.dark => l10n.themeDark,
-        };
+      ThemeMode.light => l10n.themeLight,
+      ThemeMode.system => l10n.themeSystem,
+      ThemeMode.dark => l10n.themeDark,
+    };
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsTitle)),
@@ -44,8 +57,12 @@ class SettingsScreen extends ConsumerWidget {
             leading: const Icon(Icons.person_outline),
             title: Text(l10n.settingsName),
             subtitle: Text(s.displayName.isEmpty ? '—' : s.displayName),
-            onTap: () => _editName(context, s.displayName, ctrl.setDisplayName,
-                l10n.settingsName),
+            onTap: () => _editName(
+              context,
+              s.displayName,
+              ctrl.setDisplayName,
+              l10n.settingsName,
+            ),
           ),
           _section(c, l10n.settingsReading),
           ListTile(
@@ -56,14 +73,16 @@ class SettingsScreen extends ConsumerWidget {
             onTap: available.isEmpty
                 ? null
                 : () => _pick<({String id, String lang, String title})>(
-                      context,
-                      l10n.settingsTranslation,
-                      available,
-                      (t) => translationLabel(l10n, t.lang, t.title),
-                      available.firstWhere((t) => t.id == resolvedId,
-                          orElse: () => available.first),
-                      (t) => ctrl.setTranslation(t.id),
+                    context,
+                    l10n.settingsTranslation,
+                    available,
+                    (t) => translationLabel(l10n, t.lang, t.title),
+                    available.firstWhere(
+                      (t) => t.id == resolvedId,
+                      orElse: () => available.first,
                     ),
+                    (t) => ctrl.setTranslation(t.id),
+                  ),
           ),
           ListTile(
             leading: const Icon(Icons.language),
@@ -91,6 +110,32 @@ class SettingsScreen extends ConsumerWidget {
               ctrl.setThemeMode,
             ),
           ),
+          ListTile(
+            leading: const Icon(Icons.text_fields),
+            title: Text(l10n.settingsFont),
+            subtitle: Text(fontLabel(s.readingFont)),
+            onTap: () => _pick<ReadingFont>(
+              context,
+              l10n.settingsFont,
+              ReadingFont.values,
+              fontLabel,
+              s.readingFont,
+              ctrl.setReadingFont,
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.format_size),
+            title: Text(l10n.settingsFontSize),
+            subtitle: Text(scaleLabel(s.fontScale)),
+            onTap: () => _pick<double>(
+              context,
+              l10n.settingsFontSize,
+              kFontScales,
+              scaleLabel,
+              kFontScales.contains(s.fontScale) ? s.fontScale : 1.0,
+              ctrl.setFontScale,
+            ),
+          ),
           SwitchListTile(
             secondary: const Icon(Icons.notifications_none),
             title: Text(l10n.settingsReminders),
@@ -101,10 +146,13 @@ class SettingsScreen extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.auto_stories_outlined),
             title: Text(l10n.commentaryPreferences),
-            subtitle: Text(s.commentaryPrefs.isDefault
-                ? l10n.commentaryPrefsAll
-                : l10n.commentaryPrefsFilters(
-                    s.commentaryPrefs.activeFilterCount)),
+            subtitle: Text(
+              s.commentaryPrefs.isDefault
+                  ? l10n.commentaryPrefsAll
+                  : l10n.commentaryPrefsFilters(
+                      s.commentaryPrefs.activeFilterCount,
+                    ),
+            ),
             trailing: Icon(Icons.chevron_right, color: c.textFaint),
             onTap: () => showCommentaryPreferences(context),
           ),
@@ -113,8 +161,10 @@ class SettingsScreen extends ConsumerWidget {
             _PackageTile(pkg: entry.pkg, installed: entry.installed),
           _section(c, l10n.settingsContact),
           ListTile(
-            leading: const Icon(Icons.chat_bubble_outline,
-                color: Color(0xFF25D366)),
+            leading: const Icon(
+              Icons.chat_bubble_outline,
+              color: Color(0xFF25D366),
+            ),
             title: Text(l10n.whatsappTitle),
             subtitle: Text(l10n.whatsappSubtitle),
             onTap: () => _openWhatsApp(context),
@@ -130,8 +180,10 @@ class SettingsScreen extends ConsumerWidget {
           Center(
             child: TextButton(
               onPressed: () => context.go('/home'),
-              child:
-                  Text(l10n.actionClose, style: TextStyle(color: c.textSecondary)),
+              child: Text(
+                l10n.actionClose,
+                style: TextStyle(color: c.textSecondary),
+              ),
             ),
           ),
         ],
@@ -157,8 +209,12 @@ class SettingsScreen extends ConsumerWidget {
     }
   }
 
-  void _editName(BuildContext context, String current,
-      ValueChanged<String> onSave, String title) {
+  void _editName(
+    BuildContext context,
+    String current,
+    ValueChanged<String> onSave,
+    String title,
+  ) {
     final controller = TextEditingController(text: current);
     showDialog(
       context: context,
@@ -168,13 +224,13 @@ class SettingsScreen extends ConsumerWidget {
           controller: controller,
           autofocus: true,
           textCapitalization: TextCapitalization.words,
-          decoration:
-              InputDecoration(hintText: ctx.l10n.namePlaceholder),
+          decoration: InputDecoration(hintText: ctx.l10n.namePlaceholder),
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(ctx.l10n.actionCancel)),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(ctx.l10n.actionCancel),
+          ),
           FilledButton(
             onPressed: () {
               onSave(controller.text.trim());
@@ -187,14 +243,21 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _pick<T>(BuildContext context, String title, List<T> options,
-      String Function(T) labelOf, T current, ValueChanged<T> onSelect) {
+  void _pick<T>(
+    BuildContext context,
+    String title,
+    List<T> options,
+    String Function(T) labelOf,
+    T current,
+    ValueChanged<T> onSelect,
+  ) {
     final c = context.bt;
     showModalBottomSheet(
       context: context,
       backgroundColor: c.surface,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -221,14 +284,17 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   Widget _section(BtColors c, String title) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-        child: Text(title.toUpperCase(),
-            style: TextStyle(
-                color: c.textFaint,
-                fontSize: 12,
-                letterSpacing: 1,
-                fontWeight: FontWeight.w600)),
-      );
+    padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+    child: Text(
+      title.toUpperCase(),
+      style: TextStyle(
+        color: c.textFaint,
+        fontSize: 12,
+        letterSpacing: 1,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  );
 }
 
 String _mb(int bytes) => '${(bytes / 1048576).toStringAsFixed(0)} MB';
@@ -246,12 +312,12 @@ class _PackageTileState extends ConsumerState<_PackageTile> {
   double _progress = 0;
 
   IconData get _icon => switch (widget.pkg.type) {
-        PackageType.patristics => Icons.auto_stories,
-        PackageType.bibleTranslation => Icons.menu_book,
-        PackageType.liturgy => Icons.calendar_month,
-        PackageType.catechism => Icons.school_outlined,
-        _ => Icons.inventory_2_outlined,
-      };
+    PackageType.patristics => Icons.auto_stories,
+    PackageType.bibleTranslation => Icons.menu_book,
+    PackageType.liturgy => Icons.calendar_month,
+    PackageType.catechism => Icons.school_outlined,
+    _ => Icons.inventory_2_outlined,
+  };
 
   Future<void> _install() async {
     setState(() {
@@ -260,15 +326,20 @@ class _PackageTileState extends ConsumerState<_PackageTile> {
     });
     final successMsg = context.l10n.installSuccess;
     try {
-      await ref.read(packageControllerProvider).install(widget.pkg,
-          onProgress: (p) {
-        if (mounted) setState(() => _progress = p);
-      });
+      await ref
+          .read(packageControllerProvider)
+          .install(
+            widget.pkg,
+            onProgress: (p) {
+              if (mounted) setState(() => _progress = p);
+            },
+          );
       showSnack(successMsg);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.installFailed('$e'))));
+          SnackBar(content: Text(context.l10n.installFailed('$e'))),
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -285,11 +356,13 @@ class _PackageTileState extends ConsumerState<_PackageTile> {
         content: Text(l10n.removePackageMessage),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(l10n.actionCancel)),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.actionCancel),
+          ),
           FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(l10n.actionRemove)),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.actionRemove),
+          ),
         ],
       ),
     );
@@ -310,8 +383,8 @@ class _PackageTileState extends ConsumerState<_PackageTile> {
     final subtitle = widget.installed
         ? l10n.packageInstalled(_mb(pkg.sizeBytes))
         : pkg.required
-            ? l10n.packageRequired
-            : l10n.packageDownload(_mb(pkg.compressedBytes), _mb(pkg.sizeBytes));
+        ? l10n.packageRequired
+        : l10n.packageDownload(_mb(pkg.compressedBytes), _mb(pkg.sizeBytes));
 
     return Column(
       children: [
@@ -324,29 +397,36 @@ class _PackageTileState extends ConsumerState<_PackageTile> {
                   width: 22,
                   height: 22,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      value: _progress == 0 ? null : _progress,
-                      color: c.accent))
+                    strokeWidth: 2,
+                    value: _progress == 0 ? null : _progress,
+                    color: c.accent,
+                  ),
+                )
               : widget.installed
-                  ? (pkg.required
-                      ? Icon(Icons.check_circle, color: LiturgicalPalette.green)
-                      : IconButton(
-                          tooltip: l10n.actionRemove,
-                          icon: Icon(Icons.delete_outline,
-                              color: c.textSecondary),
-                          onPressed: _remove))
-                  : IconButton(
-                      tooltip: l10n.actionDownload,
-                      icon: Icon(Icons.download, color: c.accent),
-                      onPressed: _install),
+              ? (pkg.required
+                    ? Icon(Icons.check_circle, color: LiturgicalPalette.green)
+                    : IconButton(
+                        tooltip: l10n.actionRemove,
+                        icon: Icon(
+                          Icons.delete_outline,
+                          color: c.textSecondary,
+                        ),
+                        onPressed: _remove,
+                      ))
+              : IconButton(
+                  tooltip: l10n.actionDownload,
+                  icon: Icon(Icons.download, color: c.accent),
+                  onPressed: _install,
+                ),
         ),
         if (_busy)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: LinearProgressIndicator(
-                value: _progress == 0 ? null : _progress,
-                backgroundColor: c.surfaceHigh,
-                color: c.accent),
+              value: _progress == 0 ? null : _progress,
+              backgroundColor: c.surfaceHigh,
+              color: c.accent,
+            ),
           ),
       ],
     );

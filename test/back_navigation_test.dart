@@ -19,9 +19,10 @@ void main() {
   test('a non-Home tab never exits, even right after a Home warning', () {
     expect(
       resolveBackAction(
-          currentIndex: 1,
-          lastPress: now.subtract(const Duration(milliseconds: 300)),
-          now: now),
+        currentIndex: 1,
+        lastPress: now.subtract(const Duration(milliseconds: 300)),
+        now: now,
+      ),
       BackAction.goHome,
     );
   });
@@ -36,15 +37,19 @@ void main() {
   test('second Back on Home within the window exits', () {
     expect(
       resolveBackAction(
-          currentIndex: 0,
-          lastPress: now.subtract(const Duration(milliseconds: 900)),
-          now: now),
+        currentIndex: 0,
+        lastPress: now.subtract(const Duration(milliseconds: 900)),
+        now: now,
+      ),
       BackAction.exit,
     );
     // Exactly at the boundary still counts as a confirmation.
     expect(
       resolveBackAction(
-          currentIndex: 0, lastPress: now.subtract(kExitConfirmWindow), now: now),
+        currentIndex: 0,
+        lastPress: now.subtract(kExitConfirmWindow),
+        now: now,
+      ),
       BackAction.exit,
     );
   });
@@ -52,9 +57,12 @@ void main() {
   test('a stale press warns again rather than exiting', () {
     expect(
       resolveBackAction(
-          currentIndex: 0,
-          lastPress: now.subtract(kExitConfirmWindow + const Duration(seconds: 1)),
-          now: now),
+        currentIndex: 0,
+        lastPress: now.subtract(
+          kExitConfirmWindow + const Duration(seconds: 1),
+        ),
+        now: now,
+      ),
       BackAction.warnBeforeExit,
     );
   });

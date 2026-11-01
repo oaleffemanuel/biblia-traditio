@@ -109,7 +109,9 @@ class ParallelChapter {
   /// silently dropped. A null [secondary] yields rows with no secondary side
   /// (the "no secondary translation" case still renders the primary cleanly).
   factory ParallelChapter.align(
-      ChapterContent primary, ChapterContent? secondary) {
+    ChapterContent primary,
+    ChapterContent? secondary,
+  ) {
     final secVerses = secondary?.verses ?? const <Verse>[];
     final secByNum = <int, Verse>{for (final v in secVerses) v.number: v};
     final primaryNums = <int>{for (final v in primary.verses) v.number};
@@ -118,14 +120,17 @@ class ParallelChapter {
       for (final v in primary.verses)
         ParallelVerse(v.number, v, secByNum[v.number]),
     ];
-    final extras = secVerses
-        .where((v) => !primaryNums.contains(v.number))
-        .toList()
-      ..sort((a, b) => a.number.compareTo(b.number));
+    final extras =
+        secVerses.where((v) => !primaryNums.contains(v.number)).toList()
+          ..sort((a, b) => a.number.compareTo(b.number));
     rows.addAll(extras.map((v) => ParallelVerse(v.number, null, v)));
 
     return ParallelChapter(
-        primary.bookId, primary.chapter, rows, primary.headings);
+      primary.bookId,
+      primary.chapter,
+      rows,
+      primary.headings,
+    );
   }
 }
 
@@ -187,7 +192,19 @@ class Commentary {
     if (n <= 0) return '';
     const vals = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
     const syms = [
-      'M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I'
+      'M',
+      'CM',
+      'D',
+      'CD',
+      'C',
+      'XC',
+      'L',
+      'XL',
+      'X',
+      'IX',
+      'V',
+      'IV',
+      'I',
     ];
     final sb = StringBuffer();
     var x = n;
@@ -202,7 +219,15 @@ class Commentary {
 
   static int? romanToInt(String roman) {
     if (roman.isEmpty) return null;
-    const map = {'I': 1, 'V': 5, 'X': 10, 'L': 50, 'C': 100, 'D': 500, 'M': 1000};
+    const map = {
+      'I': 1,
+      'V': 5,
+      'X': 10,
+      'L': 50,
+      'C': 100,
+      'D': 500,
+      'M': 1000,
+    };
     var total = 0, prev = 0;
     for (var i = roman.length - 1; i >= 0; i--) {
       final v = map[roman[i].toUpperCase()];

@@ -46,8 +46,11 @@ BackAction resolveBackAction({
 class BackNavigationScope extends StatefulWidget {
   final StatefulNavigationShell navShell;
   final Widget child;
-  const BackNavigationScope(
-      {super.key, required this.navShell, required this.child});
+  const BackNavigationScope({
+    super.key,
+    required this.navShell,
+    required this.child,
+  });
 
   @override
   State<BackNavigationScope> createState() => _BackNavigationScopeState();

@@ -14,9 +14,9 @@ import 'package:flutter/widgets.dart';
 
 /// Right-to-left for Hebrew (and Aramaic); left-to-right for everything else.
 TextDirection scriptDirection(String lang) => switch (lang) {
-      'he' || 'hbo' || 'arc' => TextDirection.rtl,
-      _ => TextDirection.ltr,
-    };
+  'he' || 'hbo' || 'arc' => TextDirection.rtl,
+  _ => TextDirection.ltr,
+};
 
 bool isRtlScript(String lang) => scriptDirection(lang) == TextDirection.rtl;
 
@@ -25,27 +25,30 @@ TextAlign scriptAlign(String lang) =>
     isRtlScript(lang) ? TextAlign.right : TextAlign.left;
 
 const _hebrewFallback = [
-  'Noto Sans Hebrew', 'Noto Serif Hebrew', 'David', 'Arial Hebrew',
+  'Noto Sans Hebrew',
+  'Noto Serif Hebrew',
+  'David',
+  'Arial Hebrew',
   'Times New Roman',
 ];
-const _greekFallback = [
-  'Noto Serif', 'Times New Roman', 'Helvetica',
-];
+const _greekFallback = ['Noto Serif', 'Times New Roman', 'Helvetica'];
 
 /// Adds a glyph-bearing fallback for scripts the app's own serif doesn't cover.
 /// EB Garamond carries Greek, so the Greek list is a safety net; Hebrew needs
 /// a real fallback.
 TextStyle? scriptStyle(TextStyle? base, String lang) => switch (lang) {
-      'he' || 'hbo' || 'arc' =>
-        (base ?? const TextStyle()).copyWith(fontFamilyFallback: _hebrewFallback),
-      'grc' || 'el' =>
-        (base ?? const TextStyle()).copyWith(fontFamilyFallback: _greekFallback),
-      _ => base,
-    };
+  'he' || 'hbo' || 'arc' => (base ?? const TextStyle()).copyWith(
+    fontFamilyFallback: _hebrewFallback,
+  ),
+  'grc' || 'el' => (base ?? const TextStyle()).copyWith(
+    fontFamilyFallback: _greekFallback,
+  ),
+  _ => base,
+};
 
 /// Wraps [child] in the reading direction of [lang]. A no-op for left-to-right
 /// texts, so ordinary verses keep the ambient directionality.
 Widget scriptDirectionality({required String lang, required Widget child}) =>
     isRtlScript(lang)
-        ? Directionality(textDirection: TextDirection.rtl, child: child)
-        : child;
+    ? Directionality(textDirection: TextDirection.rtl, child: child)
+    : child;

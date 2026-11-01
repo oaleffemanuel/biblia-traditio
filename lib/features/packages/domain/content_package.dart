@@ -9,13 +9,13 @@ enum PackageType {
   unknown;
 
   static PackageType from(String s) => switch (s) {
-        'bible_translation' => bibleTranslation,
-        'patristics' => patristics,
-        'liturgy' => liturgy,
-        'catechism' => catechism,
-        'church_documents' => churchDocuments,
-        _ => unknown,
-      };
+    'bible_translation' => bibleTranslation,
+    'patristics' => patristics,
+    'liturgy' => liturgy,
+    'catechism' => catechism,
+    'church_documents' => churchDocuments,
+    _ => unknown,
+  };
 }
 
 /// A unit of installable content. Bundled packages ship compressed in the app
@@ -57,23 +57,30 @@ class ContentPackage {
   bool get isBundled => asset != null && asset!.isNotEmpty;
 
   factory ContentPackage.fromJson(Map<String, dynamic> j) => ContentPackage(
-        id: j['id'] as String,
-        title: j['title'] as String,
-        language: j['language'] as String? ?? '',
-        type: PackageType.from(j['type'] as String? ?? ''),
-        version: (j['version'] as num?)?.toInt() ?? 1,
-        source: j['source'] as String? ?? '',
-        license: j['license'] as String? ?? '',
-        asset: j['asset'] as String?,
-        url: j['url'] as String?,
-        sizeBytes: (j['sizeBytes'] as num?)?.toInt() ?? 0,
-        compressedBytes: (j['compressedBytes'] as num?)?.toInt() ?? 0,
-        sha256: j['sha256'] as String? ?? '',
-        required: j['required'] as bool? ?? false,
-      );
+    id: j['id'] as String,
+    title: j['title'] as String,
+    language: j['language'] as String? ?? '',
+    type: PackageType.from(j['type'] as String? ?? ''),
+    version: (j['version'] as num?)?.toInt() ?? 1,
+    source: j['source'] as String? ?? '',
+    license: j['license'] as String? ?? '',
+    asset: j['asset'] as String?,
+    url: j['url'] as String?,
+    sizeBytes: (j['sizeBytes'] as num?)?.toInt() ?? 0,
+    compressedBytes: (j['compressedBytes'] as num?)?.toInt() ?? 0,
+    sha256: j['sha256'] as String? ?? '',
+    required: j['required'] as bool? ?? false,
+  );
 
   /// Required metadata fields for release validation.
   static const requiredFields = [
-    'id', 'title', 'language', 'type', 'version', 'source', 'license', 'sha256',
+    'id',
+    'title',
+    'language',
+    'type',
+    'version',
+    'source',
+    'license',
+    'sha256',
   ];
 }

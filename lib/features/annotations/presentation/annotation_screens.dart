@@ -43,27 +43,39 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                 filled: true,
                 fillColor: c.surface,
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none),
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
           ),
           if (notes.isEmpty)
-            Expanded(child: _empty(c, Icons.note_outlined, context.l10n.noNotesYet))
+            Expanded(
+              child: _empty(c, Icons.note_outlined, context.l10n.noNotesYet),
+            )
           else
             Expanded(
               child: ListView.separated(
                 itemCount: notes.length,
-                separatorBuilder: (_, _) => Divider(height: 1, color: c.divider),
+                separatorBuilder: (_, _) =>
+                    Divider(height: 1, color: c.divider),
                 itemBuilder: (_, i) {
                   final n = notes[i];
                   return ListTile(
-                    title: Text(_ref(ref, n.ref),
-                        style: TextStyle(
-                            color: c.accent, fontWeight: FontWeight.w600)),
-                    subtitle: Text(n.body,
-                        maxLines: 2, overflow: TextOverflow.ellipsis),
-                    onTap: () => showNoteEditor(context, ref, n.ref, existing: n),
+                    title: Text(
+                      _ref(ref, n.ref),
+                      style: TextStyle(
+                        color: c.accent,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: Text(
+                      n.body,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    onTap: () =>
+                        showNoteEditor(context, ref, n.ref, existing: n),
                   );
                 },
               ),
@@ -91,8 +103,11 @@ class FavoritesScreen extends ConsumerWidget {
                 final f = favorites[i];
                 return ListTile(
                   leading: Icon(Icons.favorite, color: c.accent, size: 20),
-                  title: Text(f.snapshot,
-                      maxLines: 3, overflow: TextOverflow.ellipsis),
+                  title: Text(
+                    f.snapshot,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   trailing: IconButton(
                     tooltip: context.l10n.unfavorite,
                     icon: Icon(Icons.close, size: 18, color: c.textFaint),
@@ -101,16 +116,19 @@ class FavoritesScreen extends ConsumerWidget {
                     onPressed: () {
                       final ctrl = ref.read(annotationControllerProvider);
                       ctrl.toggleFavorite(f.ref, f.snapshot);
-                      showSnack(context.l10n.favoriteRemoved,
-                          action: SnackBarAction(
-                            label: context.l10n.actionUndo,
-                            onPressed: () =>
-                                ctrl.toggleFavorite(f.ref, f.snapshot),
-                          ));
+                      showSnack(
+                        context.l10n.favoriteRemoved,
+                        action: SnackBarAction(
+                          label: context.l10n.actionUndo,
+                          onPressed: () =>
+                              ctrl.toggleFavorite(f.ref, f.snapshot),
+                        ),
+                      );
                     },
                   ),
                   onTap: () => context.push(
-                      '/bible/${f.ref.bookId}/${f.ref.chapter}?v=${f.ref.verse}'),
+                    '/bible/${f.ref.bookId}/${f.ref.chapter}?v=${f.ref.verse}',
+                  ),
                 );
               },
             ),
@@ -135,26 +153,45 @@ class HighlightsScreen extends ConsumerWidget {
                 final h = items[i];
                 return ListTile(
                   leading: Container(
-                      width: 18,
-                      height: 18,
-                      decoration: BoxDecoration(
-                          color: h.color.color, shape: BoxShape.circle)),
+                    width: 18,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      color: h.color.color,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
                   title: Text(_ref(ref, h.ref)),
+                  subtitle: (h.excerpt ?? '').isEmpty
+                      ? null
+                      : Text(
+                          '“${h.excerpt}”',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                   trailing: IconButton(
                     tooltip: context.l10n.actionRemove,
                     icon: Icon(Icons.close, size: 18, color: c.textFaint),
                     onPressed: () {
                       final ctrl = ref.read(annotationControllerProvider);
                       ctrl.removeHighlight(h.ref);
-                      showSnack(context.l10n.highlightRemoved,
-                          action: SnackBarAction(
-                            label: context.l10n.actionUndo,
-                            onPressed: () => ctrl.setHighlight(h.ref, h.color),
-                          ));
+                      showSnack(
+                        context.l10n.highlightRemoved,
+                        action: SnackBarAction(
+                          label: context.l10n.actionUndo,
+                          onPressed: () => ctrl.setHighlight(
+                            h.ref,
+                            h.color,
+                            start: h.start,
+                            end: h.end,
+                            excerpt: h.excerpt,
+                          ),
+                        ),
+                      );
                     },
                   ),
                   onTap: () => context.push(
-                      '/bible/${h.ref.bookId}/${h.ref.chapter}?v=${h.ref.verse}'),
+                    '/bible/${h.ref.bookId}/${h.ref.chapter}?v=${h.ref.verse}',
+                  ),
                 );
               },
             ),
@@ -163,12 +200,12 @@ class HighlightsScreen extends ConsumerWidget {
 }
 
 Widget _empty(BtColors c, IconData icon, String msg) => Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 44, color: c.textFaint),
-          const SizedBox(height: 12),
-          Text(msg, style: TextStyle(color: c.textSecondary)),
-        ],
-      ),
-    );
+  child: Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(icon, size: 44, color: c.textFaint),
+      const SizedBox(height: 12),
+      Text(msg, style: TextStyle(color: c.textSecondary)),
+    ],
+  ),
+);

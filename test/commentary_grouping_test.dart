@@ -11,19 +11,23 @@ import 'package:flutter_test/flutter_test.dart';
 
 const _vref = VerseRef('jn', 1, 1);
 
-Commentary _c(int id, String name, String text,
-        {String century = 'IV', String role = 'doutor-da-igreja'}) =>
-    Commentary(
-      id: id,
-      ref: _vref,
-      fatherName: name,
-      century: century,
-      source: 'Catena Aurea',
-      isMachineTranslation: true,
-      text: text,
-      rolePrimary: role,
-      roleGroups: const {'patristica'},
-    );
+Commentary _c(
+  int id,
+  String name,
+  String text, {
+  String century = 'IV',
+  String role = 'doutor-da-igreja',
+}) => Commentary(
+  id: id,
+  ref: _vref,
+  fatherName: name,
+  century: century,
+  source: 'Catena Aurea',
+  isMachineTranslation: true,
+  text: text,
+  rolePrimary: role,
+  roleGroups: const {'patristica'},
+);
 
 /// St Basil has three excerpts on this verse; Chrysostom has one. This is the
 /// shape that used to render as repeated headers.
@@ -39,61 +43,72 @@ Future<void> _open(WidgetTester tester, {List<Commentary>? items}) async {
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
 
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      contentDatabaseProvider.overrideWithValue(null),
-      userDbProvider.overrideWithValue(null),
-      commentariesProvider.overrideWith((ref, v) => items ?? _fixture),
-    ],
-    child: MaterialApp(
-      theme: AppTheme.dark(),
-      locale: const Locale('pt'),
-      localizationsDelegates: AppL10n.localizationsDelegates,
-      supportedLocales: AppL10n.supportedLocales,
-      home: Consumer(
-        builder: (context, ref, _) => Scaffold(
-          body: Center(
-            child: ElevatedButton(
-              onPressed: () => showCommentaryPanel(context, ref, _vref,
-                  bookName: 'João', verseText: 'No princípio era o Verbo'),
-              child: const Text('abrir'),
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        contentDatabaseProvider.overrideWithValue(null),
+        userDbProvider.overrideWithValue(null),
+        commentariesProvider.overrideWith((ref, v) => items ?? _fixture),
+      ],
+      child: MaterialApp(
+        theme: AppTheme.dark(),
+        locale: const Locale('pt'),
+        localizationsDelegates: AppL10n.localizationsDelegates,
+        supportedLocales: AppL10n.supportedLocales,
+        home: Consumer(
+          builder: (context, ref, _) => Scaffold(
+            body: Center(
+              child: ElevatedButton(
+                onPressed: () => showCommentaryPanel(
+                  context,
+                  ref,
+                  _vref,
+                  bookName: 'João',
+                  verseText: 'No princípio era o Verbo',
+                ),
+                child: const Text('abrir'),
+              ),
             ),
           ),
         ),
       ),
     ),
-  ));
+  );
   await tester.tap(find.text('abrir'));
   await tester.pumpAndSettle();
 }
 
 void main() {
   group('one header per author', () {
-    testWidgets('a Father with three excerpts appears once, not three times',
-        (tester) async {
+    testWidgets('a Father with three excerpts appears once, not three times', (
+      tester,
+    ) async {
       await _open(tester);
       expect(find.text('São Basílio Magno'), findsOneWidget);
       expect(find.text('São João Crisóstomo'), findsOneWidget);
     });
 
-    testWidgets('the header says how many excerpts wait inside',
-        (tester) async {
+    testWidgets('the header says how many excerpts wait inside', (
+      tester,
+    ) async {
       await _open(tester);
       expect(find.text('3 excertos'), findsOneWidget);
       // A single excerpt needs no count.
       expect(find.text('1 excerto'), findsNothing);
     });
 
-    testWidgets('the count still reports every excerpt, not every author',
-        (tester) async {
+    testWidgets('the count still reports every excerpt, not every author', (
+      tester,
+    ) async {
       await _open(tester);
       expect(find.text('4 comentários'), findsOneWidget);
     });
   });
 
   group('expanding', () {
-    testWidgets('opening an author reveals all of its excerpts, in order',
-        (tester) async {
+    testWidgets('opening an author reveals all of its excerpts, in order', (
+      tester,
+    ) async {
       await _open(tester);
       expect(find.textContaining('excerto de Basílio'), findsNothing);
 
@@ -138,8 +153,14 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Minimizar todos'), findsOneWidget);
-      expect(find.textContaining('Primeiro excerto de Basílio'), findsOneWidget);
-      expect(find.textContaining('Terceiro excerto de Basílio'), findsOneWidget);
+      expect(
+        find.textContaining('Primeiro excerto de Basílio'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('Terceiro excerto de Basílio'),
+        findsOneWidget,
+      );
       expect(find.textContaining('Único excerto'), findsOneWidget);
 
       await tester.tap(find.text('Minimizar todos'));
@@ -177,8 +198,14 @@ void main() {
 
   group('responsorial psalm data path', () {
     test('a reading with no refrain reports none rather than guessing', () {
-      const r = Reading(ReadingSlot.psalm, 'Sl 22(23)',
-          bookId: 'ps', chapter: 22, verseStart: 1, verseEnd: 6);
+      const r = Reading(
+        ReadingSlot.psalm,
+        'Sl 22(23)',
+        bookId: 'ps',
+        chapter: 22,
+        verseStart: 1,
+        verseEnd: 6,
+      );
       expect(r.hasRefrain, isFalse);
       expect(r.refrain, isNull);
     });

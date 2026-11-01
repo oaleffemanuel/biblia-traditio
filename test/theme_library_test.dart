@@ -93,7 +93,7 @@ void main() {
       expect(lib.themes, isNotEmpty);
       for (final t in lib.themes) {
         expect(groups, contains(t.groupId), reason: t.id);
-        expect(t.passages, isNotEmpty, reason: t.id);
+        expect(t.passageCount, greaterThan(0), reason: t.id);
         expect(t.title.trim(), isNotEmpty);
       }
     });
@@ -101,7 +101,10 @@ void main() {
     test('ids are unique and every passage points at a canonical book', () {
       expect(lib.themes.map((t) => t.id).toSet().length, lib.themes.length);
       for (final t in lib.themes) {
-        for (final p in t.passages) {
+        for (final p in [
+          ...t.passages,
+          for (final st in t.subtopics) ...st.passages,
+        ]) {
           expect(_canon, contains(p.bookId), reason: '${t.id} ${p.ref}');
           expect(p.chapter, greaterThan(0));
           expect(p.verseStart, greaterThan(0));
@@ -114,16 +117,33 @@ void main() {
       }
     });
 
-    test('the Eucharist theme leads with John 6', () {
-      final e = lib.byId('eucaristia')!;
-      expect(e.passages.first.bookId, 'jn');
-      expect(e.passages.first.chapter, 6);
+    test('the Eucharist theme exists and carries passages', () {
+      final e = lib.themes.firstWhere((t) => t.title.contains('Eucaristia'));
+      expect(e.passageCount, greaterThan(0));
+      final all = [...e.passages, for (final st in e.subtopics) ...st.passages];
+      expect(all.any((p) => p.bookId == 'jn' && p.chapter == 6), isTrue);
+    });
+
+    test('psalms are stored in Vulgate chapters', () {
+      final ps = [
+        for (final t in lib.themes)
+          for (final p in t.passages)
+            if (p.bookId == 'ps') p,
+      ];
+      expect(ps, isNotEmpty);
+      for (final p in ps) {
+        expect(p.chapter, lessThanOrEqualTo(150));
+        expect(p.chapter, greaterThan(0));
+      }
     });
 
     test('the bundled asset loads through Flutter asset resolution', () async {
       final loaded = await ThemeLibrary.load();
       expect(loaded.themes.length, lib.themes.length);
-      expect(loaded.byId('eucaristia'), isNotNull);
+      expect(
+        loaded.themes.any((t) => t.title.contains('Eucaristia')),
+        isTrue,
+      );
     });
   });
 

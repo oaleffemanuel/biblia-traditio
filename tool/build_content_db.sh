@@ -82,6 +82,24 @@ else
   echo "▶ Bible (SBLGNT) — SKIPPED: $GRC_JSON not available"
 fi
 
+# Greek Old Testament — Septuagint, Henry Barclay Swete's edition (1930, public
+# domain), from the team's per-book JSON (tool/importer/data/lxx_swete/*.json,
+# converted by convert_bt_json.py; LXX Psalm 151 is dropped). Psalms already
+# follow the LXX/Vulgate numbering, so they align in Parallel Reading.
+LXX_JSON="$DATA/grc_lxx.json"
+if [ ! -f "$LXX_JSON" ] && [ -d "$DATA/lxx_swete" ]; then
+  python3 -I "$IMP/convert_bt_json.py" "$DATA/lxx_swete" "$LXX_JSON" || true
+fi
+if [ -f "$LXX_JSON" ]; then
+  echo "▶ Bible (Grego AT — Septuaginta de Swete)"
+  dart run bin/import.dart biblejson --src "$LXX_JSON" --translation grc_lxx --lang grc \
+    --title "Septuaginta (Swete)" \
+    --license "Domínio público — The Old Testament in Greek according to the Septuagint, ed. H. B. Swete (Cambridge, 1930)" \
+    --out "$DATA/bible_vulgata.sqlite"
+else
+  echo "▶ Bible (Septuaginta) — SKIPPED: $LXX_JSON not available"
+fi
+
 # Hebrew Old Testament — Westminster Leningrad Codex via Open Scriptures
 # (morphhb, OSIS). WLC text is public domain; the OSHB morphology (CC BY 4.0)
 # is not bundled. Psalms are stored in Vulgate numbering (fetch_wlc.py maps
@@ -198,8 +216,8 @@ PA_GZ=$(sz "$PKG/patristics.sqlite.gz")
 
 BIBLE_TITLE="Bíblia (Vulgata + Português + Grego + Hebraico + Espanhol + Francês)"
 BIBLE_VERSION=10
-BIBLE_SOURCE="Vulgata: open-bibles (Clementine, USFX). Português: corpus interno (iacula) — origem da tradução a confirmar. Matos Soares: padrepauloricardo.org (edição matos-soares). Grego: SBLGNT via morphgnt. Hebraico: Westminster Leningrad Codex via Open Scriptures (morphhb). Espanhol: Biblia Platense (Straubinger) via CrossWire SpaPlatense. Francês: néo-Crampon Libre via eBible."
-BIBLE_LICENSE="Vulgata: domínio público. Português (beta): uso interno — origem da tradução a confirmar. Matos Soares: Pe. Matos Soares †1957 — domínio público só a partir de 01/01/2028; não publicar sem licença (beta). Grego: CC BY 4.0 (SBLGNT, SBL & Logos). Hebraico: domínio público (WLC). Espanhol: domínio público — CrossWire SpaPlatense. Francês: CC BY-SA 4.0 — Fraternité de Tibériade via eBible."
+BIBLE_SOURCE="Vulgata: open-bibles (Clementine, USFX). Português: corpus interno (iacula) — origem da tradução a confirmar. Matos Soares: padrepauloricardo.org (edição matos-soares). Grego NT: SBLGNT via morphgnt. Grego AT: Septuaginta de H. B. Swete (1930). Hebraico: Westminster Leningrad Codex via Open Scriptures (morphhb). Espanhol: Biblia Platense (Straubinger) via CrossWire SpaPlatense. Francês: néo-Crampon Libre via eBible."
+BIBLE_LICENSE="Vulgata: domínio público. Português (beta): uso interno — origem da tradução a confirmar. Matos Soares: Pe. Matos Soares †1957 — domínio público só a partir de 01/01/2028; não publicar sem licença (beta). Grego NT: CC BY 4.0 (SBLGNT, SBL & Logos). Grego AT: domínio público (Swete 1930). Hebraico: domínio público (WLC). Espanhol: domínio público — CrossWire SpaPlatense. Francês: CC BY-SA 4.0 — Fraternité de Tibériade via eBible."
 if [ -f "$FR_JSON" ]; then
   BIBLE_VERSION=11
 fi

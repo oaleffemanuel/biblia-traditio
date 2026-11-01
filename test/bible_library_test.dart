@@ -9,15 +9,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 BibleBook _book(String id, String name, Testament t, int order) => BibleBook(
-      id: id,
-      testament: t,
-      order: order,
-      isDeutero: false,
-      chapterCount: 10,
-      emblemAsset: '',
-      name: name,
-      abbrev: id,
-    );
+  id: id,
+  testament: t,
+  order: order,
+  isDeutero: false,
+  chapterCount: 10,
+  emblemAsset: '',
+  name: name,
+  abbrev: id,
+);
 
 final _books = [
   _book('gn', 'Gênesis', Testament.ot, 1),
@@ -26,27 +26,32 @@ final _books = [
   _book('mk', 'São Marcos', Testament.nt, 48),
 ];
 
-Future<void> _pumpLibrary(WidgetTester tester,
-    {List<BibleBook> books = const []}) async {
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      contentDatabaseProvider.overrideWithValue(null),
-      booksProvider.overrideWithValue(books),
-    ],
-    child: MaterialApp(
-      theme: AppTheme.dark(),
-      locale: const Locale('pt'),
-      localizationsDelegates: AppL10n.localizationsDelegates,
-      supportedLocales: AppL10n.supportedLocales,
-      home: const BibleLibraryScreen(),
+Future<void> _pumpLibrary(
+  WidgetTester tester, {
+  List<BibleBook> books = const [],
+}) async {
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        contentDatabaseProvider.overrideWithValue(null),
+        booksProvider.overrideWithValue(books),
+      ],
+      child: MaterialApp(
+        theme: AppTheme.dark(),
+        locale: const Locale('pt'),
+        localizationsDelegates: AppL10n.localizationsDelegates,
+        supportedLocales: AppL10n.supportedLocales,
+        home: const BibleLibraryScreen(),
+      ),
     ),
-  ));
+  );
   await tester.pumpAndSettle();
 }
 
 void main() {
-  testWidgets('Bible screen no longer shows the three-dot overflow menu',
-      (tester) async {
+  testWidgets('Bible screen no longer shows the three-dot overflow menu', (
+    tester,
+  ) async {
     await _pumpLibrary(tester);
     // The "⋯" → Settings shortcut was removed; Settings lives on Home.
     expect(find.byIcon(Icons.more_horiz), findsNothing);
@@ -55,8 +60,9 @@ void main() {
     expect(find.text('Bíblia'), findsOneWidget);
   });
 
-  testWidgets('opens on the Old Testament with the selector visible',
-      (tester) async {
+  testWidgets('opens on the Old Testament with the selector visible', (
+    tester,
+  ) async {
     await _pumpLibrary(tester, books: _books);
     expect(find.byType(PageView), findsOneWidget);
     expect(find.text('Antigo testamento'), findsOneWidget);
@@ -99,13 +105,14 @@ void main() {
     expect(find.text('Êxodo'), findsOneWidget);
   });
 
-  testWidgets('the selector stays a labelled, selectable control for a11y',
-      (tester) async {
+  testWidgets('the selector stays a labelled, selectable control for a11y', (
+    tester,
+  ) async {
     await _pumpLibrary(tester, books: _books);
 
-    Semantics segment(String label) => tester.widgetList<Semantics>(
-          find.byType(Semantics),
-        ).firstWhere((s) => s.properties.label == label);
+    Semantics segment(String label) => tester
+        .widgetList<Semantics>(find.byType(Semantics))
+        .firstWhere((s) => s.properties.label == label);
 
     expect(segment('Antigo testamento').properties.button, isTrue);
     expect(segment('Antigo testamento').properties.selected, isTrue);

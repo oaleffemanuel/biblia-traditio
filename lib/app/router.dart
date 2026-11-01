@@ -30,60 +30,79 @@ final routerProvider = Provider.family<GoRouter, bool>((ref, completed) {
       StatefulShellRoute.indexedStack(
         builder: (context, state, navShell) => _Scaffold(navShell: navShell),
         branches: [
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/liturgy', builder: (_, _) => const LiturgyScreen()),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/bible',
-              builder: (_, _) => const BibleLibraryScreen(),
-              routes: [
-                GoRoute(
-                  path: ':bookId',
-                  builder: (_, s) =>
-                      ChaptersScreen(bookId: s.pathParameters['bookId']!),
-                  routes: [
-                    GoRoute(
-                      path: ':chapter',
-                      builder: (_, s) => ReaderScreen(
-                        bookId: s.pathParameters['bookId']!,
-                        chapter: int.parse(s.pathParameters['chapter']!),
-                        // ?src=liturgy|plan opens the reader in a separate
-                        // context that must not overwrite "Continue reading".
-                        recordProgress:
-                            s.uri.queryParameters['src'] == null,
-                        // ?v=16 scrolls to (and briefly marks) that verse, so
-                        // a note/favorite/search hit lands on the verse the
-                        // reader asked for, not the top of the chapter.
-                        focusVerse: int.tryParse(
-                            s.uri.queryParameters['v'] ?? ''),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/liturgy',
+                builder: (_, _) => const LiturgyScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/bible',
+                builder: (_, _) => const BibleLibraryScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':bookId',
+                    builder: (_, s) =>
+                        ChaptersScreen(bookId: s.pathParameters['bookId']!),
+                    routes: [
+                      GoRoute(
+                        path: ':chapter',
+                        builder: (_, s) => ReaderScreen(
+                          bookId: s.pathParameters['bookId']!,
+                          chapter: int.parse(s.pathParameters['chapter']!),
+                          // ?src=liturgy|plan opens the reader in a separate
+                          // context that must not overwrite "Continue reading".
+                          recordProgress: s.uri.queryParameters['src'] == null,
+                          // ?v=16 scrolls to (and briefly marks) that verse, so
+                          // a note/favorite/search hit lands on the verse the
+                          // reader asked for, not the top of the chapter.
+                          focusVerse: int.tryParse(
+                            s.uri.queryParameters['v'] ?? '',
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ]),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/themes',
+                builder: (_, _) => const ThemesScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    builder: (_, st) =>
+                        ThemeDetailScreen(themeId: st.pathParameters['id']!),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
       ),
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
+      GoRoute(path: '/licenses', builder: (_, _) => const AttributionsScreen()),
       GoRoute(
-          path: '/licenses', builder: (_, _) => const AttributionsScreen()),
-      GoRoute(
-          path: '/reading-plan',
-          builder: (_, _) => const ReadingPlanScreen()),
+        path: '/reading-plan',
+        builder: (_, _) => const ReadingPlanScreen(),
+      ),
       GoRoute(path: '/notes', builder: (_, _) => const NotesScreen()),
       GoRoute(path: '/favorites', builder: (_, _) => const FavoritesScreen()),
       GoRoute(path: '/highlights', builder: (_, _) => const HighlightsScreen()),
       GoRoute(path: '/search', builder: (_, _) => const SearchScreen()),
-      GoRoute(path: '/themes', builder: (_, _) => const ThemesScreen()),
-      GoRoute(
-          path: '/themes/:id',
-          builder: (_, st) =>
-              ThemeDetailScreen(themeId: st.pathParameters['id']!)),
     ],
   );
 });
@@ -105,21 +124,31 @@ class _Scaffold extends StatelessWidget {
           ),
           child: BottomNavigationBar(
             currentIndex: navShell.currentIndex,
-            onTap: (i) => navShell.goBranch(i,
-                initialLocation: i == navShell.currentIndex),
+            onTap: (i) => navShell.goBranch(
+              i,
+              initialLocation: i == navShell.currentIndex,
+            ),
             items: [
               BottomNavigationBarItem(
-                  icon: const Icon(Icons.home_outlined),
-                  activeIcon: const Icon(Icons.home),
-                  label: context.l10n.navHome),
+                icon: const Icon(Icons.home_outlined),
+                activeIcon: const Icon(Icons.home),
+                label: context.l10n.navHome,
+              ),
               BottomNavigationBarItem(
-                  icon: const Icon(Icons.calendar_month_outlined),
-                  activeIcon: const Icon(Icons.calendar_month),
-                  label: context.l10n.navLiturgy),
+                icon: const Icon(Icons.calendar_month_outlined),
+                activeIcon: const Icon(Icons.calendar_month),
+                label: context.l10n.navLiturgy,
+              ),
               BottomNavigationBarItem(
-                  icon: const Icon(Icons.menu_book_outlined),
-                  activeIcon: const Icon(Icons.menu_book),
-                  label: context.l10n.navBible),
+                icon: const Icon(Icons.menu_book_outlined),
+                activeIcon: const Icon(Icons.menu_book),
+                label: context.l10n.navBible,
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.auto_stories_outlined),
+                activeIcon: const Icon(Icons.auto_stories),
+                label: context.l10n.navThemes,
+              ),
             ],
           ),
         ),

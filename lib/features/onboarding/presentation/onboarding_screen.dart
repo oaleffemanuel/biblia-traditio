@@ -77,6 +77,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     s.setSecondaryTranslation(
       secondary != null && secondary.id != _translationId ? secondary.id : '',
     );
+    s.setParallelPreset(switch (_parallel) {
+      ParallelPreference.latin => ParallelPreset.latin,
+      ParallelPreference.greek => ParallelPreset.greek,
+      ParallelPreference.hebrew => ParallelPreset.hebrewGreek,
+      ParallelPreference.none => ParallelPreset.custom,
+    });
 
     s.completeOnboarding(); // flips initial route to /home
   }

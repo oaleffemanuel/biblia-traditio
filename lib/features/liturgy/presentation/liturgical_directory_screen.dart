@@ -10,22 +10,22 @@ import 'liturgy_screen.dart' show colorLabel, rankLabel, seasonLabel;
 
 /// Localised labels for the directory, built from the active locale.
 DirectoryLabels directoryLabels(AppL10n l) => DirectoryLabels(
-      season: l.directoryCardSeason,
-      celebration: l.directoryCardCelebration,
-      color: l.directoryCardColor,
-      week: l.directoryCardWeek,
-      year: l.directoryCardYear,
-      cycle: l.directoryCardCycle,
-      preface: l.directoryCardPreface,
-      observances: l.directoryCardObservances,
-      ephemerides: l.directoryCardEphemerides,
-      seasonName: (s) => seasonLabel(l, s),
-      colorName: (c) => colorLabel(l, c),
-      rankName: (r) => rankLabel(l, r),
-      weekOf: l.liturgyWeekOf,
-      yearOf: l.liturgicalYear,
-      cycleOf: l.liturgicalCycle,
-    );
+  season: l.directoryCardSeason,
+  celebration: l.directoryCardCelebration,
+  color: l.directoryCardColor,
+  week: l.directoryCardWeek,
+  year: l.directoryCardYear,
+  cycle: l.directoryCardCycle,
+  preface: l.directoryCardPreface,
+  observances: l.directoryCardObservances,
+  ephemerides: l.directoryCardEphemerides,
+  seasonName: (s) => seasonLabel(l, s),
+  colorName: (c) => colorLabel(l, c),
+  rankName: (r) => rankLabel(l, r),
+  weekOf: l.liturgyWeekOf,
+  yearOf: l.liturgicalYear,
+  cycleOf: l.liturgicalCycle,
+);
 
 /// The Liturgical Directory: what today's celebration is, answered card by
 /// card. Opened from the Liturgy screen as a sheet — the app keeps its three
@@ -37,7 +37,8 @@ void showLiturgicalDirectory(BuildContext context, DateTime date) {
     isScrollControlled: true,
     backgroundColor: c.surface,
     shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
     builder: (_) => DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.9,
@@ -59,44 +60,60 @@ class _DirectoryBody extends ConsumerWidget {
     final l10n = context.l10n;
     final light = Theme.of(context).brightness == Brightness.light;
     final day = ref.watch(liturgicalDayProvider(date));
-    final entry =
-        const LiturgicalDirectory().explain(day, directoryLabels(l10n));
+    final entry = const LiturgicalDirectory().explain(
+      day,
+      directoryLabels(l10n),
+    );
 
     return Column(
       children: [
         const SizedBox(height: 12),
         Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-                color: c.divider, borderRadius: BorderRadius.circular(2))),
+          width: 40,
+          height: 4,
+          decoration: BoxDecoration(
+            color: c.divider,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
         Expanded(
           child: ListView(
             controller: controller,
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
             children: [
-              Row(children: [
-                Container(
+              Row(
+                children: [
+                  Container(
                     width: 10,
                     height: 10,
                     decoration: BoxDecoration(
-                        color: day.color.dotColor(light: light),
-                        shape: BoxShape.circle)),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(l10n.liturgicalDirectory,
-                      style: Theme.of(context).textTheme.headlineMedium),
-                ),
-              ]),
+                      color: day.color.dotColor(light: light),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      l10n.liturgicalDirectory,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 28),
               for (var i = 0; i < entry.cards.length; i++) ...[
                 if (i > 0) _Rule(c),
                 _Field(field: entry.cards[i]),
               ],
               const SizedBox(height: 24),
-              Text(l10n.directorySource,
-                  style:
-                      TextStyle(color: c.textFaint, fontSize: 11.5, height: 1.4)),
+              Text(
+                l10n.directorySource,
+                style: TextStyle(
+                  color: c.textFaint,
+                  fontSize: 11.5,
+                  height: 1.4,
+                ),
+              ),
             ],
           ),
         ),
@@ -112,9 +129,9 @@ class _Rule extends StatelessWidget {
   const _Rule(this.c);
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 22),
-        child: Container(height: 1, color: c.divider.withValues(alpha: 0.6)),
-      );
+    padding: const EdgeInsets.symmetric(vertical: 22),
+    child: Container(height: 1, color: c.divider.withValues(alpha: 0.6)),
+  );
 }
 
 /// One field: a quiet label, the answer set in the serif, and at most a line
@@ -129,23 +146,30 @@ class _Field extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(field.label.toUpperCase(),
-            style: TextStyle(
-                color: c.textFaint,
-                fontSize: 10.5,
-                letterSpacing: 1.4,
-                fontWeight: FontWeight.w600)),
+        Text(
+          field.label.toUpperCase(),
+          style: TextStyle(
+            color: c.textFaint,
+            fontSize: 10.5,
+            letterSpacing: 1.4,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         const SizedBox(height: 8),
-        Text(field.value,
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(height: 1.3)),
+        Text(
+          field.value,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(height: 1.3),
+        ),
         if (field.note != null) ...[
           const SizedBox(height: 8),
-          Text(field.note!,
-              style: TextStyle(
-                  color: c.textSecondary, fontSize: 13.5, height: 1.5)),
+          Text(
+            field.note!,
+            style: TextStyle(
+              color: c.textSecondary,
+              fontSize: 13.5,
+              height: 1.5,
+            ),
+          ),
         ],
       ],
     );

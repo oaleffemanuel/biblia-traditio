@@ -8,8 +8,12 @@ import '../application/annotation_providers.dart';
 import '../domain/entities.dart';
 
 /// Bottom-sheet note editor. Creates a new note or edits [existing].
-void showNoteEditor(BuildContext context, WidgetRef ref, VerseRef vref,
-    {Note? existing}) {
+void showNoteEditor(
+  BuildContext context,
+  WidgetRef ref,
+  VerseRef vref, {
+  Note? existing,
+}) {
   final c = context.bt;
   // Localized book name for the title (never the raw id like "gn").
   final bookName = ref.read(bookByIdProvider(vref.bookId))?.name ?? vref.bookId;
@@ -18,7 +22,8 @@ void showNoteEditor(BuildContext context, WidgetRef ref, VerseRef vref,
     isScrollControlled: true,
     backgroundColor: c.surface,
     shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
     builder: (_) =>
         _NoteEditorSheet(vref: vref, bookName: bookName, existing: existing),
   );
@@ -31,16 +36,20 @@ class _NoteEditorSheet extends ConsumerStatefulWidget {
   final VerseRef vref;
   final String bookName;
   final Note? existing;
-  const _NoteEditorSheet(
-      {required this.vref, required this.bookName, this.existing});
+  const _NoteEditorSheet({
+    required this.vref,
+    required this.bookName,
+    this.existing,
+  });
 
   @override
   ConsumerState<_NoteEditorSheet> createState() => _NoteEditorSheetState();
 }
 
 class _NoteEditorSheetState extends ConsumerState<_NoteEditorSheet> {
-  late final TextEditingController _controller =
-      TextEditingController(text: widget.existing?.body ?? '');
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.existing?.body ?? '',
+  );
 
   @override
   void dispose() {
@@ -59,11 +68,13 @@ class _NoteEditorSheetState extends ConsumerState<_NoteEditorSheet> {
         content: Text(l10n.deleteNoteMessage),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(l10n.actionCancel)),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.actionCancel),
+          ),
           FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(l10n.actionDelete)),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.actionDelete),
+          ),
         ],
       ),
     );
@@ -104,10 +115,13 @@ class _NoteEditorSheetState extends ConsumerState<_NoteEditorSheet> {
         children: [
           Center(
             child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                    color: c.divider, borderRadius: BorderRadius.circular(2))),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: c.divider,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
           ),
           const SizedBox(height: 16),
           Row(
@@ -116,9 +130,12 @@ class _NoteEditorSheetState extends ConsumerState<_NoteEditorSheet> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                    l10n.noteEditorTitle('${widget.bookName} '
-                        '${widget.vref.chapter},${widget.vref.verse}'),
-                    style: Theme.of(context).textTheme.titleMedium),
+                  l10n.noteEditorTitle(
+                    '${widget.bookName} '
+                    '${widget.vref.chapter},${widget.vref.verse}',
+                  ),
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ),
               if (widget.existing != null)
                 IconButton(
@@ -142,15 +159,17 @@ class _NoteEditorSheetState extends ConsumerState<_NoteEditorSheet> {
               filled: true,
               fillColor: c.background,
               border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide.none),
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none,
+              ),
             ),
           ),
           const SizedBox(height: 16),
           FilledButton(
             style: FilledButton.styleFrom(
-                backgroundColor: c.accent,
-                padding: const EdgeInsets.symmetric(vertical: 14)),
+              backgroundColor: c.accent,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
             onPressed: _save,
             child: Text(l10n.actionSave),
           ),

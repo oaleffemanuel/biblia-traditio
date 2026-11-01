@@ -56,6 +56,21 @@ class UserDatabase {
       CREATE INDEX IF NOT EXISTS idx_note_ref ON note(book_id, chapter, verse);
       CREATE TABLE IF NOT EXISTS app_setting(key TEXT PRIMARY KEY, value TEXT);
     ''');
+    // Excerpt highlights (a selected span inside a verse) — added later, so
+    // existing databases get the columns on first open.
+    final cols = _db
+        .select('PRAGMA table_info(highlight)')
+        .map((r) => r['name'] as String)
+        .toSet();
+    if (!cols.contains('start_offset')) {
+      _db.execute('ALTER TABLE highlight ADD COLUMN start_offset INTEGER');
+    }
+    if (!cols.contains('end_offset')) {
+      _db.execute('ALTER TABLE highlight ADD COLUMN end_offset INTEGER');
+    }
+    if (!cols.contains('excerpt')) {
+      _db.execute('ALTER TABLE highlight ADD COLUMN excerpt TEXT');
+    }
   }
 
   // ── Settings (key/value) ───────────────────────────────────────────────
@@ -65,132 +80,205 @@ class UserDatabase {
   }
 
   void setSetting(String key, String value) => _db.execute(
-      'INSERT INTO app_setting(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',
-      [key, value]);
+    'INSERT INTO app_setting(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',
+    [key, value],
+  );
 
   int get _now => DateTime.now().millisecondsSinceEpoch;
   DateTime _at(Object? ms) =>
       DateTime.fromMillisecondsSinceEpoch((ms as int?) ?? 0);
 
   // ── Highlights ─────────────────────────────────────────────────────────
-  void setHighlight(VerseRef r, HighlightColor color) {
-    _db.execute('''
-      INSERT INTO highlight(uuid,book_id,chapter,verse,color_key,created_at,updated_at,is_dirty,is_deleted)
-      VALUES(?,?,?,?,?,?,?,1,0)
+  /// Whole verse when [start]/[end] are null; an excerpt inside the verse
+  /// otherwise (character offsets into the verse text, [excerpt] the words).
+  /// One highlight per verse: a new one replaces the old, range and all.
+  void setHighlight(
+    VerseRef r,
+    HighlightColor color, {
+    int? start,
+    int? end,
+    String? excerpt,
+  }) {
+    _db.execute(
+      '''
+      INSERT INTO highlight(uuid,book_id,chapter,verse,color_key,start_offset,end_offset,excerpt,created_at,updated_at,is_dirty,is_deleted)
+      VALUES(?,?,?,?,?,?,?,?,?,?,1,0)
       ON CONFLICT(book_id,chapter,verse) DO UPDATE SET
-        color_key=excluded.color_key, updated_at=excluded.updated_at,
-        is_dirty=1, is_deleted=0
-    ''', [_uuid.v4(), r.bookId, r.chapter, r.verse, color.key, _now, _now]);
+        color_key=excluded.color_key, start_offset=excluded.start_offset,
+        end_offset=excluded.end_offset, excerpt=excluded.excerpt,
+        updated_at=excluded.updated_at, is_dirty=1, is_deleted=0
+    ''',
+      [
+        _uuid.v4(),
+        r.bookId,
+        r.chapter,
+        r.verse,
+        color.key,
+        start,
+        end,
+        excerpt,
+        _now,
+        _now,
+      ],
+    );
   }
 
   void removeHighlight(VerseRef r) => _db.execute(
-      'UPDATE highlight SET is_deleted=1, is_dirty=1, updated_at=? WHERE book_id=? AND chapter=? AND verse=?',
-      [_now, r.bookId, r.chapter, r.verse]);
+    'UPDATE highlight SET is_deleted=1, is_dirty=1, updated_at=? WHERE book_id=? AND chapter=? AND verse=?',
+    [_now, r.bookId, r.chapter, r.verse],
+  );
 
-  /// verse number → highlight color, for one chapter.
-  Map<int, HighlightColor> highlightsForChapter(String bookId, int chapter) {
+  /// verse number → highlight mark (colour + optional excerpt range).
+  Map<int, HighlightMark> highlightsForChapter(String bookId, int chapter) {
     final rows = _db.select(
-        'SELECT verse,color_key FROM highlight WHERE book_id=? AND chapter=? AND is_deleted=0',
-        [bookId, chapter]);
+      'SELECT verse,color_key,start_offset,end_offset FROM highlight WHERE book_id=? AND chapter=? AND is_deleted=0',
+      [bookId, chapter],
+    );
     return {
       for (final r in rows)
-        r['verse'] as int: HighlightColor.fromKey(r['color_key'] as String)
+        r['verse'] as int: HighlightMark(
+          HighlightColor.fromKey(r['color_key'] as String),
+          start: r['start_offset'] as int?,
+          end: r['end_offset'] as int?,
+        ),
     };
   }
 
   List<Highlight> allHighlights() => _db
       .select(
-          'SELECT * FROM highlight WHERE is_deleted=0 ORDER BY updated_at DESC')
-      .map((r) => Highlight(
-            r['uuid'] as String,
-            VerseRef(r['book_id'] as String, r['chapter'] as int, r['verse'] as int),
-            HighlightColor.fromKey(r['color_key'] as String),
-            _at(r['created_at']),
-          ))
+        'SELECT * FROM highlight WHERE is_deleted=0 ORDER BY updated_at DESC',
+      )
+      .map(
+        (r) => Highlight(
+          r['uuid'] as String,
+          VerseRef(
+            r['book_id'] as String,
+            r['chapter'] as int,
+            r['verse'] as int,
+          ),
+          HighlightColor.fromKey(r['color_key'] as String),
+          _at(r['created_at']),
+          start: r['start_offset'] as int?,
+          end: r['end_offset'] as int?,
+          excerpt: r['excerpt'] as String?,
+        ),
+      )
       .toList();
 
   // ── Bookmarks ──────────────────────────────────────────────────────────
   bool isBookmarked(VerseRef r) => _db.select(
-      'SELECT 1 FROM bookmark WHERE book_id=? AND chapter=? AND verse=? AND is_deleted=0',
-      [r.bookId, r.chapter, r.verse]).isNotEmpty;
+    'SELECT 1 FROM bookmark WHERE book_id=? AND chapter=? AND verse=? AND is_deleted=0',
+    [r.bookId, r.chapter, r.verse],
+  ).isNotEmpty;
 
   void toggleBookmark(VerseRef r, {String? label}) {
     if (isBookmarked(r)) {
       _db.execute(
-          'UPDATE bookmark SET is_deleted=1, is_dirty=1, updated_at=? WHERE book_id=? AND chapter=? AND verse=?',
-          [_now, r.bookId, r.chapter, r.verse]);
+        'UPDATE bookmark SET is_deleted=1, is_dirty=1, updated_at=? WHERE book_id=? AND chapter=? AND verse=?',
+        [_now, r.bookId, r.chapter, r.verse],
+      );
     } else {
-      _db.execute('''
+      _db.execute(
+        '''
         INSERT INTO bookmark(uuid,book_id,chapter,verse,label,created_at,updated_at,is_dirty,is_deleted)
         VALUES(?,?,?,?,?,?,?,1,0)
         ON CONFLICT(book_id,chapter,verse) DO UPDATE SET
           is_deleted=0, is_dirty=1, updated_at=excluded.updated_at
-      ''', [_uuid.v4(), r.bookId, r.chapter, r.verse, label, _now, _now]);
+      ''',
+        [_uuid.v4(), r.bookId, r.chapter, r.verse, label, _now, _now],
+      );
     }
   }
 
   List<Bookmark> allBookmarks() => _db
-      .select('SELECT * FROM bookmark WHERE is_deleted=0 ORDER BY updated_at DESC')
-      .map((r) => Bookmark(
-            r['uuid'] as String,
-            VerseRef(r['book_id'] as String, r['chapter'] as int, r['verse'] as int),
-            r['label'] as String?,
-            _at(r['created_at']),
-          ))
+      .select(
+        'SELECT * FROM bookmark WHERE is_deleted=0 ORDER BY updated_at DESC',
+      )
+      .map(
+        (r) => Bookmark(
+          r['uuid'] as String,
+          VerseRef(
+            r['book_id'] as String,
+            r['chapter'] as int,
+            r['verse'] as int,
+          ),
+          r['label'] as String?,
+          _at(r['created_at']),
+        ),
+      )
       .toList();
 
   // ── Favorites ──────────────────────────────────────────────────────────
   bool isFavorite(VerseRef r) => _db.select(
-      'SELECT 1 FROM favorite WHERE book_id=? AND chapter=? AND verse=? AND is_deleted=0',
-      [r.bookId, r.chapter, r.verse]).isNotEmpty;
+    'SELECT 1 FROM favorite WHERE book_id=? AND chapter=? AND verse=? AND is_deleted=0',
+    [r.bookId, r.chapter, r.verse],
+  ).isNotEmpty;
 
   void toggleFavorite(VerseRef r, String snapshot) {
     if (isFavorite(r)) {
       _db.execute(
-          'UPDATE favorite SET is_deleted=1, is_dirty=1, updated_at=? WHERE book_id=? AND chapter=? AND verse=?',
-          [_now, r.bookId, r.chapter, r.verse]);
+        'UPDATE favorite SET is_deleted=1, is_dirty=1, updated_at=? WHERE book_id=? AND chapter=? AND verse=?',
+        [_now, r.bookId, r.chapter, r.verse],
+      );
     } else {
-      _db.execute('''
+      _db.execute(
+        '''
         INSERT INTO favorite(uuid,book_id,chapter,verse,snapshot,created_at,updated_at,is_dirty,is_deleted)
         VALUES(?,?,?,?,?,?,?,1,0)
         ON CONFLICT(book_id,chapter,verse) DO UPDATE SET
           snapshot=excluded.snapshot, is_deleted=0, is_dirty=1, updated_at=excluded.updated_at
-      ''', [_uuid.v4(), r.bookId, r.chapter, r.verse, snapshot, _now, _now]);
+      ''',
+        [_uuid.v4(), r.bookId, r.chapter, r.verse, snapshot, _now, _now],
+      );
     }
   }
 
   List<Favorite> allFavorites() => _db
-      .select('SELECT * FROM favorite WHERE is_deleted=0 ORDER BY updated_at DESC')
-      .map((r) => Favorite(
-            r['uuid'] as String,
-            VerseRef(r['book_id'] as String, r['chapter'] as int, r['verse'] as int),
-            r['snapshot'] as String? ?? '',
-            _at(r['created_at']),
-          ))
+      .select(
+        'SELECT * FROM favorite WHERE is_deleted=0 ORDER BY updated_at DESC',
+      )
+      .map(
+        (r) => Favorite(
+          r['uuid'] as String,
+          VerseRef(
+            r['book_id'] as String,
+            r['chapter'] as int,
+            r['verse'] as int,
+          ),
+          r['snapshot'] as String? ?? '',
+          _at(r['created_at']),
+        ),
+      )
       .toList();
 
   // ── Notes ──────────────────────────────────────────────────────────────
   String addNote(VerseRef r, String body) {
     final id = _uuid.v4();
-    _db.execute('''
+    _db.execute(
+      '''
       INSERT INTO note(uuid,book_id,chapter,verse,body,created_at,updated_at,is_dirty,is_deleted)
       VALUES(?,?,?,?,?,?,?,1,0)
-    ''', [id, r.bookId, r.chapter, r.verse, body, _now, _now]);
+    ''',
+      [id, r.bookId, r.chapter, r.verse, body, _now, _now],
+    );
     return id;
   }
 
   void updateNote(String uuid, String body) => _db.execute(
-      'UPDATE note SET body=?, updated_at=?, is_dirty=1 WHERE uuid=?',
-      [body, _now, uuid]);
+    'UPDATE note SET body=?, updated_at=?, is_dirty=1 WHERE uuid=?',
+    [body, _now, uuid],
+  );
 
   void deleteNote(String uuid) => _db.execute(
-      'UPDATE note SET is_deleted=1, is_dirty=1, updated_at=? WHERE uuid=?',
-      [_now, uuid]);
+    'UPDATE note SET is_deleted=1, is_dirty=1, updated_at=? WHERE uuid=?',
+    [_now, uuid],
+  );
 
   List<Note> notesForVerse(VerseRef r) => _db
       .select(
-          'SELECT * FROM note WHERE book_id=? AND chapter=? AND verse=? AND is_deleted=0 ORDER BY updated_at DESC',
-          [r.bookId, r.chapter, r.verse])
+        'SELECT * FROM note WHERE book_id=? AND chapter=? AND verse=? AND is_deleted=0 ORDER BY updated_at DESC',
+        [r.bookId, r.chapter, r.verse],
+      )
       .map(_toNote)
       .toList();
 
@@ -199,9 +287,11 @@ class UserDatabase {
     final rows = hasQ
         ? _db.select(
             "SELECT * FROM note WHERE is_deleted=0 AND body LIKE ? ORDER BY updated_at DESC",
-            ['%${query.trim()}%'])
+            ['%${query.trim()}%'],
+          )
         : _db.select(
-            'SELECT * FROM note WHERE is_deleted=0 ORDER BY updated_at DESC');
+            'SELECT * FROM note WHERE is_deleted=0 ORDER BY updated_at DESC',
+          );
     return rows.map(_toNote).toList();
   }
 
@@ -210,21 +300,24 @@ class UserDatabase {
           as int;
 
   Note _toNote(Row r) => Note(
-        r['uuid'] as String,
-        VerseRef(r['book_id'] as String, r['chapter'] as int, r['verse'] as int),
-        r['body'] as String? ?? '',
-        _at(r['created_at']),
-        _at(r['updated_at']),
-      );
+    r['uuid'] as String,
+    VerseRef(r['book_id'] as String, r['chapter'] as int, r['verse'] as int),
+    r['body'] as String? ?? '',
+    _at(r['created_at']),
+    _at(r['updated_at']),
+  );
 
   // ── Reading progress ───────────────────────────────────────────────────
-  void setProgress(String translationId, VerseRef r) => _db.execute('''
+  void setProgress(String translationId, VerseRef r) => _db.execute(
+    '''
         INSERT INTO reading_progress(id,translation_id,book_id,chapter,verse,updated_at)
         VALUES(1,?,?,?,?,?)
         ON CONFLICT(id) DO UPDATE SET
           translation_id=excluded.translation_id, book_id=excluded.book_id,
           chapter=excluded.chapter, verse=excluded.verse, updated_at=excluded.updated_at
-      ''', [translationId, r.bookId, r.chapter, r.verse, _now]);
+      ''',
+    [translationId, r.bookId, r.chapter, r.verse, _now],
+  );
 
   ReadingPosition? latestProgress() {
     final rows = _db.select('SELECT * FROM reading_progress WHERE id=1');
@@ -246,8 +339,9 @@ class UserDatabase {
   String _planStartKey(String planId) => 'readingPlan.$planId.startEpochDay';
 
   int? readingPlanStart(String planId) {
-    final rows = _db
-        .select('SELECT value FROM app_setting WHERE key=?', [_planStartKey(planId)]);
+    final rows = _db.select('SELECT value FROM app_setting WHERE key=?', [
+      _planStartKey(planId),
+    ]);
     if (rows.isEmpty) return null;
     return int.tryParse(rows.first['value'] as String);
   }
@@ -257,23 +351,28 @@ class UserDatabase {
 
   Set<int> completedPlanDays(String planId) => _db
       .select(
-          'SELECT day FROM reading_plan_day WHERE plan_id=? AND is_deleted=0',
-          [planId])
+        'SELECT day FROM reading_plan_day WHERE plan_id=? AND is_deleted=0',
+        [planId],
+      )
       .map((r) => r['day'] as int)
       .toSet();
 
   void setPlanDayCompleted(String planId, int day, bool completed) {
     if (completed) {
-      _db.execute('''
+      _db.execute(
+        '''
         INSERT INTO reading_plan_day(plan_id,day,completed_at,is_dirty,is_deleted)
         VALUES(?,?,?,1,0)
         ON CONFLICT(plan_id,day) DO UPDATE SET
           completed_at=excluded.completed_at, is_dirty=1, is_deleted=0
-      ''', [planId, day, _now]);
+      ''',
+        [planId, day, _now],
+      );
     } else {
       _db.execute(
-          'UPDATE reading_plan_day SET is_deleted=1, is_dirty=1, completed_at=? WHERE plan_id=? AND day=?',
-          [_now, planId, day]);
+        'UPDATE reading_plan_day SET is_deleted=1, is_dirty=1, completed_at=? WHERE plan_id=? AND day=?',
+        [_now, planId, day],
+      );
     }
   }
 }

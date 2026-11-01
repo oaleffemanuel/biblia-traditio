@@ -2094,6 +2094,156 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Select at least one sentence.'**
   String get shareExcerptNone;
+
+  /// No description provided for @navThemes.
+  ///
+  /// In en, this message translates to:
+  /// **'Themes'**
+  String get navThemes;
+
+  /// No description provided for @themeComments.
+  ///
+  /// In en, this message translates to:
+  /// **'Commentaries'**
+  String get themeComments;
+
+  /// No description provided for @themeReadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Read more'**
+  String get themeReadMore;
+
+  /// No description provided for @parallelPresetLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Parallel text preset'**
+  String get parallelPresetLabel;
+
+  /// No description provided for @presetCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose manually'**
+  String get presetCustom;
+
+  /// No description provided for @presetLatin.
+  ///
+  /// In en, this message translates to:
+  /// **'Old and New Testament — Latin'**
+  String get presetLatin;
+
+  /// No description provided for @presetGreek.
+  ///
+  /// In en, this message translates to:
+  /// **'Old and New Testament — Greek'**
+  String get presetGreek;
+
+  /// No description provided for @presetHebrewGreek.
+  ///
+  /// In en, this message translates to:
+  /// **'Hebrew Old Testament | Greek New Testament'**
+  String get presetHebrewGreek;
+
+  /// No description provided for @presetLatinGreek.
+  ///
+  /// In en, this message translates to:
+  /// **'Latin Old Testament | Greek New Testament'**
+  String get presetLatinGreek;
+
+  /// No description provided for @presetLatinHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Clementine Vulgate in both Testaments'**
+  String get presetLatinHint;
+
+  /// No description provided for @presetGreekHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Septuagint (Swete) in the OT, SBLGNT in the NT'**
+  String get presetGreekHint;
+
+  /// No description provided for @presetHebrewGreekHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leningrad Codex in the OT, SBLGNT in the NT'**
+  String get presetHebrewGreekHint;
+
+  /// No description provided for @presetLatinGreekHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Clementine Vulgate in the OT, SBLGNT in the NT'**
+  String get presetLatinGreekHint;
+
+  /// No description provided for @settingsFont.
+  ///
+  /// In en, this message translates to:
+  /// **'Typeface'**
+  String get settingsFont;
+
+  /// No description provided for @settingsFontSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Text size'**
+  String get settingsFontSize;
+
+  /// No description provided for @fontGaramond.
+  ///
+  /// In en, this message translates to:
+  /// **'EB Garamond (serif)'**
+  String get fontGaramond;
+
+  /// No description provided for @fontInter.
+  ///
+  /// In en, this message translates to:
+  /// **'Inter (sans serif)'**
+  String get fontInter;
+
+  /// No description provided for @fontSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System font'**
+  String get fontSystem;
+
+  /// No description provided for @fontSizeSmall.
+  ///
+  /// In en, this message translates to:
+  /// **'Small'**
+  String get fontSizeSmall;
+
+  /// No description provided for @fontSizeNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get fontSizeNormal;
+
+  /// No description provided for @fontSizeLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Large'**
+  String get fontSizeLarge;
+
+  /// No description provided for @fontSizeLarger.
+  ///
+  /// In en, this message translates to:
+  /// **'Larger'**
+  String get fontSizeLarger;
+
+  /// No description provided for @fontSizeMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Largest'**
+  String get fontSizeMax;
+
+  /// No description provided for @highlightExcerpt.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight excerpt'**
+  String get highlightExcerpt;
+
+  /// No description provided for @highlightPickColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight colour'**
+  String get highlightPickColor;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

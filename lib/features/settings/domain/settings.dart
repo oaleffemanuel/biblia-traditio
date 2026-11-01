@@ -64,7 +64,10 @@ enum TranslationStyle {
   const TranslationStyle(this.key);
 
   static const List<TranslationStyle> choices = [
-    academic, simple, balanced, liturgical
+    academic,
+    simple,
+    balanced,
+    liturgical,
   ];
 
   static TranslationStyle fromKey(String? k) =>
@@ -89,6 +92,40 @@ enum ParallelPreference {
       values.firstWhere((p) => p.langCode == k, orElse: () => none);
 }
 
+/// Which secondary text Parallel Reading shows, chosen per Testament. The
+/// primary (the reader's own translation) never changes; a preset only decides
+/// the companion column, and only among texts that are actually installed.
+enum ParallelPreset {
+  custom('custom'),
+  latin('latin'), // Vulgata for both Testaments
+  greek('greek'), // Septuagint (OT) + SBLGNT (NT)
+  hebrewGreek('hebrew_greek'), // Leningrad Codex (OT) + SBLGNT (NT)
+  latinGreek('latin_greek'); // Vulgata (OT) + SBLGNT (NT)
+
+  final String key;
+  const ParallelPreset(this.key);
+
+  static ParallelPreset fromKey(String? k) =>
+      values.firstWhere((p) => p.key == k, orElse: () => custom);
+}
+
+/// Typeface for Scripture in the reader. The serif is the app's voice; the
+/// sans and the platform font are there for readers who find them easier.
+enum ReadingFont {
+  garamond('garamond'),
+  inter('inter'),
+  system('system');
+
+  final String key;
+  const ReadingFont(this.key);
+
+  static ReadingFont fromKey(String? k) =>
+      values.firstWhere((f) => f.key == k, orElse: () => garamond);
+}
+
+/// Reader text sizes offered in Settings, as multipliers of the base size.
+const List<double> kFontScales = [0.85, 1.0, 1.15, 1.3, 1.5];
+
 @immutable
 class Settings {
   final bool onboardingCompleted;
@@ -103,6 +140,9 @@ class Settings {
   final ParallelLayout parallelLayout;
   final TranslationStyle translationStyle;
   final ParallelPreference parallelPreference;
+  final ParallelPreset parallelPreset;
+  final double fontScale;
+  final ReadingFont readingFont;
   final CommentaryPrefs commentaryPrefs;
 
   const Settings({
@@ -118,42 +158,48 @@ class Settings {
     this.parallelLayout = ParallelLayout.auto,
     this.translationStyle = TranslationStyle.unset,
     this.parallelPreference = ParallelPreference.none,
+    this.parallelPreset = ParallelPreset.custom,
+    this.fontScale = 1.0,
+    this.readingFont = ReadingFont.garamond,
     this.commentaryPrefs = CommentaryPrefs.defaults,
   });
 
   factory Settings.fromMap(Map<String, String> m) => Settings(
-        onboardingCompleted: m['onboardingCompleted'] == 'true',
-        displayName: m['displayName'] ?? '',
-        language: AppLanguage.fromCode(m['language']),
-        primaryTranslationId: m['primaryTranslationId'] ?? 'pt_matos_soares',
-        themeMode: switch (m['themeMode']) {
-          'light' => ThemeMode.light,
-          'dark' => ThemeMode.dark,
-          _ => ThemeMode.system, // default + unknown → follow the OS
-        },
-        notificationsEnabled: m['notificationsEnabled'] == 'true',
-        wantsReadingPlan: m['wantsReadingPlan'] == 'true',
-        parallelReadingEnabled: m['parallelReadingEnabled'] == 'true',
-        secondaryTranslationId: m['secondaryTranslationId'] ?? '',
-        parallelLayout: switch (m['parallelLayout']) {
-          'stacked' => ParallelLayout.stacked,
-          'sideBySide' => ParallelLayout.sideBySide,
-          _ => ParallelLayout.auto,
-        },
-        translationStyle: TranslationStyle.fromKey(m['translationStyle']),
-        parallelPreference: ParallelPreference.fromKey(m['parallelPreference']),
-        commentaryPrefs: CommentaryPrefs.fromMap(m),
-      );
+    onboardingCompleted: m['onboardingCompleted'] == 'true',
+    displayName: m['displayName'] ?? '',
+    language: AppLanguage.fromCode(m['language']),
+    primaryTranslationId: m['primaryTranslationId'] ?? 'pt_matos_soares',
+    themeMode: switch (m['themeMode']) {
+      'light' => ThemeMode.light,
+      'dark' => ThemeMode.dark,
+      _ => ThemeMode.system, // default + unknown → follow the OS
+    },
+    notificationsEnabled: m['notificationsEnabled'] == 'true',
+    wantsReadingPlan: m['wantsReadingPlan'] == 'true',
+    parallelReadingEnabled: m['parallelReadingEnabled'] == 'true',
+    secondaryTranslationId: m['secondaryTranslationId'] ?? '',
+    parallelLayout: switch (m['parallelLayout']) {
+      'stacked' => ParallelLayout.stacked,
+      'sideBySide' => ParallelLayout.sideBySide,
+      _ => ParallelLayout.auto,
+    },
+    translationStyle: TranslationStyle.fromKey(m['translationStyle']),
+    parallelPreference: ParallelPreference.fromKey(m['parallelPreference']),
+    parallelPreset: ParallelPreset.fromKey(m['parallelPreset']),
+    fontScale: double.tryParse(m['fontScale'] ?? '') ?? 1.0,
+    readingFont: ReadingFont.fromKey(m['readingFont']),
+    commentaryPrefs: CommentaryPrefs.fromMap(m),
+  );
 
   static String themeModeKey(ThemeMode m) => switch (m) {
-        ThemeMode.light => 'light',
-        ThemeMode.system => 'system',
-        ThemeMode.dark => 'dark',
-      };
+    ThemeMode.light => 'light',
+    ThemeMode.system => 'system',
+    ThemeMode.dark => 'dark',
+  };
 
   static String parallelLayoutKey(ParallelLayout l) => switch (l) {
-        ParallelLayout.auto => 'auto',
-        ParallelLayout.stacked => 'stacked',
-        ParallelLayout.sideBySide => 'sideBySide',
-      };
+    ParallelLayout.auto => 'auto',
+    ParallelLayout.stacked => 'stacked',
+    ParallelLayout.sideBySide => 'sideBySide',
+  };
 }

@@ -52,33 +52,27 @@ class CommentaryPrefs {
     Set<String>? classes,
     Set<int>? centuries,
     bool? onlySaints,
-  }) =>
-      CommentaryPrefs(
-        classes: classes ?? this.classes,
-        centuries: centuries ?? this.centuries,
-        onlySaints: onlySaints ?? this.onlySaints,
-      );
+  }) => CommentaryPrefs(
+    classes: classes ?? this.classes,
+    centuries: centuries ?? this.centuries,
+    onlySaints: onlySaints ?? this.onlySaints,
+  );
 
   factory CommentaryPrefs.fromMap(Map<String, String> m) => CommentaryPrefs(
-        classes: _splitStrings(m['commentaryClasses']),
-        centuries: _splitInts(m['commentaryCenturies']),
-        onlySaints: m['commentaryOnlySaints'] == 'true',
-      );
+    classes: _splitStrings(m['commentaryClasses']),
+    centuries: _splitInts(m['commentaryCenturies']),
+    onlySaints: m['commentaryOnlySaints'] == 'true',
+  );
 
   static String joinStrings(Set<String> v) => (v.toList()..sort()).join(';');
   static String joinInts(Set<int> v) =>
       (v.toList()..sort()).map((e) => '$e').join(';');
 
-  static Set<String> _splitStrings(String? raw) => (raw ?? '')
-      .split(';')
-      .where((s) => s.isNotEmpty)
-      .toSet();
+  static Set<String> _splitStrings(String? raw) =>
+      (raw ?? '').split(';').where((s) => s.isNotEmpty).toSet();
 
-  static Set<int> _splitInts(String? raw) => (raw ?? '')
-      .split(';')
-      .map(int.tryParse)
-      .whereType<int>()
-      .toSet();
+  static Set<int> _splitInts(String? raw) =>
+      (raw ?? '').split(';').map(int.tryParse).whereType<int>().toSet();
 
   @override
   bool operator ==(Object other) =>
@@ -88,6 +82,9 @@ class CommentaryPrefs {
       setEquals(other.centuries, centuries);
 
   @override
-  int get hashCode => Object.hash(onlySaints, Object.hashAllUnordered(classes),
-      Object.hashAllUnordered(centuries));
+  int get hashCode => Object.hash(
+    onlySaints,
+    Object.hashAllUnordered(classes),
+    Object.hashAllUnordered(centuries),
+  );
 }

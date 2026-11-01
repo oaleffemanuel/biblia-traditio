@@ -23,12 +23,35 @@ enum HighlightColor {
       values.firstWhere((c) => c.key == k, orElse: () => gold);
 }
 
+/// What the reader painted on one verse: the colour and, for an excerpt
+/// highlight (a few words selected inside the verse), the character range.
+/// A whole-verse highlight carries no range.
+class HighlightMark {
+  final HighlightColor color;
+  final int? start;
+  final int? end;
+  const HighlightMark(this.color, {this.start, this.end});
+  bool get isPartial => start != null && end != null && end! > start!;
+}
+
 class Highlight {
   final String uuid;
   final VerseRef ref;
   final HighlightColor color;
   final DateTime createdAt;
-  Highlight(this.uuid, this.ref, this.color, this.createdAt);
+  final int? start;
+  final int? end;
+  final String? excerpt;
+  Highlight(
+    this.uuid,
+    this.ref,
+    this.color,
+    this.createdAt, {
+    this.start,
+    this.end,
+    this.excerpt,
+  });
+  HighlightMark get mark => HighlightMark(color, start: start, end: end);
 }
 
 class Bookmark {
@@ -63,5 +86,10 @@ class ReadingPosition {
   final int verse;
   final DateTime updatedAt;
   ReadingPosition(
-      this.translationId, this.bookId, this.chapter, this.verse, this.updatedAt);
+    this.translationId,
+    this.bookId,
+    this.chapter,
+    this.verse,
+    this.updatedAt,
+  );
 }

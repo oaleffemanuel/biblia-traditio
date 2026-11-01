@@ -9,25 +9,32 @@ import 'book_emblem.dart';
 
 /// Book picker with an Antigo/Novo Testamento toggle. Returns the chosen book id.
 Future<String?> showBookPicker(
-    BuildContext context, WidgetRef ref, String currentBookId) {
+  BuildContext context,
+  WidgetRef ref,
+  String currentBookId,
+) {
   final current = ref.read(bookByIdProvider(currentBookId));
   return showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
     backgroundColor: context.bt.surface,
     shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
     builder: (_) => _BookPickerSheet(
-        initialTestament: current?.testament ?? Testament.ot,
-        currentBookId: currentBookId),
+      initialTestament: current?.testament ?? Testament.ot,
+      currentBookId: currentBookId,
+    ),
   );
 }
 
 class _BookPickerSheet extends ConsumerStatefulWidget {
   final Testament initialTestament;
   final String currentBookId;
-  const _BookPickerSheet(
-      {required this.initialTestament, required this.currentBookId});
+  const _BookPickerSheet({
+    required this.initialTestament,
+    required this.currentBookId,
+  });
   @override
   ConsumerState<_BookPickerSheet> createState() => _BookPickerSheetState();
 }
@@ -47,10 +54,13 @@ class _BookPickerSheetState extends ConsumerState<_BookPickerSheet> {
         children: [
           const SizedBox(height: 12),
           Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                  color: c.divider, borderRadius: BorderRadius.circular(2))),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: c.divider,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(16),
             child: _Segmented(
@@ -69,11 +79,13 @@ class _BookPickerSheetState extends ConsumerState<_BookPickerSheet> {
                 final selected = b.id == widget.currentBookId;
                 return ListTile(
                   leading: BookEmblem(bookId: b.id, abbrev: b.abbrev, size: 40),
-                  title: Text(b.name,
-                      style: TextStyle(
-                          color: selected ? c.accent : c.textPrimary,
-                          fontWeight:
-                              selected ? FontWeight.w700 : FontWeight.w500)),
+                  title: Text(
+                    b.name,
+                    style: TextStyle(
+                      color: selected ? c.accent : c.textPrimary,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    ),
+                  ),
                   trailing: selected
                       ? Icon(Icons.check, color: c.accent, size: 18)
                       : null,
@@ -104,13 +116,17 @@ class _Segmented extends StatelessWidget {
             duration: const Duration(milliseconds: 180),
             padding: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
-                color: on ? c.surfaceHigh : Colors.transparent,
-                borderRadius: BorderRadius.circular(24)),
+              color: on ? c.surfaceHigh : Colors.transparent,
+              borderRadius: BorderRadius.circular(24),
+            ),
             alignment: Alignment.center,
-            child: Text(label,
-                style: TextStyle(
-                    color: on ? c.textPrimary : c.textSecondary,
-                    fontWeight: FontWeight.w600)),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: on ? c.textPrimary : c.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ),
       );
@@ -119,26 +135,34 @@ class _Segmented extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-          color: c.surfaceHigh.withValues(alpha: 0.4),
-          borderRadius: BorderRadius.circular(28)),
-      child: Row(children: [
-        seg(context.l10n.oldTestament, Testament.ot),
-        seg(context.l10n.newTestament, Testament.nt),
-      ]),
+        color: c.surfaceHigh.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(28),
+      ),
+      child: Row(
+        children: [
+          seg(context.l10n.oldTestament, Testament.ot),
+          seg(context.l10n.newTestament, Testament.nt),
+        ],
+      ),
     );
   }
 }
 
 /// Chapter grid picker. Returns the chosen chapter number.
 Future<int?> showChapterPicker(
-    BuildContext context, String bookName, int chapterCount, int current) {
+  BuildContext context,
+  String bookName,
+  int chapterCount,
+  int current,
+) {
   final c = context.bt;
   return showModalBottomSheet<int>(
     context: context,
     isScrollControlled: true,
     backgroundColor: c.surface,
     shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
     builder: (_) => DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.6,
@@ -147,21 +171,29 @@ Future<int?> showChapterPicker(
         children: [
           const SizedBox(height: 12),
           Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                  color: c.divider, borderRadius: BorderRadius.circular(2))),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: c.divider,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Text(context.l10n.chapterPickerTitle(bookName),
-                style: Theme.of(context).textTheme.titleMedium),
+            child: Text(
+              context.l10n.chapterPickerTitle(bookName),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
           ),
           Expanded(
             child: GridView.builder(
               controller: controller,
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 5, mainAxisSpacing: 10, crossAxisSpacing: 10),
+                crossAxisCount: 5,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+              ),
               itemCount: chapterCount,
               itemBuilder: (_, i) {
                 final n = i + 1;
@@ -170,16 +202,18 @@ Future<int?> showChapterPicker(
                   onTap: () => Navigator.pop(context, n),
                   child: Container(
                     decoration: BoxDecoration(
-                        color: on ? c.accentSoft : c.surfaceHigh,
-                        borderRadius: BorderRadius.circular(12),
-                        border: on
-                            ? Border.all(color: c.accent)
-                            : null),
+                      color: on ? c.accentSoft : c.surfaceHigh,
+                      borderRadius: BorderRadius.circular(12),
+                      border: on ? Border.all(color: c.accent) : null,
+                    ),
                     alignment: Alignment.center,
-                    child: Text('$n',
-                        style: TextStyle(
-                            color: on ? c.accent : c.textPrimary,
-                            fontWeight: FontWeight.w600)),
+                    child: Text(
+                      '$n',
+                      style: TextStyle(
+                        color: on ? c.accent : c.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 );
               },
@@ -193,14 +227,18 @@ Future<int?> showChapterPicker(
 
 /// Verse-number picker (jump within the open chapter). Returns the verse number.
 Future<int?> showVersePicker(
-    BuildContext context, int verseCount, int current) {
+  BuildContext context,
+  int verseCount,
+  int current,
+) {
   final c = context.bt;
   return showModalBottomSheet<int>(
     context: context,
     isScrollControlled: true,
     backgroundColor: c.surface,
     shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
     builder: (_) => DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.5,
@@ -209,21 +247,29 @@ Future<int?> showVersePicker(
         children: [
           const SizedBox(height: 12),
           Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                  color: c.divider, borderRadius: BorderRadius.circular(2))),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: c.divider,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Text(context.l10n.goToVerse,
-                style: Theme.of(context).textTheme.titleMedium),
+            child: Text(
+              context.l10n.goToVerse,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
           ),
           Expanded(
             child: GridView.builder(
               controller: controller,
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 6, mainAxisSpacing: 10, crossAxisSpacing: 10),
+                crossAxisCount: 6,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+              ),
               itemCount: verseCount,
               itemBuilder: (_, i) {
                 final n = i + 1;
@@ -232,12 +278,14 @@ Future<int?> showVersePicker(
                   onTap: () => Navigator.pop(context, n),
                   child: Container(
                     decoration: BoxDecoration(
-                        color: on ? c.accentSoft : c.surfaceHigh,
-                        borderRadius: BorderRadius.circular(10)),
+                      color: on ? c.accentSoft : c.surfaceHigh,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                     alignment: Alignment.center,
-                    child: Text('$n',
-                        style: TextStyle(
-                            color: on ? c.accent : c.textPrimary)),
+                    child: Text(
+                      '$n',
+                      style: TextStyle(color: on ? c.accent : c.textPrimary),
+                    ),
                   ),
                 );
               },

@@ -12,19 +12,22 @@ import 'package:flutter_test/flutter_test.dart';
 
 const _vref = VerseRef('jn', 1, 1);
 
-Commentary _c(int id, String name,
-        {String century = 'V', String role = 'doutor-da-igreja'}) =>
-    Commentary(
-      id: id,
-      ref: _vref,
-      fatherName: name,
-      century: century,
-      source: 'Catena Aurea / Haydock',
-      isMachineTranslation: true,
-      text: 'Comentário de $name sobre o Verbo. ' * 3,
-      rolePrimary: role,
-      roleGroups: const {'patristica', 'santos'},
-    );
+Commentary _c(
+  int id,
+  String name, {
+  String century = 'V',
+  String role = 'doutor-da-igreja',
+}) => Commentary(
+  id: id,
+  ref: _vref,
+  fatherName: name,
+  century: century,
+  source: 'Catena Aurea / Haydock',
+  isMachineTranslation: true,
+  text: 'Comentário de $name sobre o Verbo. ' * 3,
+  rolePrimary: role,
+  roleGroups: const {'patristica', 'santos'},
+);
 
 final _commentaries = [
   _c(1, 'Santo Agostinho de Hipona'),
@@ -32,8 +35,10 @@ final _commentaries = [
   _c(3, 'Santo Tomás de Aquino', century: 'XIII', role: 'medieval'),
 ];
 
-Future<void> _openPanel(WidgetTester tester,
-    {List<Commentary>? commentaries}) async {
+Future<void> _openPanel(
+  WidgetTester tester, {
+  List<Commentary>? commentaries,
+}) async {
   // A tall surface so every commentary in these small fixtures is laid out —
   // the panel's list is lazy by design, and scrolling it in a test would fight
   // the tab view's own horizontal scrollable.
@@ -41,38 +46,47 @@ Future<void> _openPanel(WidgetTester tester,
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
 
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      contentDatabaseProvider.overrideWithValue(null),
-      userDbProvider.overrideWithValue(null),
-      commentariesProvider
-          .overrideWith((ref, vref) => commentaries ?? _commentaries),
-    ],
-    child: MaterialApp(
-      theme: AppTheme.dark(),
-      locale: const Locale('pt'),
-      localizationsDelegates: AppL10n.localizationsDelegates,
-      supportedLocales: AppL10n.supportedLocales,
-      home: Consumer(
-        builder: (context, ref, _) => Scaffold(
-          body: Center(
-            child: ElevatedButton(
-              onPressed: () => showCommentaryPanel(context, ref, _vref,
-                  bookName: 'João', verseText: 'No princípio era o Verbo'),
-              child: const Text('abrir'),
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        contentDatabaseProvider.overrideWithValue(null),
+        userDbProvider.overrideWithValue(null),
+        commentariesProvider.overrideWith(
+          (ref, vref) => commentaries ?? _commentaries,
+        ),
+      ],
+      child: MaterialApp(
+        theme: AppTheme.dark(),
+        locale: const Locale('pt'),
+        localizationsDelegates: AppL10n.localizationsDelegates,
+        supportedLocales: AppL10n.supportedLocales,
+        home: Consumer(
+          builder: (context, ref, _) => Scaffold(
+            body: Center(
+              child: ElevatedButton(
+                onPressed: () => showCommentaryPanel(
+                  context,
+                  ref,
+                  _vref,
+                  bookName: 'João',
+                  verseText: 'No princípio era o Verbo',
+                ),
+                child: const Text('abrir'),
+              ),
             ),
           ),
         ),
       ),
     ),
-  ));
+  );
   await tester.tap(find.text('abrir'));
   await tester.pumpAndSettle();
 }
 
 void main() {
-  testWidgets('opens as an index of commentators, with no commentary body',
-      (tester) async {
+  testWidgets('opens as an index of commentators, with no commentary body', (
+    tester,
+  ) async {
     await _openPanel(tester);
 
     for (final name in [
@@ -88,51 +102,67 @@ void main() {
     expect(find.byIcon(Icons.expand_more), findsNWidgets(3));
   });
 
-  testWidgets('each commentator carries their function and century',
-      (tester) async {
+  testWidgets('each commentator carries their function and century', (
+    tester,
+  ) async {
     await _openPanel(tester);
     expect(find.text('Doutor da Igreja — séc. V'), findsNWidgets(2));
     expect(find.text('Medieval — séc. XIII'), findsOneWidget);
   });
 
-  testWidgets('a commentator with no function shows the century alone',
-      (tester) async {
-    await _openPanel(tester, commentaries: [
-      _c(1, 'Tertuliano', century: 'III', role: ''),
-    ]);
+  testWidgets('a commentator with no function shows the century alone', (
+    tester,
+  ) async {
+    await _openPanel(
+      tester,
+      commentaries: [_c(1, 'Tertuliano', century: 'III', role: '')],
+    );
     expect(find.text('séc. III'), findsOneWidget);
   });
 
-  testWidgets('a commentator with neither shows no metadata line at all',
-      (tester) async {
-    await _openPanel(tester, commentaries: [
-      _c(1, 'Anônimo', century: '', role: ''),
-    ]);
+  testWidgets('a commentator with neither shows no metadata line at all', (
+    tester,
+  ) async {
+    await _openPanel(
+      tester,
+      commentaries: [_c(1, 'Anônimo', century: '', role: '')],
+    );
     expect(find.text('Anônimo'), findsOneWidget);
     expect(find.textContaining('séc.'), findsNothing);
   });
 
-  testWidgets('tapping a row expands that commentary and offers a way to close',
-      (tester) async {
-    await _openPanel(tester);
-    await tester.tap(find.text('São João Crisóstomo'));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'tapping a row expands that commentary and offers a way to close',
+    (tester) async {
+      await _openPanel(tester);
+      await tester.tap(find.text('São João Crisóstomo'));
+      await tester.pumpAndSettle();
 
-    expect(find.textContaining('Comentário de São João Crisóstomo'),
-        findsOneWidget);
-    // Other commentaries stay closed.
-    expect(find.textContaining('Comentário de Santo Agostinho'), findsNothing);
-    // The "^" collapse action at the foot of the open commentary.
-    expect(find.byIcon(Icons.expand_less), findsWidgets);
-    expect(find.text('Partilhar comentário'), findsOneWidget);
+      expect(
+        find.textContaining('Comentário de São João Crisóstomo'),
+        findsOneWidget,
+      );
+      // Other commentaries stay closed.
+      expect(
+        find.textContaining('Comentário de Santo Agostinho'),
+        findsNothing,
+      );
+      // The "^" collapse action at the foot of the open commentary.
+      expect(find.byIcon(Icons.expand_less), findsWidgets);
+      expect(find.text('Partilhar comentário'), findsOneWidget);
 
-    await tester.tap(find.text('São João Crisóstomo'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('Comentário de São João Crisóstomo'), findsNothing);
-  });
+      await tester.tap(find.text('São João Crisóstomo'));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('Comentário de São João Crisóstomo'),
+        findsNothing,
+      );
+    },
+  );
 
-  testWidgets('"Exibir todos" opens everything and becomes "Minimizar todos"',
-      (tester) async {
+  testWidgets('"Exibir todos" opens everything and becomes "Minimizar todos"', (
+    tester,
+  ) async {
     await _openPanel(tester);
     expect(find.text('Exibir todos'), findsOneWidget);
 

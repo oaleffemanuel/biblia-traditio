@@ -20,29 +20,36 @@ class AttributionsScreen extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.only(bottom: 16, top: 4),
-              child: Text(l10n.licensesIntro,
-                  style: TextStyle(color: c.textSecondary, height: 1.5)),
+              child: Text(
+                l10n.licensesIntro,
+                style: TextStyle(color: c.textSecondary, height: 1.5),
+              ),
             ),
             _SourceCard(
-                icon: Icons.menu_book_outlined,
-                title: l10n.licVulgataTitle,
-                body: l10n.licVulgataBody),
+              icon: Icons.menu_book_outlined,
+              title: l10n.licVulgataTitle,
+              body: l10n.licVulgataBody,
+            ),
             _SourceCard(
-                icon: Icons.auto_stories_outlined,
-                title: l10n.licPatristicsTitle,
-                body: l10n.licPatristicsBody),
+              icon: Icons.auto_stories_outlined,
+              title: l10n.licPatristicsTitle,
+              body: l10n.licPatristicsBody,
+            ),
             _SourceCard(
-                icon: Icons.translate,
-                title: l10n.licPortugueseTitle,
-                body: l10n.licPortugueseBody),
+              icon: Icons.translate,
+              title: l10n.licPortugueseTitle,
+              body: l10n.licPortugueseBody,
+            ),
             _SourceCard(
-                icon: Icons.history_edu_outlined,
-                title: l10n.licMatosTitle,
-                body: l10n.licMatosBody),
+              icon: Icons.history_edu_outlined,
+              title: l10n.licMatosTitle,
+              body: l10n.licMatosBody,
+            ),
             _SourceCard(
-                icon: Icons.translate,
-                title: l10n.licGreekTitle,
-                body: l10n.licGreekBody),
+              icon: Icons.translate,
+              title: l10n.licGreekTitle,
+              body: l10n.licGreekBody,
+            ),
             const SizedBox(height: 8),
             ListTile(
               contentPadding: EdgeInsets.zero,
@@ -66,8 +73,11 @@ class _SourceCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String body;
-  const _SourceCard(
-      {required this.icon, required this.title, required this.body});
+  const _SourceCard({
+    required this.icon,
+    required this.title,
+    required this.body,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +86,9 @@ class _SourceCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-          color: c.surface, borderRadius: BorderRadius.circular(16)),
+        color: c.surface,
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -86,14 +98,17 @@ class _SourceCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w600)),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(height: 6),
-                Text(body,
-                    style: TextStyle(color: c.textSecondary, height: 1.45)),
+                Text(
+                  body,
+                  style: TextStyle(color: c.textSecondary, height: 1.45),
+                ),
               ],
             ),
           ),

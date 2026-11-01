@@ -20,11 +20,11 @@ class PlanTarget {
       (verse >= verseStart! && verse <= (verseEnd ?? verseStart!));
 
   factory PlanTarget.fromJson(Map<String, dynamic> j) => PlanTarget(
-        j['book'] as String,
-        (j['chapter'] as num).toInt(),
-        verseStart: (j['verseStart'] as num?)?.toInt(),
-        verseEnd: (j['verseEnd'] as num?)?.toInt(),
-      );
+    j['book'] as String,
+    (j['chapter'] as num).toInt(),
+    verseStart: (j['verseStart'] as num?)?.toInt(),
+    verseEnd: (j['verseEnd'] as num?)?.toInt(),
+  );
 }
 
 /// Which strand of the plan a reading belongs to. The schedule runs a narrative
@@ -46,16 +46,15 @@ class PlanReading {
   final String ref; // human label, exactly as the plan presents it
   final List<PlanTarget> targets;
   final PlanSection section;
-  const PlanReading(this.ref, this.targets,
-      {this.section = PlanSection.book});
+  const PlanReading(this.ref, this.targets, {this.section = PlanSection.book});
 
   factory PlanReading.fromJson(Map<String, dynamic> j) => PlanReading(
-        j['ref'] as String,
-        (j['targets'] as List)
-            .map((e) => PlanTarget.fromJson(e as Map<String, dynamic>))
-            .toList(),
-        section: PlanSection.fromKey(j['section'] as String?),
-      );
+    j['ref'] as String,
+    (j['targets'] as List)
+        .map((e) => PlanTarget.fromJson(e as Map<String, dynamic>))
+        .toList(),
+    section: PlanSection.fromKey(j['section'] as String?),
+  );
 }
 
 class PlanDay {
@@ -64,11 +63,11 @@ class PlanDay {
   const PlanDay(this.day, this.readings);
 
   factory PlanDay.fromJson(Map<String, dynamic> j) => PlanDay(
-        (j['day'] as num).toInt(),
-        (j['readings'] as List)
-            .map((e) => PlanReading.fromJson(e as Map<String, dynamic>))
-            .toList(),
-      );
+    (j['day'] as num).toInt(),
+    (j['readings'] as List)
+        .map((e) => PlanReading.fromJson(e as Map<String, dynamic>))
+        .toList(),
+  );
 }
 
 /// A fixed-sequence reading plan bundled as an asset. The single plan shipping

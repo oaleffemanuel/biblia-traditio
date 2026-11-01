@@ -88,8 +88,10 @@ final Map<String, BookProclamation> _byId = {
   'eph': _p('Carta de São Paulo aos Efésios', feminine: true),
   'phil': _p('Carta de São Paulo aos Filipenses', feminine: true),
   'col': _p('Carta de São Paulo aos Colossenses', feminine: true),
-  '1thes':
-      _p('Primeira Carta de São Paulo aos Tessalonicenses', feminine: true),
+  '1thes': _p(
+    'Primeira Carta de São Paulo aos Tessalonicenses',
+    feminine: true,
+  ),
   '2thes': _p('Segunda Carta de São Paulo aos Tessalonicenses', feminine: true),
   '1tm': _p('Primeira Carta de São Paulo a Timóteo', feminine: true),
   '2tm': _p('Segunda Carta de São Paulo a Timóteo', feminine: true),

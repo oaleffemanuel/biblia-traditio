@@ -7,7 +7,8 @@ import 'content_package_manager.dart';
 final packageManagerProvider = Provider((ref) => ContentPackageManager());
 
 final manifestProvider = FutureProvider<List<ContentPackage>>(
-    (ref) => ref.watch(packageManagerProvider).loadManifest());
+  (ref) => ref.watch(packageManagerProvider).loadManifest(),
+);
 
 /// Bumped after any install/remove so dependent providers re-evaluate.
 final installRevisionProvider = StateProvider<int>((_) => 0);
@@ -59,13 +60,11 @@ final contentPathsProvider = Provider<ContentPaths>((ref) {
 /// Packages with their install state + size, for the Settings manager.
 final installablePackagesProvider =
     Provider<List<({ContentPackage pkg, bool installed})>>((ref) {
-  ref.watch(installRevisionProvider);
-  final mgr = ref.watch(packageManagerProvider);
-  final pkgs = ref.watch(manifestProvider).value ?? const [];
-  return pkgs
-      .map((p) => (pkg: p, installed: mgr.isInstalled(p)))
-      .toList();
-});
+      ref.watch(installRevisionProvider);
+      final mgr = ref.watch(packageManagerProvider);
+      final pkgs = ref.watch(manifestProvider).value ?? const [];
+      return pkgs.map((p) => (pkg: p, installed: mgr.isInstalled(p))).toList();
+    });
 
 /// Install/remove a package and refresh the app.
 final packageControllerProvider = Provider((ref) => PackageController(ref));
@@ -74,8 +73,10 @@ class PackageController {
   final Ref _ref;
   PackageController(this._ref);
 
-  Future<void> install(ContentPackage pkg,
-      {void Function(double) onProgress = _noop}) async {
+  Future<void> install(
+    ContentPackage pkg, {
+    void Function(double) onProgress = _noop,
+  }) async {
     await _ref
         .read(packageManagerProvider)
         .install(pkg, onProgress: (_, p) => onProgress(p));

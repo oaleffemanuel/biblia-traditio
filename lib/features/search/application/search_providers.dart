@@ -36,7 +36,12 @@ class SearchResults {
   final List<CommentaryHit> commentaries;
   final List<Note> notes;
   const SearchResults(
-      this.reference, this.books, this.verses, this.commentaries, this.notes);
+    this.reference,
+    this.books,
+    this.verses,
+    this.commentaries,
+    this.notes,
+  );
 
   static const empty = SearchResults(null, [], [], [], []);
 
@@ -72,18 +77,19 @@ final searchResultsProvider = Provider<SearchResults>((ref) {
   final reference = citation == null
       ? null
       : _resolveReference(books, citation);
-  final bookHits = [
-    for (final b in matchBooks(books, q)) BookHit(b),
-  ];
+  final bookHits = [for (final b in matchBooks(books, q)) BookHit(b)];
 
-  final verses = content?.searchVerseHits(translation, q, limit: 60) ?? const [];
+  final verses =
+      content?.searchVerseHits(translation, q, limit: 60) ?? const [];
   final commentaries = content?.searchCommentaryHits(q, limit: 60) ?? const [];
   final notes = user?.allNotes(query: q) ?? const <Note>[];
   return SearchResults(reference, bookHits, verses, commentaries, notes);
 });
 
-ReferenceHit? _resolveReference(List<BibleBook> books,
-    ({String book, int chapter, int? verse}) citation) {
+ReferenceHit? _resolveReference(
+  List<BibleBook> books,
+  ({String book, int chapter, int? verse}) citation,
+) {
   final matches = matchBooks(books, citation.book);
   if (matches.isEmpty) return null;
   final book = matches.first;
@@ -95,8 +101,9 @@ ReferenceHit? _resolveReference(List<BibleBook> books,
 /// "Salmo 23" → (Salmo, 23, null). Returns null when the text isn't a citation
 /// at all, so plain words fall through to full-text search untouched.
 ({String book, int chapter, int? verse})? parseReference(String raw) {
-  final m = RegExp(r'^(.+?)\s*[\s.]\s*(\d{1,3})(?:\s*[:,.]\s*(\d{1,3}))?$')
-      .firstMatch(raw.trim());
+  final m = RegExp(
+    r'^(.+?)\s*[\s.]\s*(\d{1,3})(?:\s*[:,.]\s*(\d{1,3}))?$',
+  ).firstMatch(raw.trim());
   if (m == null) return null;
   final book = m.group(1)!.trim();
   if (book.isEmpty) return null;

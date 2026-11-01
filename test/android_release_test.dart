@@ -6,16 +6,21 @@ import 'package:flutter_test/flutter_test.dart';
 /// unsigned, over-permissioned or wrongly-identified build.
 void main() {
   final gradle = File('android/app/build.gradle.kts').readAsStringSync();
-  final manifest =
-      File('android/app/src/main/AndroidManifest.xml').readAsStringSync();
+  final manifest = File(
+    'android/app/src/main/AndroidManifest.xml',
+  ).readAsStringSync();
   final pubspec = File('pubspec.yaml').readAsStringSync();
 
   group('identity', () {
     test('applicationId and namespace agree and are the published id', () {
-      expect(gradle,
-          contains('applicationId = "br.com.bibliatraditio.biblia_traditio"'));
-      expect(gradle,
-          contains('namespace = "br.com.bibliatraditio.biblia_traditio"'));
+      expect(
+        gradle,
+        contains('applicationId = "br.com.bibliatraditio.biblia_traditio"'),
+      );
+      expect(
+        gradle,
+        contains('namespace = "br.com.bibliatraditio.biblia_traditio"'),
+      );
     });
 
     test('the launcher label is the app name', () {
@@ -51,11 +56,13 @@ void main() {
   });
 
   group('signing', () {
-    test('a release signing config exists and is wired to the release build',
-        () {
-      expect(gradle, contains('signingConfigs {'));
-      expect(gradle, contains('signingConfigs.getByName("release")'));
-    });
+    test(
+      'a release signing config exists and is wired to the release build',
+      () {
+        expect(gradle, contains('signingConfigs {'));
+        expect(gradle, contains('signingConfigs.getByName("release")'));
+      },
+    );
 
     test('credentials come from key.properties or the environment', () {
       expect(gradle, contains('key.properties'));
@@ -70,8 +77,10 @@ void main() {
     });
 
     test('no secret is hardcoded in the build script', () {
-      expect(RegExp(r'(storePassword|keyPassword)\s*=\s*"').hasMatch(gradle),
-          isFalse);
+      expect(
+        RegExp(r'(storePassword|keyPassword)\s*=\s*"').hasMatch(gradle),
+        isFalse,
+      );
     });
 
     test('secrets and keystores are gitignored', () {
@@ -82,8 +91,11 @@ void main() {
     });
 
     test('a filled-in key.properties is never committed', () {
-      expect(File('android/key.properties').existsSync(), isFalse,
-          reason: 'a real key.properties must stay out of the repo');
+      expect(
+        File('android/key.properties').existsSync(),
+        isFalse,
+        reason: 'a real key.properties must stay out of the repo',
+      );
       // The template that documents the setup is committed instead.
       expect(File('android/key.properties.example').existsSync(), isTrue);
     });
@@ -97,8 +109,9 @@ void main() {
     });
 
     test('the debug-only INTERNET permission stays out of the release', () {
-      final debug =
-          File('android/app/src/debug/AndroidManifest.xml').readAsStringSync();
+      final debug = File(
+        'android/app/src/debug/AndroidManifest.xml',
+      ).readAsStringSync();
       expect(debug, contains('android.permission.INTERNET'));
     });
 
@@ -115,9 +128,10 @@ void main() {
     });
 
     test('pubspec carries a name+build version Play can accept', () {
-      final m = RegExp(r'^version:\s*(\d+)\.(\d+)\.(\d+)\+(\d+)\s*$',
-              multiLine: true)
-          .firstMatch(pubspec);
+      final m = RegExp(
+        r'^version:\s*(\d+)\.(\d+)\.(\d+)\+(\d+)\s*$',
+        multiLine: true,
+      ).firstMatch(pubspec);
       expect(m, isNotNull, reason: 'version must be x.y.z+build');
       expect(int.parse(m!.group(4)!), greaterThanOrEqualTo(1));
     });
@@ -125,8 +139,15 @@ void main() {
 
   group('iOS release configuration', () {
     test('the bundle id is fixed and matches the App Store record', () {
-      final pbx = File('ios/Runner.xcodeproj/project.pbxproj').readAsStringSync();
-      expect(pbx, contains('PRODUCT_BUNDLE_IDENTIFIER = br.com.bibliatraditio.bibliaTraditio;'));
+      final pbx = File(
+        'ios/Runner.xcodeproj/project.pbxproj',
+      ).readAsStringSync();
+      expect(
+        pbx,
+        contains(
+          'PRODUCT_BUNDLE_IDENTIFIER = br.com.bibliatraditio.bibliaTraditio;',
+        ),
+      );
     });
 
     test('version and build come from pubspec, not from Xcode', () {
@@ -136,7 +157,9 @@ void main() {
     });
 
     test('signing is configured', () {
-      final pbx = File('ios/Runner.xcodeproj/project.pbxproj').readAsStringSync();
+      final pbx = File(
+        'ios/Runner.xcodeproj/project.pbxproj',
+      ).readAsStringSync();
       expect(pbx, contains('DEVELOPMENT_TEAM = '));
       expect(pbx, contains('CODE_SIGN_STYLE = Automatic;'));
     });
@@ -150,25 +173,36 @@ void main() {
   group('launcher assets', () {
     test('the adaptive icon and its densities were generated', () {
       expect(
-          File('android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml')
-              .existsSync(),
-          isTrue);
+        File(
+          'android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml',
+        ).existsSync(),
+        isTrue,
+      );
       for (final d in ['hdpi', 'mdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi']) {
-        expect(File('android/app/src/main/res/mipmap-$d/ic_launcher.png')
-            .existsSync(), isTrue,
-            reason: 'mipmap-$d');
+        expect(
+          File(
+            'android/app/src/main/res/mipmap-$d/ic_launcher.png',
+          ).existsSync(),
+          isTrue,
+          reason: 'mipmap-$d',
+        );
       }
     });
 
-    test('the native splash was generated, including the Android 12 variant',
-        () {
-      expect(
-          File('android/app/src/main/res/drawable/launch_background.xml')
-              .existsSync(),
-          isTrue);
-      expect(
+    test(
+      'the native splash was generated, including the Android 12 variant',
+      () {
+        expect(
+          File(
+            'android/app/src/main/res/drawable/launch_background.xml',
+          ).existsSync(),
+          isTrue,
+        );
+        expect(
           File('android/app/src/main/res/values-v31/styles.xml').existsSync(),
-          isTrue);
-    });
+          isTrue,
+        );
+      },
+    );
   });
 }

@@ -104,7 +104,7 @@ class _ThemeRow extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      l10n.themePassages(theme.passages.length),
+                      l10n.themePassages(theme.passageCount),
                       style: TextStyle(color: c.textSecondary, fontSize: 12.5),
                     ),
                   ],

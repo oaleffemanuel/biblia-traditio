@@ -40,21 +40,18 @@ class SaintEntry {
   });
 
   factory SaintEntry.fromJson(Map<String, dynamic> j) => SaintEntry(
-        day: j['day'] as String,
-        name: j['name'] as String,
-        title: (j['title'] as String?) ?? '',
-        century: (j['century'] as String?) ?? '',
-        died: j['died'] as String?,
-        biography: [
-          for (final p in (j['biography'] as List? ?? const [])) '$p',
-        ],
-        source: (j['source'] as String?) ?? '',
-      );
+    day: j['day'] as String,
+    name: j['name'] as String,
+    title: (j['title'] as String?) ?? '',
+    century: (j['century'] as String?) ?? '',
+    died: j['died'] as String?,
+    biography: [for (final p in (j['biography'] as List? ?? const [])) '$p'],
+    source: (j['source'] as String?) ?? '',
+  );
 
   /// A life needs a name and at least three paragraphs to be worth a section.
   /// Anything thinner is treated as absent rather than padded out.
-  bool get isPresentable =>
-      name.trim().isNotEmpty && biography.length >= 3;
+  bool get isPresentable => name.trim().isNotEmpty && biography.length >= 3;
 }
 
 abstract class SaintsRepository {

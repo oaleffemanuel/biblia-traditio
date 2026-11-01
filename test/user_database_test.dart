@@ -20,9 +20,9 @@ void main() {
 
   test('highlight set / query / remove', () {
     db.setHighlight(r, HighlightColor.gold);
-    expect(db.highlightsForChapter('gn', 1)[1], HighlightColor.gold);
+    expect(db.highlightsForChapter('gn', 1)[1]!.color, HighlightColor.gold);
     db.setHighlight(r, HighlightColor.rose); // upsert, no duplicate
-    expect(db.highlightsForChapter('gn', 1)[1], HighlightColor.rose);
+    expect(db.highlightsForChapter('gn', 1)[1]!.color, HighlightColor.rose);
     expect(db.allHighlights(), hasLength(1));
     db.removeHighlight(r);
     expect(db.highlightsForChapter('gn', 1), isEmpty);
@@ -61,4 +61,27 @@ void main() {
     expect(p.bookId, 'ps');
     expect(p.chapter, 23);
   });
+
+  test(
+    'excerpt highlight keeps its range and words; a whole-verse one clears them',
+    () {
+      db.setHighlight(
+        r,
+        HighlightColor.sky,
+        start: 3,
+        end: 12,
+        excerpt: 'princípio',
+      );
+      final mark = db.highlightsForChapter('gn', 1)[1]!;
+      expect(mark.isPartial, isTrue);
+      expect((mark.start, mark.end), (3, 12));
+      expect(db.allHighlights().single.excerpt, 'princípio');
+      db.setHighlight(
+        r,
+        HighlightColor.sky,
+      ); // whole verse replaces the excerpt
+      expect(db.highlightsForChapter('gn', 1)[1]!.isPartial, isFalse);
+      expect(db.allHighlights().single.excerpt, isNull);
+    },
+  );
 }
