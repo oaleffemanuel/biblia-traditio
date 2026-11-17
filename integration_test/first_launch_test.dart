@@ -60,12 +60,22 @@ void main() {
     final reached = await until(
         tester,
         find.byWidgetPredicate((w) =>
-            w is Text && (w.data == 'Continuar' || w.data == 'Início')),
+            w is Text &&
+            (w.data == 'Pular' ||
+                w.data == 'Continuar' ||
+                w.data == 'Início')),
         limit: const Duration(seconds: 90));
     debugPrint('RESULT first_launch_reached=$reached '
         'install_ms=${sw.elapsedMilliseconds}');
     expect(reached, isTrue);
 
+    if (find.byKey(const ValueKey('intro-skip')).evaluate().isNotEmpty) {
+      // Let the intro clip run to its end: it must hand over on its own.
+      final handedOver = await until(tester, find.text('Continuar'),
+          limit: const Duration(seconds: 20));
+      debugPrint('RESULT intro_handed_over=$handedOver');
+      expect(handedOver, isTrue);
+    }
     if (find.text('Continuar').evaluate().isNotEmpty) {
       await tap(tester, find.text('Continuar'));
       if (find.byType(TextField).evaluate().isNotEmpty) {

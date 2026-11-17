@@ -51,6 +51,9 @@ Future<void> _patristics(List<String> argv) async {
         ..addOption('overlay',
             help: 'Corrected corpus dir with <book>_pt.json (wins per verse)')
         ..addOption('overlay-suffix', defaultsTo: '_pt.json')
+        ..addOption('overlay-lang',
+            defaultsTo: 'pt-BR',
+            help: 'Language of the overlay corpus (pt-BR, en, it)')
         ..addOption('report', help: 'Write the coverage report as JSON here')
         ..addOption('out', defaultsTo: 'biblia_traditio.sqlite'))
       .parse(argv);
@@ -73,7 +76,8 @@ Future<void> _patristics(List<String> argv) async {
     stdout.writeln('▶ Ingesting patristics (corrected) from: $overlayDir');
     final parser = await PatristicsParser.fromDir(overlayDir);
     overlay = await parser.parseCorrectedDir(overlayDir,
-        suffix: a['overlay-suffix'] as String);
+        suffix: a['overlay-suffix'] as String,
+        lang: a['overlay-lang'] as String);
     _summarise('corrected', overlay);
   }
 

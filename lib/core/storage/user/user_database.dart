@@ -71,6 +71,34 @@ class UserDatabase {
     if (!cols.contains('excerpt')) {
       _db.execute('ALTER TABLE highlight ADD COLUMN excerpt TEXT');
     }
+    // Text marks: any number of word/letter marks per verse. The highlight
+    // table keeps one whole-verse colour per verse; excerpts written there by
+    // earlier versions move here once, so nothing the reader painted is lost.
+    _db.execute('''
+      CREATE TABLE IF NOT EXISTS text_mark(
+        uuid TEXT PRIMARY KEY, book_id TEXT, chapter INTEGER, verse INTEGER,
+        start_offset INTEGER, end_offset INTEGER, color_key TEXT,
+        style TEXT DEFAULT 'highlight', excerpt TEXT,
+        created_at INTEGER, updated_at INTEGER,
+        is_dirty INTEGER DEFAULT 1, is_deleted INTEGER DEFAULT 0);
+      CREATE INDEX IF NOT EXISTS idx_text_mark_ref
+        ON text_mark(book_id, chapter, verse);
+    ''');
+    final legacy = _db.select(
+      'SELECT COUNT(*) n FROM highlight WHERE is_deleted=0 AND start_offset IS NOT NULL AND end_offset > start_offset',
+    );
+    if ((legacy.first['n'] as int) > 0) {
+      _db.execute('''
+        INSERT OR IGNORE INTO text_mark(uuid,book_id,chapter,verse,start_offset,end_offset,color_key,style,excerpt,created_at,updated_at,is_dirty,is_deleted)
+        SELECT uuid,book_id,chapter,verse,start_offset,end_offset,color_key,'highlight',excerpt,created_at,updated_at,1,0
+        FROM highlight
+        WHERE is_deleted=0 AND start_offset IS NOT NULL AND end_offset > start_offset
+      ''');
+      _db.execute(
+        'UPDATE highlight SET is_deleted=1, is_dirty=1, updated_at=? WHERE is_deleted=0 AND start_offset IS NOT NULL AND end_offset > start_offset',
+        [_now],
+      );
+    }
   }
 
   // ── Settings (key/value) ───────────────────────────────────────────────
@@ -164,6 +192,99 @@ class UserDatabase {
         ),
       )
       .toList();
+
+  // ── Text marks (word / letter / phrase) ───────────────────────────────
+  /// Adds a mark over [start, end) of the verse text. Marks accumulate: a
+  /// verse can carry several words marked in different colours and styles.
+  String addTextMark(
+    VerseRef r, {
+    required int start,
+    required int end,
+    required HighlightColor color,
+    MarkStyle style = MarkStyle.highlight,
+    String? excerpt,
+  }) {
+    final id = _uuid.v4();
+    _db.execute(
+      '''
+      INSERT INTO text_mark(uuid,book_id,chapter,verse,start_offset,end_offset,color_key,style,excerpt,created_at,updated_at,is_dirty,is_deleted)
+      VALUES(?,?,?,?,?,?,?,?,?,?,?,1,0)
+    ''',
+      [
+        id,
+        r.bookId,
+        r.chapter,
+        r.verse,
+        start,
+        end,
+        color.key,
+        style.key,
+        excerpt,
+        _now,
+        _now,
+      ],
+    );
+    return id;
+  }
+
+  void removeTextMark(String uuid) => _db.execute(
+    'UPDATE text_mark SET is_deleted=1, is_dirty=1, updated_at=? WHERE uuid=?',
+    [_now, uuid],
+  );
+
+  /// Restores a removed mark (Undo).
+  void restoreTextMark(String uuid) => _db.execute(
+    'UPDATE text_mark SET is_deleted=0, is_dirty=1, updated_at=? WHERE uuid=?',
+    [_now, uuid],
+  );
+
+  /// Removes every mark of the verse that touches [start, end); returns the
+  /// removed ids so the action can be undone.
+  List<String> removeTextMarksIn(VerseRef r, int start, int end) {
+    final ids = _db
+        .select(
+          'SELECT uuid FROM text_mark WHERE book_id=? AND chapter=? AND verse=? AND is_deleted=0 AND start_offset < ? AND end_offset > ?',
+          [r.bookId, r.chapter, r.verse, end, start],
+        )
+        .map((row) => row['uuid'] as String)
+        .toList();
+    for (final id in ids) {
+      removeTextMark(id);
+    }
+    return ids;
+  }
+
+  /// verse number → its marks, oldest first (so later ones paint on top).
+  Map<int, List<TextMark>> textMarksForChapter(String bookId, int chapter) {
+    final rows = _db.select(
+      'SELECT * FROM text_mark WHERE book_id=? AND chapter=? AND is_deleted=0 ORDER BY created_at, rowid',
+      [bookId, chapter],
+    );
+    final out = <int, List<TextMark>>{};
+    for (final row in rows) {
+      final m = _toTextMark(row);
+      (out[m.ref.verse] ??= []).add(m);
+    }
+    return out;
+  }
+
+  List<TextMark> allTextMarks() => _db
+      .select(
+        'SELECT * FROM text_mark WHERE is_deleted=0 ORDER BY updated_at DESC',
+      )
+      .map(_toTextMark)
+      .toList();
+
+  TextMark _toTextMark(Row r) => TextMark(
+    r['uuid'] as String,
+    VerseRef(r['book_id'] as String, r['chapter'] as int, r['verse'] as int),
+    start: r['start_offset'] as int,
+    end: r['end_offset'] as int,
+    color: HighlightColor.fromKey(r['color_key'] as String),
+    style: MarkStyle.fromKey(r['style'] as String?),
+    excerpt: r['excerpt'] as String?,
+    createdAt: _at(r['created_at']),
+  );
 
   // ── Bookmarks ──────────────────────────────────────────────────────────
   bool isBookmarked(VerseRef r) => _db.select(

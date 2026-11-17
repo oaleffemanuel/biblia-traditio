@@ -24,7 +24,7 @@ void main() {
     });
 
     test('the launcher label is the app name', () {
-      expect(manifest, contains('android:label="Biblia Traditio"'));
+      expect(manifest, contains('android:label="Bíblia Patrística"'));
     });
 
     test('the launcher icon points at the generated mipmap', () {
@@ -166,7 +166,7 @@ void main() {
 
     test('the display name is set', () {
       final plist = File('ios/Runner/Info.plist').readAsStringSync();
-      expect(plist, contains('Biblia Traditio'));
+      expect(plist, contains('Bíblia Patrística'));
     });
   });
 

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../themes/presentation/themes_icon.dart';
+import '../domain/psalm_wallpaper.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../annotations/application/annotation_providers.dart';
@@ -26,8 +28,14 @@ class HomeScreen extends ConsumerWidget {
     final counts = ref.watch(userCountsProvider);
     return Scaffold(
       body: SafeArea(
+        bottom: false, // content scrolls beneath the floating glass bar
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+          padding: EdgeInsets.fromLTRB(
+            20,
+            16,
+            20,
+            32 + MediaQuery.paddingOf(context).bottom,
+          ),
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -118,6 +126,7 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             _SecondaryCard(
               icon: Icons.auto_stories_outlined,
+              image: kThemesIcon,
               title: l10n.themesTitle,
               subtitle: l10n.themesSubtitle,
               onTap: () => context.push('/themes'),
@@ -255,11 +264,15 @@ class _SectionLabel extends StatelessWidget {
 
 class _SecondaryCard extends StatelessWidget {
   final IconData icon;
+
+  /// A drawn mark (e.g. the Chi-Rho) that replaces [icon] when given.
+  final ImageProvider? image;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
   const _SecondaryCard({
     required this.icon,
+    this.image,
     required this.title,
     required this.subtitle,
     required this.onTap,
@@ -287,7 +300,9 @@ class _SecondaryCard extends StatelessWidget {
                   color: c.accentSoft,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: c.accent, size: 22),
+                child: image != null
+                    ? ImageIcon(image, color: c.accent, size: 24)
+                    : Icon(icon, color: c.accent, size: 22),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -466,12 +481,20 @@ class _GospelHero extends ConsumerWidget {
         ? (psalmRefrain != null ? l10n.homePsalmRefrain : l10n.homePsalmToday)
         : l10n.liturgyToday;
     final cta = hasText ? l10n.homeReadPsalm : l10n.homeSeeLiturgy;
+    // The background the reader chose in Settings › Appearance, with the
+    // text and title colours that belong to it.
+    final wp = PsalmWallpaper.fromKey(
+      ref.watch(settingsProvider).psalmWallpaper,
+    );
+    final onHero = wp.textColor ?? c.onHero;
+    final gold = wp.titleColor ?? c.gold;
+    final onHeroMuted = wp.textColor?.withValues(alpha: 0.82) ?? c.onHeroMuted;
     final serif = GoogleFonts.ebGaramond(
       fontStyle: hasText ? FontStyle.italic : FontStyle.normal,
       fontWeight: hasText ? FontWeight.w500 : FontWeight.w600,
       fontSize: hasText ? 22 : 28,
       height: 1.3,
-      color: c.onHero,
+      color: onHero,
     );
 
     void open() {
@@ -493,13 +516,27 @@ class _GospelHero extends ConsumerWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
           child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [c.heroStart, c.heroEnd],
-              ),
-            ),
+            decoration: wp.asset == null
+                ? BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [c.heroStart, c.heroEnd],
+                    ),
+                  )
+                : BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage(wp.asset!),
+                      fit: BoxFit.cover,
+                      // A soft scrim keeps the verse legible on any image.
+                      colorFilter: ColorFilter.mode(
+                        (wp.isLight ? Colors.white : Colors.black).withValues(
+                          alpha: wp.isLight ? 0.18 : 0.32,
+                        ),
+                        BlendMode.srcATop,
+                      ),
+                    ),
+                  ),
             child: Stack(
               children: [
                 Padding(
@@ -509,12 +546,12 @@ class _GospelHero extends ConsumerWidget {
                     children: [
                       Row(
                         children: [
-                          Container(width: 18, height: 1, color: c.gold),
+                          Container(width: 18, height: 1, color: gold),
                           const SizedBox(width: 8),
                           Text(
                             label.toUpperCase(),
                             style: TextStyle(
-                              color: c.gold,
+                              color: gold,
                               fontSize: 11,
                               letterSpacing: 1.6,
                               fontWeight: FontWeight.w700,
@@ -541,7 +578,7 @@ class _GospelHero extends ConsumerWidget {
                                       l10n.liturgicalYear(day.sundayCycle),
                                     ].join('  ·  '),
                               style: TextStyle(
-                                color: c.onHeroMuted,
+                                color: onHeroMuted,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -558,13 +595,13 @@ class _GospelHero extends ConsumerWidget {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(999),
                               border: Border.all(
-                                color: c.gold.withValues(alpha: 0.8),
+                                color: gold.withValues(alpha: 0.8),
                               ),
                             ),
                             child: Text(
                               cta,
                               style: TextStyle(
-                                color: c.onHero,
+                                color: onHero,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                               ),

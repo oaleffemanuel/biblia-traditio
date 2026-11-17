@@ -179,7 +179,7 @@ void main() {
       await tester.tap(find.text('São Basílio Magno'));
       await tester.pumpAndSettle();
       // One per excerpt, not one per author.
-      expect(find.text('Partilhar comentário'), findsNWidgets(3));
+      expect(find.text('Compartilhar comentário'), findsNWidgets(3));
     });
 
     testWidgets('sharing one excerpt shares that excerpt', (tester) async {
@@ -187,7 +187,7 @@ void main() {
       await tester.tap(find.text('São Basílio Magno'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Partilhar comentário').at(1));
+      await tester.tap(find.text('Compartilhar comentário').at(1));
       await tester.pumpAndSettle();
 
       expect(find.textContaining('Segundo excerto de Basílio'), findsWidgets);

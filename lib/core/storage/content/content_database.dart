@@ -49,9 +49,12 @@ class ContentDatabase {
     final rows = _bible.select(
       '''
       SELECT b.id, b.testament, b.canon_order, b.is_deutero, b.chapter_count,
-             b.emblem_asset, n.name, n.abbrev
+             b.emblem_asset,
+             COALESCE(n.name, pt.name) AS name,
+             COALESCE(n.abbrev, pt.abbrev) AS abbrev
       FROM book b
       LEFT JOIN book_name n ON n.book_id = b.id AND n.lang = ?
+      LEFT JOIN book_name pt ON pt.book_id = b.id AND pt.lang = 'pt'
       ORDER BY b.canon_order
     ''',
       [lang],

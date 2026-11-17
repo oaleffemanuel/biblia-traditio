@@ -106,7 +106,7 @@ abstract class AppL10n {
   /// No description provided for @appName.
   ///
   /// In en, this message translates to:
-  /// **'Biblia Traditio'**
+  /// **'Bíblia Patrística'**
   String get appName;
 
   /// No description provided for @tagline.
@@ -928,13 +928,13 @@ abstract class AppL10n {
   /// No description provided for @settingsTranslation.
   ///
   /// In en, this message translates to:
-  /// **'Translation'**
+  /// **'Bible version'**
   String get settingsTranslation;
 
   /// No description provided for @settingsAppLanguage.
   ///
   /// In en, this message translates to:
-  /// **'App language'**
+  /// **'Language'**
   String get settingsAppLanguage;
 
   /// No description provided for @settingsTheme.
@@ -988,7 +988,7 @@ abstract class AppL10n {
   /// No description provided for @licensesIntro.
   ///
   /// In en, this message translates to:
-  /// **'Biblia Traditio respects the sources it uses. Below is the origin and license of each.'**
+  /// **'Bíblia Patrística respects the sources it uses. Below is the origin and license of each.'**
   String get licensesIntro;
 
   /// No description provided for @licVulgataTitle.
@@ -1128,6 +1128,12 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Preparing the Bible…'**
   String get preparingBible;
+
+  /// No description provided for @introSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get introSkip;
 
   /// No description provided for @startupError.
   ///
@@ -2244,6 +2250,156 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Highlight colour'**
   String get highlightPickColor;
+
+  /// No description provided for @onbParallelTableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the parallel reading language'**
+  String get onbParallelTableTitle;
+
+  /// No description provided for @onbParallelTableHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick one language per Testament — or none. Tap again to clear.'**
+  String get onbParallelTableHint;
+
+  /// No description provided for @presetByTestament.
+  ///
+  /// In en, this message translates to:
+  /// **'One language per Testament'**
+  String get presetByTestament;
+
+  /// No description provided for @presetByTestamentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose in the table below'**
+  String get presetByTestamentHint;
+
+  /// No description provided for @markStyleHighlight.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight'**
+  String get markStyleHighlight;
+
+  /// No description provided for @markStyleUnderline.
+  ///
+  /// In en, this message translates to:
+  /// **'Underline'**
+  String get markStyleUnderline;
+
+  /// No description provided for @markStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get markStart;
+
+  /// No description provided for @markEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'End'**
+  String get markEnd;
+
+  /// No description provided for @markLetterHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the arrows to adjust letter by letter — you can mark a single letter.'**
+  String get markLetterHint;
+
+  /// No description provided for @markRemoveHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove marks in this span'**
+  String get markRemoveHere;
+
+  /// No description provided for @markRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark removed'**
+  String get markRemoved;
+
+  /// No description provided for @markAddNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Add note'**
+  String get markAddNote;
+
+  /// No description provided for @markAdjust.
+  ///
+  /// In en, this message translates to:
+  /// **'Underline or adjust'**
+  String get markAdjust;
+
+  /// No description provided for @markRemoveShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove mark'**
+  String get markRemoveShort;
+
+  /// No description provided for @settingsPsalmBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Psalm background'**
+  String get settingsPsalmBackground;
+
+  /// No description provided for @psalmBackgroundNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Original gradient'**
+  String get psalmBackgroundNone;
+
+  /// No description provided for @settingsAppearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get settingsAppearance;
+
+  /// No description provided for @themesSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search a theme (e.g. Eucharist)'**
+  String get themesSearchHint;
+
+  /// No description provided for @themesNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No theme found.'**
+  String get themesNoResults;
+
+  /// No description provided for @themeTabVerses.
+  ///
+  /// In en, this message translates to:
+  /// **'Verses'**
+  String get themeTabVerses;
+
+  /// No description provided for @themeTabComments.
+  ///
+  /// In en, this message translates to:
+  /// **'Commentary'**
+  String get themeTabComments;
+
+  /// No description provided for @themeNoComments.
+  ///
+  /// In en, this message translates to:
+  /// **'This theme has no commentary yet.'**
+  String get themeNoComments;
+
+  /// No description provided for @languageScopeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'App, Bible and commentary'**
+  String get languageScopeHint;
+
+  /// No description provided for @bibleInYourLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'In this language'**
+  String get bibleInYourLanguage;
+
+  /// No description provided for @bibleOriginalLanguages.
+  ///
+  /// In en, this message translates to:
+  /// **'Original languages'**
+  String get bibleOriginalLanguages;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

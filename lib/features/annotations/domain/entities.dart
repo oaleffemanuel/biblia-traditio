@@ -34,6 +34,45 @@ class HighlightMark {
   bool get isPartial => start != null && end != null && end! > start!;
 }
 
+/// How a text mark is drawn: a highlighter stroke behind the letters, or a
+/// pen line under them. The `key` is what's stored.
+enum MarkStyle {
+  highlight('highlight'),
+  underline('underline');
+
+  final String key;
+  const MarkStyle(this.key);
+
+  static MarkStyle fromKey(String? k) =>
+      values.firstWhere((m) => m.key == k, orElse: () => highlight);
+}
+
+/// A mark on part of a verse — a word, a phrase or a single letter. A verse
+/// can carry any number of them (they may overlap; the newest is drawn on
+/// top). [start]/[end] are character offsets into the verse text.
+class TextMark {
+  final String uuid;
+  final VerseRef ref;
+  final int start;
+  final int end;
+  final HighlightColor color;
+  final MarkStyle style;
+  final String? excerpt;
+  final DateTime createdAt;
+  const TextMark(
+    this.uuid,
+    this.ref, {
+    required this.start,
+    required this.end,
+    required this.color,
+    this.style = MarkStyle.highlight,
+    this.excerpt,
+    required this.createdAt,
+  });
+
+  bool overlaps(int a, int b) => start < b && a < end;
+}
+
 class Highlight {
   final String uuid;
   final VerseRef ref;

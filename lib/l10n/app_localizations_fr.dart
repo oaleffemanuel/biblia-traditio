@@ -9,7 +9,7 @@ class AppL10nFr extends AppL10n {
   AppL10nFr([String locale = 'fr']) : super(locale);
 
   @override
-  String get appName => 'Biblia Traditio';
+  String get appName => 'Bíblia Patrística';
 
   @override
   String get tagline => 'L\'Écriture à la lumière de la Tradition.';
@@ -468,10 +468,10 @@ class AppL10nFr extends AppL10n {
   String get settingsReading => 'En lisant';
 
   @override
-  String get settingsTranslation => 'Traduction';
+  String get settingsTranslation => 'Version de la Bible';
 
   @override
-  String get settingsAppLanguage => 'Langue de l\'application';
+  String get settingsAppLanguage => 'Langue';
 
   @override
   String get settingsTheme => 'Thème';
@@ -499,7 +499,7 @@ class AppL10nFr extends AppL10n {
 
   @override
   String get licensesIntro =>
-      'Biblia Traditio respecte les sources qu\'elle utilise. ';
+      'Bíblia Patrística respecte les sources qu\'elle utilise. ';
 
   @override
   String get licVulgataTitle => 'Vulgate Clémentine (latin)';
@@ -579,6 +579,9 @@ class AppL10nFr extends AppL10n {
 
   @override
   String get preparingBible => 'Préparer la Bible…';
+
+  @override
+  String get introSkip => 'Passer';
 
   @override
   String get startupError => 'Échec du démarrage.';
@@ -872,7 +875,7 @@ class AppL10nFr extends AppL10n {
   String get langGreek => 'grec';
 
   @override
-  String get langHebrew => 'hébreu';
+  String get langHebrew => 'Hébreu';
 
   @override
   String get langPortuguese => 'portugais';
@@ -1211,4 +1214,82 @@ class AppL10nFr extends AppL10n {
 
   @override
   String get highlightPickColor => 'Highlight colour';
+
+  @override
+  String get onbParallelTableTitle =>
+      'Choisissez la langue de la lecture parallèle';
+
+  @override
+  String get onbParallelTableHint =>
+      'Choisissez une langue par Testament, ou aucune. Touchez à nouveau pour désélectionner.';
+
+  @override
+  String get presetByTestament => 'Une langue par Testament';
+
+  @override
+  String get presetByTestamentHint => 'Choisissez dans le tableau ci-dessous';
+
+  @override
+  String get markStyleHighlight => 'Surligner';
+
+  @override
+  String get markStyleUnderline => 'Souligner';
+
+  @override
+  String get markStart => 'Début';
+
+  @override
+  String get markEnd => 'Fin';
+
+  @override
+  String get markLetterHint =>
+      'Utilisez les flèches pour ajuster lettre par lettre : on peut marquer une seule lettre.';
+
+  @override
+  String get markRemoveHere => 'Retirer les marques de ce passage';
+
+  @override
+  String get markRemoved => 'Marque retirée';
+
+  @override
+  String get markAddNote => 'Ajouter une note';
+
+  @override
+  String get markAdjust => 'Souligner ou ajuster';
+
+  @override
+  String get markRemoveShort => 'Retirer la marque';
+
+  @override
+  String get settingsPsalmBackground => 'Fond du Psaume';
+
+  @override
+  String get psalmBackgroundNone => 'Dégradé d\'origine';
+
+  @override
+  String get settingsAppearance => 'Apparence';
+
+  @override
+  String get themesSearchHint => 'Chercher un thème (ex. : Eucharistie)';
+
+  @override
+  String get themesNoResults => 'Aucun thème trouvé.';
+
+  @override
+  String get themeTabVerses => 'Versets';
+
+  @override
+  String get themeTabComments => 'Commentaires';
+
+  @override
+  String get themeNoComments => 'Ce thème n\'a pas encore de commentaires.';
+
+  @override
+  String get languageScopeHint => 'Application, Bible et commentaires';
+
+  @override
+  String get bibleInYourLanguage => 'Dans cette langue';
+
+  @override
+  String get bibleOriginalLanguages => 'Langues originales';
 }

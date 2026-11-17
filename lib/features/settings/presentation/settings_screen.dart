@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../home/domain/psalm_wallpaper.dart';
+import 'psalm_wallpaper_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -66,28 +69,9 @@ class SettingsScreen extends ConsumerWidget {
           ),
           _section(c, l10n.settingsReading),
           ListTile(
-            leading: const Icon(Icons.translate),
-            title: Text(l10n.settingsTranslation),
-            subtitle: Text(translationTitle),
-            enabled: available.isNotEmpty,
-            onTap: available.isEmpty
-                ? null
-                : () => _pick<({String id, String lang, String title})>(
-                    context,
-                    l10n.settingsTranslation,
-                    available,
-                    (t) => translationLabel(l10n, t.lang, t.title),
-                    available.firstWhere(
-                      (t) => t.id == resolvedId,
-                      orElse: () => available.first,
-                    ),
-                    (t) => ctrl.setTranslation(t.id),
-                  ),
-          ),
-          ListTile(
             leading: const Icon(Icons.language),
             title: Text(l10n.settingsAppLanguage),
-            subtitle: Text(s.language.label),
+            subtitle: Text('${s.language.label} · ${l10n.languageScopeHint}'),
             onTap: () => _pick<AppLanguage>(
               context,
               l10n.settingsAppLanguage,
@@ -97,6 +81,22 @@ class SettingsScreen extends ConsumerWidget {
               ctrl.setLanguage,
             ),
           ),
+          ListTile(
+            leading: const Icon(Icons.translate),
+            title: Text(l10n.settingsTranslation),
+            subtitle: Text(translationTitle),
+            enabled: available.isNotEmpty,
+            onTap: available.isEmpty
+                ? null
+                : () => _pickVersion(
+                    context,
+                    available,
+                    s.language.code,
+                    resolvedId,
+                    (t) => ctrl.setTranslation(t.id),
+                  ),
+          ),
+          _section(c, l10n.settingsAppearance),
           ListTile(
             leading: const Icon(Icons.dark_mode_outlined),
             title: Text(l10n.settingsTheme),
@@ -134,6 +134,20 @@ class SettingsScreen extends ConsumerWidget {
               scaleLabel,
               kFontScales.contains(s.fontScale) ? s.fontScale : 1.0,
               ctrl.setFontScale,
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.wallpaper_outlined),
+            title: Text(l10n.settingsPsalmBackground),
+            subtitle: Text(
+              PsalmWallpaper.fromKey(s.psalmWallpaper) == PsalmWallpaper.none
+                  ? l10n.psalmBackgroundNone
+                  : PsalmWallpaper.fromKey(s.psalmWallpaper).label,
+            ),
+            onTap: () => showPsalmWallpaperPicker(
+              context,
+              selected: PsalmWallpaper.fromKey(s.psalmWallpaper),
+              onPick: (w) => ctrl.setPsalmWallpaper(w.key),
             ),
           ),
           SwitchListTile(
@@ -193,7 +207,7 @@ class SettingsScreen extends ConsumerWidget {
 
   Future<void> _openWhatsApp(BuildContext context) async {
     const phone = '5531975965032'; // +55 31 97596-5032
-    const msg = 'Olá! Escrevo sobre o app Biblia Traditio.';
+    const msg = 'Olá! Escrevo sobre o app Bíblia Patrística.';
     final encoded = Uri.encodeComponent(msg);
     // Prefer the WhatsApp app; fall back to the browser (wa.me). Capture the
     // failure message before any await so we never touch a stale context.
@@ -258,26 +272,129 @@ class SettingsScreen extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      isScrollControlled: true,
       builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 16),
-            Text(title, style: Theme.of(ctx).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            for (final o in options)
-              ListTile(
-                title: Text(labelOf(o)),
-                trailing: o == current
-                    ? Icon(Icons.check, color: c.accent)
-                    : null,
-                onTap: () {
-                  onSelect(o);
-                  Navigator.pop(ctx);
-                },
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(ctx).size.height * 0.8,
+          ),
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              const SizedBox(height: 16),
+              Center(
+                child: Text(title, style: Theme.of(ctx).textTheme.titleMedium),
               ),
-            const SizedBox(height: 8),
-          ],
+              const SizedBox(height: 8),
+              for (final o in options)
+                ListTile(
+                  title: Text(labelOf(o)),
+                  trailing: o == current
+                      ? Icon(Icons.check, color: c.accent)
+                      : null,
+                  onTap: () {
+                    onSelect(o);
+                    Navigator.pop(ctx);
+                  },
+                ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// The Bible version picker: versions in the app's language first, then
+  /// the original languages (Latin, Greek, Hebrew). Other modern languages
+  /// belong to that language's setting or to Parallel Reading, not here.
+  void _pickVersion(
+    BuildContext context,
+    List<({String id, String lang, String title})> all,
+    String appLang,
+    String currentId,
+    ValueChanged<({String id, String lang, String title})> onSelect,
+  ) {
+    final c = context.bt;
+    final l10n = context.l10n;
+    String base(String l) => l.split(RegExp('[-_]')).first;
+    const originals = {'la', 'grc', 'hbo', 'he'};
+    final mine = [
+      for (final t in all)
+        if (base(t.lang) == appLang) t,
+    ];
+    final orig = [
+      for (final t in all)
+        if (originals.contains(base(t.lang))) t,
+    ];
+    final current = [
+      for (final t in all)
+        if (t.id == currentId) t,
+    ];
+    // A version chosen earlier in another language stays visible (checked).
+    final stray = [
+      for (final t in current)
+        if (!mine.contains(t) && !orig.contains(t)) t,
+    ];
+    Widget header(String text) => Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+      child: Text(
+        text.toUpperCase(),
+        style: TextStyle(
+          color: c.gold,
+          fontSize: 11,
+          letterSpacing: 1.4,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+    Widget tile(BuildContext ctx, ({String id, String lang, String title}) t) =>
+        ListTile(
+          title: Text(t.title),
+          subtitle: originals.contains(base(t.lang))
+              ? Text(languageName(l10n, t.lang) ?? t.lang)
+              : null,
+          trailing: t.id == currentId
+              ? Icon(Icons.check, color: c.accent)
+              : null,
+          onTap: () {
+            onSelect(t);
+            Navigator.pop(ctx);
+          },
+        );
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: c.surface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(ctx).size.height * 0.8,
+          ),
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              const SizedBox(height: 16),
+              Center(
+                child: Text(
+                  l10n.settingsTranslation,
+                  style: Theme.of(ctx).textTheme.titleMedium,
+                ),
+              ),
+              if (mine.isNotEmpty || stray.isNotEmpty) ...[
+                header(l10n.bibleInYourLanguage),
+                for (final t in [...mine, ...stray]) tile(ctx, t),
+              ],
+              if (orig.isNotEmpty) ...[
+                header(l10n.bibleOriginalLanguages),
+                for (final t in orig) tile(ctx, t),
+              ],
+              const SizedBox(height: 12),
+            ],
+          ),
         ),
       ),
     );

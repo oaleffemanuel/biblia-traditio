@@ -110,6 +110,23 @@ class Builder:
         return out
 
 
+def comments(node):
+    """Commentaries of a theme or subtopic: author, role, date, the work and
+    the place in it. The compilers' internal `fonte` link (a private research
+    library) is never shipped."""
+    out = []
+    for c in node.get('comentarios', []) or []:
+        txt = (c.get('comment') or '').strip()
+        if not txt: continue
+        cm = {'author': c.get('commentator', '').strip(), 'role': c.get('função', '').strip(),
+              'edition': c.get('year', '').strip(), 'text': txt}
+        for src, dst in (('documento', 'document'), ('localizacao', 'location')):
+            v = (c.get(src) or '').strip()
+            if v: cm[dst] = v
+        out.append(cm)
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('src'); ap.add_argument('out'); ap.add_argument('--db')
@@ -128,21 +145,20 @@ def main():
             subs = []
             for st in t.get('subtopicos', []) or []:
                 ps = b.passages(st.get('referencias', []))
-                if ps: subs.append({'title': st['titulo'], 'passages': ps})
+                cs = comments(st)
+                if ps or cs:
+                    sub = {'title': st['titulo'], 'passages': ps}
+                    if cs: sub['comments'] = cs
+                    subs.append(sub)
             if subs: theme['subtopics'] = subs
-            cms = []
-            for c in t.get('comentarios', []) or []:
-                txt = (c.get('comment') or '').strip()
-                if not txt: continue
-                cms.append({'author': c.get('commentator', '').strip(), 'role': c.get('função', '').strip(),
-                            'edition': c.get('year', '').strip(), 'text': txt})
+            cms = comments(t)
             if cms: theme['comments'] = cms
             themes.append(theme)
-    out = {'version': 2, 'source': 'Biblioteca temática compilada pela equipe (Apologistas Católicos), 2026-10-31',
+    out = {'version': 3, 'source': 'Biblioteca temática compilada pela equipe, revisão de 2026-11-17 (citações verificadas, com obra e localização)',
            'groups': groups, 'themes': themes}
     json.dump(out, open(a.out, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     np = sum(len(t['passages']) + sum(len(s['passages']) for s in t.get('subtopics', [])) for t in themes)
-    nc = sum(len(t.get('comments', [])) for t in themes)
+    nc = sum(len(t.get('comments', [])) + sum(len(s.get('comments', [])) for s in t.get('subtopics', [])) for t in themes)
     print(f'groups {len(groups)} · themes {len(themes)} · passages {np} · comments {nc} → {a.out}')
     if b.clamped: print(f'clamped ({len(b.clamped)}):', '; '.join(sorted(set(b.clamped))))
     if b.dropped: print(f'dropped ({len(b.dropped)}):', '; '.join(sorted(set(b.dropped))))

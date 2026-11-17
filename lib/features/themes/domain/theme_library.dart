@@ -34,7 +34,12 @@ class ThemePassage {
 class ThemeSubtopic {
   final String title;
   final List<ThemePassage> passages;
-  const ThemeSubtopic({required this.title, required this.passages});
+  final List<ThemeComment> comments;
+  const ThemeSubtopic({
+    required this.title,
+    required this.passages,
+    this.comments = const [],
+  });
 }
 
 /// A commentary attached to a theme, carried with the provenance line the
@@ -46,12 +51,27 @@ class ThemeComment {
   final String role;
   final String edition;
   final String text;
+
+  /// The work quoted ("Confissões") and the place in it ("I,1,1").
+  final String document;
+  final String location;
   const ThemeComment({
     required this.author,
     required this.role,
     required this.edition,
     required this.text,
+    this.document = '',
+    this.location = '',
   });
+
+  factory ThemeComment.fromJson(Map j) => ThemeComment(
+    author: (j['author'] as String?) ?? '',
+    role: (j['role'] as String?) ?? '',
+    edition: (j['edition'] as String?) ?? '',
+    text: (j['text'] as String?) ?? '',
+    document: (j['document'] as String?) ?? '',
+    location: (j['location'] as String?) ?? '',
+  );
 }
 
 @immutable
@@ -73,6 +93,10 @@ class BibleTheme {
     this.comments = const [],
   });
 
+  /// Every commentary of the theme: its own, then each subtopic's.
+  int get commentCount =>
+      comments.length + subtopics.fold(0, (n, s) => n + s.comments.length);
+
   /// Theme-level passages plus those under every subtopic.
   int get passageCount =>
       passages.length + subtopics.fold(0, (n, s) => n + s.passages.length);
@@ -93,16 +117,15 @@ class BibleTheme {
         ThemeSubtopic(
           title: (st as Map)['title'] as String,
           passages: _passages(st['passages']),
+          comments: [
+            for (final c in (st['comments'] as List? ?? const []))
+              ThemeComment.fromJson(c as Map),
+          ],
         ),
     ],
     comments: [
       for (final c in (j['comments'] as List? ?? const []))
-        ThemeComment(
-          author: ((c as Map)['author'] as String?) ?? '',
-          role: (c['role'] as String?) ?? '',
-          edition: (c['edition'] as String?) ?? '',
-          text: (c['text'] as String?) ?? '',
-        ),
+        ThemeComment.fromJson(c as Map),
     ],
   );
 }

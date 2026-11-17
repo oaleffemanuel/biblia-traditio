@@ -73,6 +73,23 @@ class Reading {
 
   bool get canOpen => bookId != null && chapter != null;
 
+  /// The same reading with the day's refrain attached.
+  Reading withRefrain(String text, {String? ref}) => Reading(
+    slot,
+    reference,
+    bookId: bookId,
+    chapter: chapter,
+    verse: verse,
+    verseStart: verseStart,
+    verseEnd: verseEnd,
+    refrain: text,
+    refrainRef: ref ?? refrainRef,
+    refrainBookId: refrainBookId,
+    refrainChapter: refrainChapter,
+    refrainVerse: refrainVerse,
+    acclamation: acclamation,
+  );
+
   factory Reading.fromJson(Map<String, dynamic> j) => Reading(
     ReadingSlotX.from(j['slot'] as String) ?? ReadingSlot.first,
     j['ref'] as String,
@@ -91,12 +108,18 @@ class Reading {
 }
 
 abstract class LectionaryRepository {
+  const LectionaryRepository();
+
   /// Readings for [date], or null when none are available for that day.
   List<Reading>? readingsFor(DateTime date);
+
+  /// Whether the bundled refrains already cover [date] (matched or knowingly
+  /// left out), so nothing should be fetched online for it.
+  bool refrainsCover(DateTime date) => false;
 }
 
 /// No readings available (fallback / Latin-only builds).
-class EmptyLectionaryRepository implements LectionaryRepository {
+class EmptyLectionaryRepository extends LectionaryRepository {
   const EmptyLectionaryRepository();
   @override
   List<Reading>? readingsFor(DateTime date) => null;
@@ -105,11 +128,16 @@ class EmptyLectionaryRepository implements LectionaryRepository {
 /// Reads the bundled references dataset (built by tool/build_lectionary.py),
 /// keyed by ISO date. Missing dates return null → the UI shows the graceful
 /// "not available yet" state.
-class BundledLectionaryRepository implements LectionaryRepository {
+class BundledLectionaryRepository extends LectionaryRepository {
   final Map<String, List<Reading>> _byDate;
-  const BundledLectionaryRepository(this._byDate);
+  final Set<String> _refrainDays;
+  BundledLectionaryRepository(this._byDate, [this._refrainDays = const {}]);
+
+  @override
+  bool refrainsCover(DateTime date) => _refrainDays.contains(_key(date));
 
   static const asset = 'assets/lectionary/readings.json';
+  static const refrainsAsset = 'assets/lectionary/refrains.json';
 
   static String _key(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-'
@@ -119,8 +147,34 @@ class BundledLectionaryRepository implements LectionaryRepository {
   @override
   List<Reading>? readingsFor(DateTime date) => _byDate[_key(date)];
 
+  /// The refrain option whose psalm is the one this reading shows (in either
+  /// numbering, "Sl 14(15)"). Brazil sometimes keeps a different feast than
+  /// the reference calendar; a refrain from another psalm is never shown.
+  static Map? _refrainFor(Map<String, dynamic> psalm, List options) {
+    final ch = (psalm['chapter'] as num?)?.toInt();
+    // Hebrew and Vulgate numbers, plus the split psalms (116 → 114/115).
+    final want = {
+      ch,
+      (psalm['displayChapter'] as num?)?.toInt(),
+      if (ch != null) ch + 1,
+    }..remove(null);
+    // Canticles ("Jr 31", "Dn 3", "Lc 1") match on book and chapter.
+    final book = '${psalm['ref'] ?? ''}'.trim().split(RegExp(r'[\s\d]')).first;
+    for (final o in options) {
+      final ref = '${(o as Map)['ref'] ?? ''}'.trim();
+      final optBook = ref.split(RegExp(r'[\s\d]')).first;
+      if (optBook.isEmpty || optBook != book) continue;
+      final nums = RegExp(
+        r'\d+',
+      ).allMatches(ref).take(2).map((m) => int.parse(m.group(0)!));
+      if (nums.any(want.contains)) return o;
+    }
+    return null;
+  }
+
   static Future<BundledLectionaryRepository> load() async {
     final Map<String, List<Reading>> byDate = {};
+    Map<String, dynamic> refrains = const {};
     try {
       final raw = await rootBundle.loadString(asset);
       Map<String, dynamic> acclamations = const {};
@@ -135,6 +189,16 @@ class BundledLectionaryRepository implements LectionaryRepository {
       } on Exception {
         // The references-only lectionary remains usable without enrichment.
       }
+      // The day's psalm refrain, baked by tool/fetch_psalm_refrains.py.
+      try {
+        final r =
+            jsonDecode(await rootBundle.loadString(refrainsAsset))
+                as Map<String, dynamic>;
+        refrains = r['days'] as Map<String, dynamic>? ?? const {};
+      } on Object {
+        // No refrains bundled (asset missing is a FlutterError, not an
+        // Exception): the psalm card says where the refrain lives.
+      }
       final j = jsonDecode(raw) as Map<String, dynamic>;
       final entries = j['entries'] as Map<String, dynamic>? ?? const {};
       for (final e in entries.entries) {
@@ -144,6 +208,16 @@ class BundledLectionaryRepository implements LectionaryRepository {
           final source = Map<String, dynamic>.from(r as Map<String, dynamic>);
           final extra = dayExtra[source['slot']] as Map<String, dynamic>?;
           if (extra != null) source.addAll(extra);
+          final day = refrains[e.key] as List?;
+          if (source['slot'] == 'psalm' &&
+              source['refrain'] == null &&
+              day != null) {
+            final match = _refrainFor(source, day);
+            if (match != null) {
+              source['refrain'] = match['refrain'];
+              source['refrainRef'] ??= match['ref'];
+            }
+          }
           return Reading.fromJson(source);
         }).toList();
         byDate[e.key] = list;
@@ -151,6 +225,6 @@ class BundledLectionaryRepository implements LectionaryRepository {
     } on Exception {
       // No dataset bundled → behaves like the empty repository.
     }
-    return BundledLectionaryRepository(byDate);
+    return BundledLectionaryRepository(byDate, refrains.keys.toSet());
   }
 }

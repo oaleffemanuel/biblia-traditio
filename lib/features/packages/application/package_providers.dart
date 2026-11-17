@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
+import '../../settings/application/settings_providers.dart';
 import '../domain/content_package.dart';
 import 'content_package_manager.dart';
 
@@ -50,7 +51,24 @@ final contentPathsProvider = Provider<ContentPaths>((ref) {
   }
 
   final bible = pick(PackageType.bibleTranslation);
-  final patr = pick(PackageType.patristics);
+  // Commentary comes in one pack per language: open the one in the reader's
+  // language, else the Portuguese original, else whichever is installed.
+  final lang = ref.watch(settingsProvider.select((s) => s.language.code));
+  final commentary = [
+    for (final p in pkgs)
+      if (p.type == PackageType.patristics && mgr.isInstalled(p)) p,
+  ];
+  ContentPackage? byLang(String code) {
+    for (final p in commentary) {
+      if (p.language.split(RegExp('[-_]')).first == code) return p;
+    }
+    return null;
+  }
+
+  final patr =
+      byLang(lang) ??
+      byLang('pt') ??
+      (commentary.isEmpty ? null : commentary.first);
   return ContentPaths(
     bible: bible == null ? null : mgr.installedPathSync(bible.id),
     patristics: patr == null ? null : mgr.installedPathSync(patr.id),

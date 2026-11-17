@@ -100,7 +100,10 @@ enum ParallelPreset {
   latin('latin'), // Vulgata for both Testaments
   greek('greek'), // Septuagint (OT) + SBLGNT (NT)
   hebrewGreek('hebrew_greek'), // Leningrad Codex (OT) + SBLGNT (NT)
-  latinGreek('latin_greek'); // Vulgata (OT) + SBLGNT (NT)
+  latinGreek('latin_greek'), // Vulgata (OT) + SBLGNT (NT)
+  /// One language per Testament, picked freely in the table
+  /// ([Settings.parallelOt] / [Settings.parallelNt]).
+  byTestament('by_testament');
 
   final String key;
   const ParallelPreset(this.key);
@@ -141,9 +144,17 @@ class Settings {
   final TranslationStyle translationStyle;
   final ParallelPreference parallelPreference;
   final ParallelPreset parallelPreset;
+
+  /// The companion language for each Testament under
+  /// [ParallelPreset.byTestament]; [ParallelPreference.none] = no column there.
+  final ParallelPreference parallelOt;
+  final ParallelPreference parallelNt;
   final double fontScale;
   final ReadingFont readingFont;
   final CommentaryPrefs commentaryPrefs;
+
+  /// Background behind the Psalm of the day on Home (a [PsalmWallpaper] key).
+  final String psalmWallpaper;
 
   const Settings({
     this.onboardingCompleted = false,
@@ -159,9 +170,12 @@ class Settings {
     this.translationStyle = TranslationStyle.unset,
     this.parallelPreference = ParallelPreference.none,
     this.parallelPreset = ParallelPreset.custom,
+    this.parallelOt = ParallelPreference.none,
+    this.parallelNt = ParallelPreference.none,
     this.fontScale = 1.0,
     this.readingFont = ReadingFont.garamond,
     this.commentaryPrefs = CommentaryPrefs.defaults,
+    this.psalmWallpaper = 'oliva',
   });
 
   factory Settings.fromMap(Map<String, String> m) => Settings(
@@ -186,9 +200,12 @@ class Settings {
     translationStyle: TranslationStyle.fromKey(m['translationStyle']),
     parallelPreference: ParallelPreference.fromKey(m['parallelPreference']),
     parallelPreset: ParallelPreset.fromKey(m['parallelPreset']),
+    parallelOt: ParallelPreference.fromKey(m['parallelOt']),
+    parallelNt: ParallelPreference.fromKey(m['parallelNt']),
     fontScale: double.tryParse(m['fontScale'] ?? '') ?? 1.0,
     readingFont: ReadingFont.fromKey(m['readingFont']),
     commentaryPrefs: CommentaryPrefs.fromMap(m),
+    psalmWallpaper: m['psalmWallpaper'] ?? 'oliva',
   );
 
   static String themeModeKey(ThemeMode m) => switch (m) {

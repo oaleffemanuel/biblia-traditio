@@ -2,18 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/widgets/liquid_tab_bar.dart';
+
 import '../core/l10n_ext.dart';
-import '../core/theme/app_theme.dart';
 import '../features/annotations/presentation/annotation_screens.dart';
 import '../features/bible/presentation/bible_library_screen.dart';
 import '../features/bible/presentation/chapters_screen.dart';
 import '../features/bible/presentation/reader_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/liturgy/presentation/liturgy_screen.dart';
+import '../features/onboarding/presentation/intro_screen.dart';
 import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../features/reading_plan/presentation/reading_plan_screen.dart';
 import '../features/search/presentation/search_screen.dart';
 import '../features/themes/presentation/theme_detail_screen.dart';
+import '../features/themes/presentation/themes_icon.dart';
 import '../features/themes/presentation/themes_screen.dart';
 import '../features/settings/presentation/attributions_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
@@ -24,8 +27,10 @@ import 'back_navigation.dart';
 /// is recreated only when onboarding flips (→ initial route becomes /home).
 final routerProvider = Provider.family<GoRouter, bool>((ref, completed) {
   return GoRouter(
-    initialLocation: completed ? '/home' : '/onboarding',
+    // A fresh install opens on the intro clip, which hands over to onboarding.
+    initialLocation: completed ? '/home' : '/intro',
     routes: [
+      GoRoute(path: '/intro', builder: (_, _) => const IntroScreen()),
       GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingScreen()),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navShell) => _Scaffold(navShell: navShell),
@@ -40,6 +45,21 @@ final routerProvider = Provider.family<GoRouter, bool>((ref, completed) {
               GoRoute(
                 path: '/liturgy',
                 builder: (_, _) => const LiturgyScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/themes',
+                builder: (_, _) => const ThemesScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    builder: (_, st) =>
+                        ThemeDetailScreen(themeId: st.pathParameters['id']!),
+                  ),
+                ],
               ),
             ],
           ),
@@ -76,21 +96,6 @@ final routerProvider = Provider.family<GoRouter, bool>((ref, completed) {
               ),
             ],
           ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/themes',
-                builder: (_, _) => const ThemesScreen(),
-                routes: [
-                  GoRoute(
-                    path: ':id',
-                    builder: (_, st) =>
-                        ThemeDetailScreen(themeId: st.pathParameters['id']!),
-                  ),
-                ],
-              ),
-            ],
-          ),
         ],
       ),
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
@@ -113,44 +118,40 @@ class _Scaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.bt;
     return BackNavigationScope(
       navShell: navShell,
       child: Scaffold(
+        // The glass bar floats over the content, which scrolls beneath it.
+        extendBody: true,
         body: navShell,
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: c.divider)),
-          ),
-          child: BottomNavigationBar(
-            currentIndex: navShell.currentIndex,
-            onTap: (i) => navShell.goBranch(
-              i,
-              initialLocation: i == navShell.currentIndex,
+        bottomNavigationBar: LiquidTabBar(
+          index: navShell.currentIndex,
+          onChanged: (i) => navShell.goBranch(i),
+          onReselect: (i) => navShell.goBranch(i, initialLocation: true),
+          tabs: [
+            LiquidTab(
+              label: context.l10n.navHome,
+              icon: (c) => Icon(Icons.home_outlined, color: c, size: 26),
+              selectedIcon: (c) => Icon(Icons.home, color: c, size: 26),
             ),
-            items: [
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.home_outlined),
-                activeIcon: const Icon(Icons.home),
-                label: context.l10n.navHome,
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.calendar_month_outlined),
-                activeIcon: const Icon(Icons.calendar_month),
-                label: context.l10n.navLiturgy,
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.menu_book_outlined),
-                activeIcon: const Icon(Icons.menu_book),
-                label: context.l10n.navBible,
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.auto_stories_outlined),
-                activeIcon: const Icon(Icons.auto_stories),
-                label: context.l10n.navThemes,
-              ),
-            ],
-          ),
+            LiquidTab(
+              label: context.l10n.navLiturgy,
+              icon: (c) =>
+                  Icon(Icons.calendar_month_outlined, color: c, size: 25),
+              selectedIcon: (c) =>
+                  Icon(Icons.calendar_month, color: c, size: 25),
+            ),
+            LiquidTab(
+              label: context.l10n.navThemes,
+              icon: (c) => ImageIcon(kThemesIcon, color: c, size: 27),
+              selectedIcon: (c) => ImageIcon(kThemesIcon, color: c, size: 27),
+            ),
+            LiquidTab(
+              label: context.l10n.navBible,
+              icon: (c) => Icon(Icons.menu_book_outlined, color: c, size: 26),
+              selectedIcon: (c) => Icon(Icons.menu_book, color: c, size: 26),
+            ),
+          ],
         ),
       ),
     );

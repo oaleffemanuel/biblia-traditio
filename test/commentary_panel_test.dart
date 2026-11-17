@@ -149,7 +149,7 @@ void main() {
       );
       // The "^" collapse action at the foot of the open commentary.
       expect(find.byIcon(Icons.expand_less), findsWidgets);
-      expect(find.text('Partilhar comentário'), findsOneWidget);
+      expect(find.text('Compartilhar comentário'), findsOneWidget);
 
       await tester.tap(find.text('São João Crisóstomo'));
       await tester.pumpAndSettle();

@@ -5,6 +5,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../settings/application/settings_providers.dart';
 import '../../settings/domain/settings.dart';
+import '../../settings/presentation/parallel_table.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -14,14 +15,13 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int _step = 0;
-  static const _steps = 8;
+  static const _steps = 5;
 
   // collected choices
   final _nameController = TextEditingController();
-  AppLanguage _language = AppLanguage.pt;
-  TranslationStyle _style = TranslationStyle.balanced;
-  String _translationId = 'pt_matos_soares';
-  ParallelPreference _parallel = ParallelPreference.none;
+  // One companion language per Testament (the parallel table).
+  ParallelPreference _parallelOt = ParallelPreference.none;
+  ParallelPreference _parallelNt = ParallelPreference.none;
   bool _notifications = false;
   bool _readingPlan = false;
 
@@ -43,46 +43,40 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (_step > 0) setState(() => _step--);
   }
 
-  /// The style answer only *preselects* the translation shown on the next step,
-  /// which the reader still confirms — nothing is switched behind their back.
-  void _chooseStyle(TranslationStyle style) {
-    final suggested = suggestedTranslationId(
-      style,
-      ref.read(availableTranslationsProvider),
-    );
-    setState(() {
-      _style = style;
-      if (suggested != null) _translationId = suggested;
-    });
-  }
-
   void _finish() {
     final s = ref.read(settingsControllerProvider);
     s.setDisplayName(_nameController.text.trim());
-    s.setLanguage(_language);
-    s.setTranslationStyle(_style);
-    s.setTranslation(_translationId);
+    // Language and Bible come from the device instead of three repetitive
+    // questions; both stay editable in Settings.
+    final device = WidgetsBinding.instance.platformDispatcher.locale;
+    final language = AppLanguage.implemented.firstWhere(
+      (l) => l.code == device.languageCode,
+      orElse: () => AppLanguage.pt,
+    );
+    s.setLanguage(language);
+    final translation = translationForDeviceLanguage(
+      ref.read(availableTranslationsProvider),
+      device.languageCode,
+    );
+    if (translation != null) s.setTranslation(translation);
     s.setNotifications(_notifications);
     s.setWantsReadingPlan(_readingPlan);
 
-    // A parallel answer configures the initial reader; it stays editable in
-    // Settings. Only a text that is genuinely installed can be selected here,
-    // so this can never enable a column with nothing to show.
-    s.setParallelPreference(_parallel);
-    final secondary = translationForParallel(
-      ref.read(availableTranslationsProvider),
-      _parallel,
+    // The parallel table configures the initial reader; it stays editable in
+    // the reader's options. Only cells whose text is genuinely installed can
+    // be picked, so this never enables a column with nothing to show.
+    final anyParallel =
+        _parallelOt != ParallelPreference.none ||
+        _parallelNt != ParallelPreference.none;
+    s.setParallelPreference(
+      _parallelOt != ParallelPreference.none ? _parallelOt : _parallelNt,
     );
-    s.setParallelReading(secondary != null && secondary.id != _translationId);
-    s.setSecondaryTranslation(
-      secondary != null && secondary.id != _translationId ? secondary.id : '',
+    s.setParallelByTestament(_parallelOt, _parallelNt);
+    s.setParallelReading(anyParallel);
+    s.setSecondaryTranslation('');
+    s.setParallelPreset(
+      anyParallel ? ParallelPreset.byTestament : ParallelPreset.custom,
     );
-    s.setParallelPreset(switch (_parallel) {
-      ParallelPreference.latin => ParallelPreset.latin,
-      ParallelPreference.greek => ParallelPreset.greek,
-      ParallelPreference.hebrew => ParallelPreset.hebrewGreek,
-      ParallelPreference.none => ParallelPreset.custom,
-    });
 
     s.completeOnboarding(); // flips initial route to /home
   }
@@ -162,60 +156,53 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
-  /// Translation step: only translations actually installed in the content DB
-  /// (no hardcoded/unavailable options). Falls back to the first available.
-  Widget _translationStep(BtColors c) {
-    final l10n = context.l10n;
-    final available = ref.watch(availableTranslationsProvider);
-    if (available.isEmpty) {
-      return _ChoiceStep<({String id, String lang, String title})>(
-        c,
-        title: l10n.onbTranslationTitle,
-        subtitle: l10n.onbTranslationSubtitle,
-        options: const [],
-        labelOf: (t) => t.title,
-        selected: (id: _translationId, lang: 'pt', title: _translationId),
-        onSelect: (_) {},
-      );
-    }
-    final selected = available.firstWhere(
-      (t) => t.id == _translationId,
-      orElse: () => available.first,
-    );
-    return _ChoiceStep<({String id, String lang, String title})>(
-      c,
-      title: l10n.onbTranslationTitle,
-      subtitle: l10n.onbTranslationSubtitle,
-      options: available,
-      labelOf: (t) => translationLabel(l10n, t.lang, t.title),
-      selected: selected,
-      onSelect: (t) => setState(() => _translationId = t.id),
-    );
-  }
-
-  /// Parallel-text step. The options are built from what is installed, so Greek
-  /// and Hebrew appear exactly when their text ships and are otherwise absent —
-  /// never listed as a promise. When nothing but the primary is installed the
-  /// step has nothing to ask and is skipped.
+  /// Parallel-text step: a small table, one language per Testament (Hebrew,
+  /// Greek or Latin for the Old; Greek or Latin for the New). Cells whose text
+  /// isn't installed for that Testament are shown greyed — never a promise.
+  /// Leaving both columns empty means no parallel reading.
   Widget _parallelStep(BtColors c) {
     final l10n = context.l10n;
-    final options = ref.watch(availableParallelPreferencesProvider);
-    String label(ParallelPreference p) => switch (p) {
-      ParallelPreference.none => l10n.parallelNone,
-      ParallelPreference.latin => l10n.parallelLatin,
-      ParallelPreference.greek => l10n.parallelGreek,
-      ParallelPreference.hebrew => l10n.parallelHebrew,
-    };
-    return _ChoiceStep<ParallelPreference>(
-      c,
-      title: l10n.onbParallelTitle,
-      subtitle: l10n.onbParallelSubtitle,
-      options: options,
-      labelOf: label,
-      selected: options.contains(_parallel)
-          ? _parallel
-          : ParallelPreference.none,
-      onSelect: (p) => setState(() => _parallel = p),
+    final avail = ref.watch(parallelTableAvailabilityProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        Text(
+          l10n.onbParallelTitle,
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          l10n.onbParallelTableTitle,
+          style: TextStyle(color: c.textSecondary),
+        ),
+        const SizedBox(height: 20),
+        Expanded(
+          child: ListView(
+            children: [
+              ParallelTestamentTable(
+                ot: avail.ot.contains(_parallelOt)
+                    ? _parallelOt
+                    : ParallelPreference.none,
+                nt: avail.nt.contains(_parallelNt)
+                    ? _parallelNt
+                    : ParallelPreference.none,
+                availableOt: avail.ot,
+                availableNt: avail.nt,
+                onChanged: (ot, nt) => setState(() {
+                  _parallelOt = ot;
+                  _parallelNt = nt;
+                }),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                l10n.onbParallelTableHint,
+                style: TextStyle(color: c.textFaint, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -224,35 +211,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return switch (_step) {
       0 => _Welcome(c),
       1 => _NameStep(c, _nameController, () => setState(() {})),
-      2 => _ChoiceStep<AppLanguage>(
-        c,
-        title: l10n.onbLanguageTitle,
-        subtitle: l10n.onbLanguageSubtitle,
-        options: AppLanguage.implemented, // only translated UI languages
-        labelOf: (l) => l.label,
-        selected: AppLanguage.implemented.contains(_language)
-            ? _language
-            : AppLanguage.pt,
-        onSelect: (l) => setState(() => _language = l),
-      ),
-      3 => _ChoiceStep<TranslationStyle>(
-        c,
-        title: l10n.onbStyleTitle,
-        subtitle: l10n.onbStyleSubtitle,
-        options: TranslationStyle.choices,
-        labelOf: (s) => switch (s) {
-          TranslationStyle.academic => l10n.styleAcademic,
-          TranslationStyle.simple => l10n.styleSimple,
-          TranslationStyle.balanced => l10n.styleBalanced,
-          TranslationStyle.liturgical => l10n.styleLiturgical,
-          TranslationStyle.unset => l10n.styleBalanced,
-        },
-        selected: _style,
-        onSelect: _chooseStyle,
-      ),
-      4 => _translationStep(c),
-      5 => _parallelStep(c),
-      6 => _ToggleStep(
+      2 => _parallelStep(c),
+      3 => _ToggleStep(
         c,
         icon: Icons.notifications_none,
         title: l10n.onbNotificationsTitle,
@@ -358,97 +318,6 @@ class _NameStep extends StatelessWidget {
         ),
       ),
     ],
-  );
-}
-
-class _ChoiceStep<T> extends StatelessWidget {
-  final BtColors c;
-  final String title;
-  final String subtitle;
-  final List<T> options;
-  final String Function(T) labelOf;
-  final T selected;
-  final ValueChanged<T> onSelect;
-  const _ChoiceStep(
-    this.c, {
-    required this.title,
-    required this.subtitle,
-    required this.options,
-    required this.labelOf,
-    required this.selected,
-    required this.onSelect,
-  });
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const SizedBox(height: 16),
-      Text(title, style: Theme.of(context).textTheme.headlineMedium),
-      const SizedBox(height: 8),
-      Text(subtitle, style: TextStyle(color: c.textSecondary)),
-      const SizedBox(height: 20),
-      Expanded(
-        child: ListView(
-          children: [
-            for (final o in options)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _SelectTile(
-                  c,
-                  label: labelOf(o),
-                  selected: o == selected,
-                  onTap: () => onSelect(o),
-                ),
-              ),
-          ],
-        ),
-      ),
-    ],
-  );
-}
-
-class _SelectTile extends StatelessWidget {
-  final BtColors c;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  const _SelectTile(
-    this.c, {
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: onTap,
-    child: AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      decoration: BoxDecoration(
-        color: selected ? c.accentSoft : c.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: selected ? c.accent : Colors.transparent,
-          width: 1.2,
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: c.textPrimary,
-                fontSize: 16,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-              ),
-            ),
-          ),
-          if (selected) Icon(Icons.check_circle, color: c.accent, size: 20),
-        ],
-      ),
-    ),
   );
 }
 

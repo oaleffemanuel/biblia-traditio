@@ -207,10 +207,9 @@ def main():
     import datetime
     ap = argparse.ArgumentParser()
     ap.add_argument('--src')
-    ap.add_argument('--year', type=int, default=2026)
+    ap.add_argument('--year', type=int, nargs='+', default=[2026, 2027])
     args = ap.parse_args()
-
-    files = load_source(args)
+    years = args.year
     con = sqlite3.connect(BIBLE_DB)
 
     def verse_exists(bid, ch, v):
@@ -230,9 +229,14 @@ def main():
         return r[0] if r and r[0] else 1
 
     entries, problems, skipped_refs = {}, [], 0
-    for md, payload in sorted(files.items()):
+    # Several years in one asset, so the app is ready ahead of time.
+    work = []
+    for y in years:
+        args.year = y
+        work += [(y, md, payload) for md, payload in sorted(load_source(args).items())]
+    for year, md, payload in work:
         try:
-            dt = datetime.date(args.year, int(md[:2]), int(md[3:5]))
+            dt = datetime.date(year, int(md[:2]), int(md[3:5]))
         except ValueError:
             continue
         rd = payload.get('readings', {})
@@ -281,7 +285,7 @@ def main():
            'source': 'cpbjr/catholic-readings-api (MIT) — General Roman Calendar references',
            'refrainSource': None,  # see REFRAIN_NOTE below
            'scope': 'Full daily lectionary (weekdays, feasts, solemnities, all seasons)',
-           'year': args.year, 'days': len(entries), 'entries': entries}
+           'years': years, 'days': len(entries), 'entries': entries}
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     json.dump(out, open(OUT, 'w'), ensure_ascii=False, separators=(',', ':'))
 

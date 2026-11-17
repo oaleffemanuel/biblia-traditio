@@ -64,3 +64,10 @@ tool/importer/data/*.xml
 tool/importer/data/*.json
 tool/importer/data/*-cache/
 tool/importer/data/*.martini-cache/
+# Source corpora and downloads (team material / third-party data, rebuilt locally)
+tool/importer/data/eng_dra/
+tool/importer/data/hebrew_deutero/
+tool/importer/data/patristics_en/
+tool/importer/data/patristics_it/
+tool/importer/data/patristics_pt/
+tool/importer/data/themes_src/

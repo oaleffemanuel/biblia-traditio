@@ -91,8 +91,11 @@ class _LiturgyScreenState extends ConsumerState<LiturgyScreen> {
 
     return Scaffold(
       body: SafeArea(
+        bottom: false, // content scrolls beneath the floating glass bar
         child: ListView(
-          padding: const EdgeInsets.only(bottom: 32),
+          padding: EdgeInsets.only(
+            bottom: 24 + MediaQuery.paddingOf(context).bottom,
+          ),
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),

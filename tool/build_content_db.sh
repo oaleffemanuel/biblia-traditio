@@ -106,11 +106,19 @@ fi
 # them) so the Masoretic text aligns in Parallel Reading. Fetched once, cached.
 HBO_JSON="$DATA/hbo_wlc.json"
 [ -f "$HBO_JSON" ] || python3 "$IMP/fetch_wlc.py" "$HBO_JSON" || true
+# Deuterocanon in Hebrew/Aramaic where it survives (Sirach, Tobit fragments),
+# from the team's pack in data/hebrew_deutero (see merge_hebrew_deutero.py).
+HBO_LICENSE="Domínio público — Westminster Leningrad Codex; texto via Open Scriptures Hebrew Bible Project"
+if [ -f "$HBO_JSON" ] && [ -d "$DATA/hebrew_deutero" ]; then
+  python3 -I "$IMP/merge_hebrew_deutero.py" "$HBO_JSON" "$DATA/hebrew_deutero" "$DATA/hbo_wlc_full.json"
+  HBO_JSON="$DATA/hbo_wlc_full.json"
+  HBO_LICENSE="$HBO_LICENSE. Eclesiástico: manuscritos hebraicos (Rey & Reymond 2024, metz-theolab/bensira-xml), CC BY-SA 4.0. Tobias: fragmentos de Qumran 4Q196–4Q200 (ETCBC/dss, M. Abegg), CC BY-NC 4.0."
+fi
 if [ -f "$HBO_JSON" ]; then
   echo "▶ Bible (Hebraico — Códice de Leningrado, WLC)"
   dart run bin/import.dart biblejson --src "$HBO_JSON" --translation hbo_wlc --lang hbo \
     --title "Texto Hebraico (Códice de Leningrado)" \
-    --license "Domínio público — Westminster Leningrad Codex; texto via Open Scriptures Hebrew Bible Project" \
+    --license "$HBO_LICENSE" \
     --out "$DATA/bible_vulgata.sqlite"
 else
   echo "▶ Bible (WLC) — SKIPPED: $HBO_JSON not available"
@@ -163,6 +171,24 @@ else
   echo "▶ Bible (néo-Crampon Libre) — SKIPPED: source unavailable"
 fi
 
+# English — Douay-Rheims (Challoner, 1899 American ed.), public domain, from
+# eBible.org (engDRA). Vulgate psalm numbering, like the rest of the app.
+DRA_DIR="$DATA/eng_dra"
+if [ ! -f "$DRA_DIR/engDRA_usfx.xml" ]; then
+  mkdir -p "$DRA_DIR" && curl -fsSL https://ebible.org/Scriptures/engDRA_usfx.zip -o "$DRA_DIR/engDRA_usfx.zip" \
+    && (cd "$DRA_DIR" && unzip -o -q engDRA_usfx.zip) || true
+fi
+if [ -f "$DRA_DIR/engDRA_usfx.xml" ]; then
+  echo "▶ Bible (English — Douay-Rheims)"
+  python3 -I "$IMP/clean_ebible_usfx.py" "$DRA_DIR/engDRA_usfx.xml" "$DRA_DIR/engDRA_clean.usfx.xml"
+  dart run bin/import.dart usfx --src "$DRA_DIR/engDRA_clean.usfx.xml" --translation en_douay --lang en \
+    --title "Douay-Rheims (Challoner)" \
+    --license "Domínio público — Douay-Rheims, revisão de Challoner (ed. americana de 1899), via eBible.org" \
+    --out "$DATA/bible_vulgata.sqlite"
+fi
+# Book names in every interface language, so the reader follows the app.
+python3 -I "$IMP/book_names.py" "$DATA/bible_vulgata.sqlite"
+
 sha() { shasum -a 256 "$1" | awk '{print $1}'; }
 sz()  { stat -f%z "$1"; }
 
@@ -214,6 +240,44 @@ else
 fi
 PA_GZ=$(sz "$PKG/patristics.sqlite.gz")
 
+# English and Italian commentary — the same corpus in the reader's language,
+# one optional pack each (the app opens the pack matching its language).
+build_pat_lang() { # $1=lang $2=file suffix
+  local dir="$DATA/patristics_$1" db="$DATA/patristics_$1.sqlite" gz="$PKG/patristics_$1.sqlite.gz"
+  if [ -d "$dir" ]; then
+    rm -f "$db" "$db-wal" "$db-shm"
+    dart run bin/import.dart patristics --overlay "$dir" --overlay-suffix "$2" --overlay-lang "$1" \
+      --report "$DATA/reports/patristics_$1_coverage.json" --out "$db"
+    gzip -9 -c "$db" > "$gz"
+  fi
+}
+build_pat_lang en -en.json
+build_pat_lang it _it.json
+pat_entry() { # $1=lang $2=title
+  local gz="$PKG/patristics_$1.sqlite.gz"
+  [ -f "$gz" ] || return 0
+  local raw_sha raw_sz
+  raw_sz=$(gzip -dc "$gz" | wc -c | tr -d ' ')
+  raw_sha=$(gzip -dc "$gz" | shasum -a 256 | awk '{print $1}')
+  cat <<ENTRY
+    ,{
+      "id": "patristics_$1",
+      "title": "$2",
+      "language": "$1",
+      "type": "patristics",
+      "version": 1,
+      "source": "Catena Aurea / Haydock — corpus da equipe na língua do leitor, com função e século de cada comentador",
+      "license": "Fontes em domínio público; tradução automática revisada",
+      "asset": "assets/packages/patristics_$1.sqlite.gz",
+      "url": null,
+      "sizeBytes": $raw_sz,
+      "compressedBytes": $(sz "$gz"),
+      "sha256": "$raw_sha",
+      "required": false
+    }
+ENTRY
+}
+
 BIBLE_TITLE="Bíblia (Vulgata + Português + Grego + Hebraico + Espanhol + Francês)"
 BIBLE_VERSION=10
 BIBLE_SOURCE="Vulgata: open-bibles (Clementine, USFX). Português: corpus interno (iacula) — origem da tradução a confirmar. Matos Soares: padrepauloricardo.org (edição matos-soares). Grego NT: SBLGNT via morphgnt. Grego AT: Septuaginta de H. B. Swete (1930). Hebraico: Westminster Leningrad Codex via Open Scriptures (morphhb). Espanhol: Biblia Platense (Straubinger) via CrossWire SpaPlatense. Francês: néo-Crampon Libre via eBible."
@@ -228,6 +292,11 @@ if [ -f "$MARTINI_JSON" ]; then
   BIBLE_LICENSE="$BIBLE_LICENSE Italiano: texto histórico em domínio público; dados estruturados CC BY 4.0."
 fi
 
+if [ -d "$DATA/hebrew_deutero" ]; then
+  BIBLE_VERSION=14
+  BIBLE_SOURCE="$BIBLE_SOURCE Hebraico deuterocanônico: Eclesiástico (Rey & Reymond 2024) e Tobias (Qumran, ETCBC/dss)."
+  BIBLE_LICENSE="$BIBLE_LICENSE Eclesiástico hebraico: CC BY-SA 4.0. Tobias (Qumran): CC BY-NC 4.0 — uso não comercial. Inglês: Douay-Rheims (Challoner), domínio público."
+fi
 cat > "$PKG/manifest.json" <<JSON
 {
   "schema": 1,
@@ -262,6 +331,8 @@ cat > "$PKG/manifest.json" <<JSON
       "sha256": "$PA_SHA",
       "required": false
     }
+$(pat_entry en "Commentary of the Church Fathers (English)")
+$(pat_entry it "Commento dei Padri della Chiesa (Italiano)")
   ]
 }
 JSON

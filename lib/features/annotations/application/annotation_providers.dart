@@ -28,6 +28,49 @@ class AnnotationController {
     _bump();
   }
 
+  String? addTextMark(
+    VerseRef r, {
+    required int start,
+    required int end,
+    required HighlightColor color,
+    MarkStyle style = MarkStyle.highlight,
+    String? excerpt,
+  }) {
+    final id = _ref
+        .read(userDbProvider)
+        ?.addTextMark(
+          r,
+          start: start,
+          end: end,
+          color: color,
+          style: style,
+          excerpt: excerpt,
+        );
+    _bump();
+    return id;
+  }
+
+  void removeTextMark(String uuid) {
+    _ref.read(userDbProvider)?.removeTextMark(uuid);
+    _bump();
+  }
+
+  void restoreTextMarks(List<String> uuids) {
+    final db = _ref.read(userDbProvider);
+    for (final id in uuids) {
+      db?.restoreTextMark(id);
+    }
+    _bump();
+  }
+
+  List<String> removeTextMarksIn(VerseRef r, int start, int end) {
+    final ids =
+        _ref.read(userDbProvider)?.removeTextMarksIn(r, start, end) ??
+        const <String>[];
+    _bump();
+    return ids;
+  }
+
   void toggleBookmark(VerseRef r) {
     _ref.read(userDbProvider)?.toggleBookmark(r);
     _bump();
@@ -85,6 +128,24 @@ final highlightsForChapterProvider =
       );
     });
 
+final textMarksForChapterProvider =
+    Provider.family<Map<int, List<TextMark>>, ({String bookId, int chapter})>((
+      ref,
+      key,
+    ) {
+      return _read(
+        ref,
+        () => ref
+            .read(userDbProvider)!
+            .textMarksForChapter(key.bookId, key.chapter),
+        const {},
+      );
+    });
+
+final allTextMarksProvider = Provider<List<TextMark>>(
+  (ref) => _read(ref, () => ref.read(userDbProvider)!.allTextMarks(), const []),
+);
+
 final isBookmarkedProvider = Provider.family<bool, VerseRef>(
   (ref, r) =>
       _read(ref, () => ref.read(userDbProvider)!.isBookmarked(r), false),
@@ -128,7 +189,7 @@ final userCountsProvider =
         return (
           notes: db.countFor('note'),
           favorites: db.countFor('favorite'),
-          highlights: db.countFor('highlight'),
+          highlights: db.countFor('highlight') + db.countFor('text_mark'),
         );
       }, (notes: 0, favorites: 0, highlights: 0));
     });

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/lectionary.dart';
+import '../domain/online_refrains.dart';
 import '../domain/liturgical_calendar.dart';
 import '../domain/liturgical_day.dart';
 import '../domain/saints.dart';
@@ -39,8 +40,26 @@ final readingsForProvider = Provider.family<List<Reading>?, DateTime>((
   ref,
   date,
 ) {
-  return ref.watch(lectionaryProvider).value?.readingsFor(date);
+  final repo = ref.watch(lectionaryProvider).value;
+  final list = repo?.readingsFor(date);
+  if (list == null) return null;
+  if (repo!.refrainsCover(date)) return list;
+  // A day beyond the bundled years: fetch its refrain once, online.
+  final i = list.indexWhere(
+    (r) => r.slot == ReadingSlot.psalm && !r.hasRefrain,
+  );
+  if (i < 0) return list;
+  final online = ref.watch(onlineRefrainProvider(date)).value;
+  if (online == null) return list;
+  return [...list]..[i] = list[i].withRefrain(online);
 });
+
+/// The psalm refrain of [date] from the liturgy API, cached on disk so each
+/// day is asked once. Null offline or when the service has none — the card
+/// then explains where the refrain lives.
+final onlineRefrainProvider = FutureProvider.family<String?, DateTime>(
+  (ref, date) => OnlineRefrains.instance.refrainFor(date),
+);
 
 /// Saints proposed for a date, from the bundled dataset. Empty when the day
 /// isn't covered — the Liturgy screen then shows no section at all.

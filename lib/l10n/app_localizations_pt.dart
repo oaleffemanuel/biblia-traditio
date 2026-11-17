@@ -9,7 +9,7 @@ class AppL10nPt extends AppL10n {
   AppL10nPt([String locale = 'pt']) : super(locale);
 
   @override
-  String get appName => 'Biblia Traditio';
+  String get appName => 'Bíblia Patrística';
 
   @override
   String get tagline => 'A Escritura à luz da Tradição.';
@@ -269,7 +269,7 @@ class AppL10nPt extends AppL10n {
       'O texto bíblico ainda não está instalado.';
 
   @override
-  String get share => 'Partilhar';
+  String get share => 'Compartilhar';
 
   @override
   String get copyVerse => 'Copiar versículo';
@@ -466,10 +466,10 @@ class AppL10nPt extends AppL10n {
   String get settingsReading => 'Leitura';
 
   @override
-  String get settingsTranslation => 'Tradução';
+  String get settingsTranslation => 'Versão da Bíblia';
 
   @override
-  String get settingsAppLanguage => 'Idioma do app';
+  String get settingsAppLanguage => 'Idioma';
 
   @override
   String get settingsTheme => 'Tema';
@@ -497,7 +497,7 @@ class AppL10nPt extends AppL10n {
 
   @override
   String get licensesIntro =>
-      'Biblia Traditio respeita as fontes que utiliza. Veja abaixo a origem e a licença de cada conteúdo.';
+      'Bíblia Patrística respeita as fontes que utiliza. Veja abaixo a origem e a licença de cada conteúdo.';
 
   @override
   String get licVulgataTitle => 'Vulgata Clementina (Latim)';
@@ -577,6 +577,9 @@ class AppL10nPt extends AppL10n {
 
   @override
   String get preparingBible => 'Preparando a Bíblia…';
+
+  @override
+  String get introSkip => 'Pular';
 
   @override
   String get startupError => 'Erro ao iniciar.';
@@ -660,7 +663,7 @@ class AppL10nPt extends AppL10n {
   String get commentaryCollapse => 'Recolher';
 
   @override
-  String get shareCommentary => 'Partilhar comentário';
+  String get shareCommentary => 'Compartilhar comentário';
 
   @override
   String get roleDoctor => 'Doutor da Igreja';
@@ -814,7 +817,7 @@ class AppL10nPt extends AppL10n {
   String get selectionClear => 'Limpar';
 
   @override
-  String get shareSelection => 'Partilhar seleção';
+  String get shareSelection => 'Compartilhar seleção';
 
   @override
   String get planSectionBook => 'Leitura';
@@ -1210,4 +1213,81 @@ class AppL10nPt extends AppL10n {
 
   @override
   String get highlightPickColor => 'Cor do grifo';
+
+  @override
+  String get onbParallelTableTitle => 'Selecione o idioma da leitura paralela';
+
+  @override
+  String get onbParallelTableHint =>
+      'Escolha um idioma para cada Testamento — ou nenhum. Toque de novo para desmarcar.';
+
+  @override
+  String get presetByTestament => 'Um idioma para cada Testamento';
+
+  @override
+  String get presetByTestamentHint => 'Escolha na tabela abaixo';
+
+  @override
+  String get markStyleHighlight => 'Grifar';
+
+  @override
+  String get markStyleUnderline => 'Sublinhar';
+
+  @override
+  String get markStart => 'Início';
+
+  @override
+  String get markEnd => 'Fim';
+
+  @override
+  String get markLetterHint =>
+      'Use as setas para ajustar letra a letra — dá para marcar uma única letra.';
+
+  @override
+  String get markRemoveHere => 'Remover marcações deste trecho';
+
+  @override
+  String get markRemoved => 'Marcação removida';
+
+  @override
+  String get markAddNote => 'Adicionar nota';
+
+  @override
+  String get markAdjust => 'Sublinhar ou ajustar';
+
+  @override
+  String get markRemoveShort => 'Remover grifo';
+
+  @override
+  String get settingsPsalmBackground => 'Fundo do Salmo';
+
+  @override
+  String get psalmBackgroundNone => 'Degradê original';
+
+  @override
+  String get settingsAppearance => 'Aparência';
+
+  @override
+  String get themesSearchHint => 'Buscar tema (ex.: Eucaristia)';
+
+  @override
+  String get themesNoResults => 'Nenhum tema encontrado.';
+
+  @override
+  String get themeTabVerses => 'Versículos';
+
+  @override
+  String get themeTabComments => 'Comentários';
+
+  @override
+  String get themeNoComments => 'Este tema ainda não tem comentários.';
+
+  @override
+  String get languageScopeHint => 'Aplicativo, Bíblia e comentários';
+
+  @override
+  String get bibleInYourLanguage => 'Neste idioma';
+
+  @override
+  String get bibleOriginalLanguages => 'Línguas originais';
 }

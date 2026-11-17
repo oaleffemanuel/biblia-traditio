@@ -84,4 +84,51 @@ void main() {
       expect(db.allHighlights().single.excerpt, isNull);
     },
   );
+
+  test('text marks accumulate per verse, down to a single letter', () {
+    db.addTextMark(r, start: 3, end: 12, color: HighlightColor.sky);
+    db.addTextMark(
+      r,
+      start: 0,
+      end: 1,
+      color: HighlightColor.rose,
+      style: MarkStyle.underline,
+      excerpt: 'N',
+    );
+    final marks = db.textMarksForChapter('gn', 1)[1]!;
+    expect(marks, hasLength(2)); // the second did not replace the first
+    expect((marks.first.start, marks.first.end), (3, 12));
+    expect(marks.last.style, MarkStyle.underline);
+    expect(marks.last.end - marks.last.start, 1);
+    // A whole-verse colour lives alongside the marks.
+    db.setHighlight(r, HighlightColor.gold);
+    expect(db.textMarksForChapter('gn', 1)[1], hasLength(2));
+    expect(db.allTextMarks(), hasLength(2));
+  });
+
+  test('removing marks in a span only clears those it touches; undo restores', () {
+    db.addTextMark(r, start: 0, end: 2, color: HighlightColor.sky);
+    db.addTextMark(r, start: 10, end: 15, color: HighlightColor.sage);
+    final ids = db.removeTextMarksIn(r, 11, 12);
+    expect(ids, hasLength(1));
+    expect(db.textMarksForChapter('gn', 1)[1]!.single.start, 0);
+    db.restoreTextMark(ids.single);
+    expect(db.textMarksForChapter('gn', 1)[1], hasLength(2));
+  });
+
+  test('excerpt highlights from earlier versions move to text marks on open', () {
+    db.setHighlight(
+      r,
+      HighlightColor.sky,
+      start: 3,
+      end: 12,
+      excerpt: 'princípio',
+    );
+    db.dispose();
+    db = UserDatabase.open('${dir.path}/user.db');
+    expect(db.highlightsForChapter('gn', 1), isEmpty);
+    final m = db.textMarksForChapter('gn', 1)[1]!.single;
+    expect((m.start, m.end, m.excerpt), (3, 12, 'princípio'));
+    expect(m.color, HighlightColor.sky);
+  });
 }

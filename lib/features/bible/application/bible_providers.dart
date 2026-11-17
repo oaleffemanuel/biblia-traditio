@@ -7,7 +7,9 @@ import '../domain/entities.dart';
 /// All canonical books (from the content DB). Empty until a pack is installed.
 final booksProvider = Provider<List<BibleBook>>((ref) {
   final db = ref.watch(contentDatabaseProvider);
-  return db?.listBooks() ?? const [];
+  // Book names follow the app language (Portuguese where a name is missing).
+  final lang = ref.watch(settingsProvider.select((s) => s.language.code));
+  return db?.listBooks(lang: lang) ?? const [];
 });
 
 final booksByTestamentProvider = Provider.family<List<BibleBook>, Testament>((

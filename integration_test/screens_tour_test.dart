@@ -41,8 +41,18 @@ void main() {
     await until(
         tester,
         find.byWidgetPredicate((w) =>
-            w is Text && (w.data == 'Continuar' || w.data == 'Início')),
+            w is Text &&
+            (w.data == 'Pular' ||
+                w.data == 'Continuar' ||
+                w.data == 'Início')),
         limit: const Duration(seconds: 90));
+    // The intro's skip, by key: onboarding has its own "Pular" (skip step).
+    final introSkip = find.byKey(const ValueKey('intro-skip'));
+    if (introSkip.evaluate().isNotEmpty) {
+      await hold(tester, 'intro');
+      await tap(tester, introSkip);
+      await until(tester, find.text('Continuar'));
+    }
     if (find.text('Continuar').evaluate().isNotEmpty) {
       await hold(tester, 'onboarding1');
       await tap(tester, find.text('Continuar'));

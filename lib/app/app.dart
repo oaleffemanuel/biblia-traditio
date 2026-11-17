@@ -51,7 +51,12 @@ class _BibliaTraditioAppState extends ConsumerState<BibliaTraditioApp> {
     final saints = ref.watch(saintsRepositoryProvider);
     final themes = ref.watch(themeLibraryProvider);
 
-    if (!_splashDone ||
+    // On a fresh install the intro clip follows, which is the emblem animation
+    // at full length — so the splash's minimum hold is waived there rather than
+    // showing the emblem form twice in a row.
+    final firstLaunch =
+        dbReady.hasValue && !ref.watch(settingsProvider).onboardingCompleted;
+    if ((!_splashDone && !firstLaunch) ||
         dbReady.isLoading ||
         content.isLoading ||
         lectionary.isLoading ||
@@ -75,7 +80,7 @@ class _BibliaTraditioAppState extends ConsumerState<BibliaTraditioApp> {
     final settings = ref.watch(settingsProvider);
     final router = ref.watch(routerProvider(settings.onboardingCompleted));
     return MaterialApp.router(
-      title: 'Biblia Traditio',
+      title: 'Bíblia Patrística',
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: rootMessengerKey,
       theme: AppTheme.light(),
@@ -95,9 +100,11 @@ class _BibliaTraditioAppState extends ConsumerState<BibliaTraditioApp> {
       AppLanguage.implemented.contains(l) ? l.locale : AppLanguage.pt.locale;
 }
 
-/// The opening: the emblem rises out of the dark inside a gold ring, the
-/// wordmark follows, and a thin progress line breathes until content is ready.
-/// Shown before MaterialApp/Localizations exist, so it is language-neutral.
+/// The opening: the black emblem rises on the brand gold inside a drawn
+/// ring, the wordmark follows, and a thin progress line breathes until
+/// content is ready. Same gold as the native launch screen and the intro
+/// clip, so the hand-over between them is seamless. Shown before
+/// MaterialApp/Localizations exist, so it is language-neutral.
 class _Splash extends StatefulWidget {
   final bool error;
   final VoidCallback? onRetry;
@@ -140,18 +147,21 @@ class _SplashState extends State<_Splash> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  /// The brand gold of the logo and intro clip, and the ink drawn on it.
+  static const _gold = Color(0xFFF0C11C);
+  static const _ink = Color(0xFF111111);
+
   @override
   Widget build(BuildContext context) {
-    final c = BtColors.dark;
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-        backgroundColor: c.background,
+        backgroundColor: _gold,
         body: Center(
           child: AnimatedBuilder(
             animation: Listenable.merge([_intro, _pulse]),
             builder: (context, _) {
-              final glow = 0.10 + 0.10 * _pulse.value;
+              final glow = 0.06 + 0.06 * _pulse.value;
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -166,7 +176,7 @@ class _SplashState extends State<_Splash> with TickerProviderStateMixin {
                           size: const Size(200, 200),
                           painter: _RingPainter(
                             progress: _ring.value,
-                            color: c.gold,
+                            color: _ink,
                           ),
                         ),
                         Container(
@@ -176,7 +186,7 @@ class _SplashState extends State<_Splash> with TickerProviderStateMixin {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: c.gold.withValues(
+                                color: Colors.white.withValues(
                                   alpha: glow * _emblemFade.value,
                                 ),
                                 blurRadius: 60,
@@ -192,11 +202,11 @@ class _SplashState extends State<_Splash> with TickerProviderStateMixin {
                             child: widget.error
                                 ? Icon(
                                     Icons.error_outline,
-                                    color: c.accent,
+                                    color: _ink,
                                     size: 64,
                                   )
                                 : Image.asset(
-                                    'assets/branding/emblem_gold.png',
+                                    'assets/branding/emblem_black.png',
                                     width: 118,
                                     excludeFromSemantics: true,
                                   ),
@@ -213,9 +223,9 @@ class _SplashState extends State<_Splash> with TickerProviderStateMixin {
                       child: Column(
                         children: [
                           Text(
-                            'BIBLIA TRADITIO',
+                            'BÍBLIA PATRÍSTICA',
                             style: TextStyle(
-                              color: c.textPrimary,
+                              color: _ink,
                               fontSize: 15,
                               letterSpacing: 4,
                               fontWeight: FontWeight.w600,
@@ -225,7 +235,7 @@ class _SplashState extends State<_Splash> with TickerProviderStateMixin {
                           Text(
                             'A Escritura à luz da Tradição',
                             style: TextStyle(
-                              color: c.textFaint,
+                              color: _ink.withValues(alpha: 0.7),
                               fontSize: 12.5,
                               letterSpacing: 0.4,
                             ),
@@ -242,8 +252,8 @@ class _SplashState extends State<_Splash> with TickerProviderStateMixin {
                         width: 64,
                         height: 2,
                         child: LinearProgressIndicator(
-                          backgroundColor: c.surfaceHigh,
-                          color: c.gold.withValues(
+                          backgroundColor: _ink.withValues(alpha: 0.12),
+                          color: _ink.withValues(
                             alpha: 0.55 + 0.35 * _pulse.value,
                           ),
                         ),
@@ -254,11 +264,9 @@ class _SplashState extends State<_Splash> with TickerProviderStateMixin {
                       onPressed: widget.onRetry,
                       iconSize: 26,
                       icon: const Icon(Icons.refresh),
-                      color: c.accent,
+                      color: _ink,
                       style: IconButton.styleFrom(
-                        side: BorderSide(
-                          color: c.accent.withValues(alpha: 0.5),
-                        ),
+                        side: BorderSide(color: _ink.withValues(alpha: 0.5)),
                       ),
                     ),
                 ],

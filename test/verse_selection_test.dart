@@ -154,9 +154,27 @@ void main() {
   ) async {
     await _pump(tester);
     await tester.tap(_verse(1));
+    // The panel opens after the short multi-tap window.
+    await tester.pump(const Duration(milliseconds: 450));
     await tester.pumpAndSettle();
     // The verse panel, not a selection.
     expect(find.text('Patrística'), findsWidgets);
     expect(find.text('Minhas Notas'), findsOneWidget);
+  });
+
+  testWidgets('a triple tap selects the whole verse, ready to share as image', (
+    tester,
+  ) async {
+    await _pump(tester);
+    for (var i = 0; i < 3; i++) {
+      await tester.tap(_verse(1));
+      await tester.pump(const Duration(milliseconds: 60));
+    }
+    await tester.pump(const Duration(milliseconds: 450));
+    await tester.pumpAndSettle();
+    expect(find.text('1 versículo selecionado'), findsOneWidget);
+    expect(find.byKey(const ValueKey('selection-share-image')), findsOneWidget);
+    // No commentary panel opened behind the selection.
+    expect(find.text('Minhas Notas'), findsNothing);
   });
 }

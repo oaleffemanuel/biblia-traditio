@@ -255,7 +255,11 @@ class PatristicsParser {
               lang: lang,
               isMachineTranslation: true,
               text: text,
-              role: RoleInfo.parse((item['função'] ?? '').toString()),
+              // The English and Italian corpora name the same field in
+              // their own language.
+              role: RoleInfo.parse(
+                  (item['função'] ?? item['function'] ?? item['funzione'] ?? '')
+                      .toString()),
             ));
           }
         }

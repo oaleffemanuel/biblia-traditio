@@ -20,7 +20,7 @@ void main() {
     );
 
     // Step 0 — welcome
-    expect(find.text('Biblia Traditio'), findsOneWidget);
+    expect(find.text('Bíblia Patrística'), findsOneWidget);
     await tester.tap(find.text('Continuar'));
     await tester.pumpAndSettle();
 
@@ -31,44 +31,33 @@ void main() {
     await tester.tap(find.text('Continuar'));
     await tester.pumpAndSettle();
 
-    // Step 2 — language
-    expect(find.text('Idioma'), findsOneWidget);
-    await tester.tap(find.text('Continuar'));
-    await tester.pumpAndSettle();
+    // Language, translation style and translation are no longer asked: they
+    // follow the device language (editable in Settings).
+    expect(find.text('Idioma'), findsNothing);
+    expect(find.text('Qual estilo de tradução você prefere?'), findsNothing);
 
-    // Step 3 — translation style
-    expect(find.text('Qual estilo de tradução você prefere?'), findsOneWidget);
-    for (final option in const [
-      'Mais acadêmica',
-      'Mais simples',
-      'Equilibrada',
-      'Litúrgica',
-    ]) {
-      expect(find.text(option), findsOneWidget);
-    }
-    await tester.tap(find.text('Continuar'));
-    await tester.pumpAndSettle();
-
-    // Step 4 — translation
-    expect(find.text('Tradução'), findsOneWidget);
-    await tester.tap(find.text('Continuar'));
-    await tester.pumpAndSettle();
-
-    // Step 5 — parallel text. No content DB is open in this test, so only the
-    // honest "Não" is offered: Latin/Greek/Hebrew appear when installed.
+    // Step 2 — parallel text as a table: one language per Testament. No
+    // content DB is open in this test, so every cell is shown but disabled —
+    // tapping one selects nothing (no promise of a text that isn't there).
     expect(find.text('Deseja utilizar um texto paralelo?'), findsOneWidget);
-    expect(find.text('Não'), findsOneWidget);
-    expect(find.text('Grego'), findsNothing);
-    expect(find.text('Hebraico / Original'), findsNothing);
+    expect(find.text('Selecione o idioma da leitura paralela'), findsOneWidget);
+    expect(find.text('Antigo testamento'), findsOneWidget);
+    expect(find.text('Novo testamento'), findsOneWidget);
+    expect(find.text('Hebraico'), findsOneWidget); // OT only
+    expect(find.text('Grego'), findsNWidgets(2));
+    expect(find.text('Latim'), findsNWidgets(2));
+    await tester.tap(find.byKey(const ValueKey('parallel-ot-he')));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.check), findsNothing);
     await tester.tap(find.text('Continuar'));
     await tester.pumpAndSettle();
 
-    // Step 6 — notifications
+    // Step 3 — notifications
     expect(find.text('Lembretes diários'), findsOneWidget);
     await tester.tap(find.text('Continuar'));
     await tester.pumpAndSettle();
 
-    // Step 7 — reading plan, final button reads "Entrar"
+    // Step 4 — reading plan, final button reads "Entrar"
     expect(find.text('Plano de leitura'), findsOneWidget);
     expect(find.text('Entrar'), findsOneWidget);
     await tester.tap(find.text('Entrar')); // completes without throwing

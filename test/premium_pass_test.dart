@@ -153,7 +153,7 @@ void main() {
 
       for (final label in [
         'Copiar',
-        'Partilhar',
+        'Compartilhar',
         'Destacar',
         'Nota',
         'Favoritar',

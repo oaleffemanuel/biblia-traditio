@@ -141,7 +141,13 @@ class HighlightsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.bt;
-    final items = ref.watch(allHighlightsProvider);
+    // Whole-verse colours and word/letter marks, newest first.
+    final items = <({DateTime at, Highlight? verse, TextMark? mark})>[
+      for (final h in ref.watch(allHighlightsProvider))
+        (at: h.createdAt, verse: h, mark: null),
+      for (final m in ref.watch(allTextMarksProvider))
+        (at: m.createdAt, verse: null, mark: m),
+    ]..sort((a, b) => b.at.compareTo(a.at));
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.highlightsTitle)),
       body: items.isEmpty
@@ -150,30 +156,57 @@ class HighlightsScreen extends ConsumerWidget {
               itemCount: items.length,
               separatorBuilder: (_, _) => Divider(height: 1, color: c.divider),
               itemBuilder: (_, i) {
-                final h = items[i];
+                final it = items[i];
+                final ctrl = ref.read(annotationControllerProvider);
+                final h = it.verse;
+                final m = it.mark;
+                final vref = h?.ref ?? m!.ref;
+                final color = h?.color ?? m!.color;
+                final excerpt = h?.excerpt ?? m?.excerpt;
+                final underline = m?.style == MarkStyle.underline;
                 return ListTile(
                   leading: Container(
                     width: 18,
                     height: 18,
                     decoration: BoxDecoration(
-                      color: h.color.color,
+                      color: underline ? null : color.color,
                       shape: BoxShape.circle,
+                      border: underline
+                          ? Border.all(color: color.color, width: 3)
+                          : null,
                     ),
                   ),
-                  title: Text(_ref(ref, h.ref)),
-                  subtitle: (h.excerpt ?? '').isEmpty
+                  title: Text(_ref(ref, vref)),
+                  subtitle: (excerpt ?? '').isEmpty
                       ? null
                       : Text(
-                          '“${h.excerpt}”',
+                          '“$excerpt”',
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
+                          style: underline
+                              ? TextStyle(
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: color.color,
+                                  decorationThickness: 2,
+                                )
+                              : null,
                         ),
                   trailing: IconButton(
                     tooltip: context.l10n.actionRemove,
                     icon: Icon(Icons.close, size: 18, color: c.textFaint),
                     onPressed: () {
-                      final ctrl = ref.read(annotationControllerProvider);
-                      ctrl.removeHighlight(h.ref);
+                      if (m != null) {
+                        ctrl.removeTextMark(m.uuid);
+                        showSnack(
+                          context.l10n.markRemoved,
+                          action: SnackBarAction(
+                            label: context.l10n.actionUndo,
+                            onPressed: () => ctrl.restoreTextMarks([m.uuid]),
+                          ),
+                        );
+                        return;
+                      }
+                      ctrl.removeHighlight(h!.ref);
                       showSnack(
                         context.l10n.highlightRemoved,
                         action: SnackBarAction(
@@ -190,7 +223,7 @@ class HighlightsScreen extends ConsumerWidget {
                     },
                   ),
                   onTap: () => context.push(
-                    '/bible/${h.ref.bookId}/${h.ref.chapter}?v=${h.ref.verse}',
+                    '/bible/${vref.bookId}/${vref.chapter}?v=${vref.verse}',
                   ),
                 );
               },

@@ -24,7 +24,20 @@ class SettingsController {
   }
 
   void setDisplayName(String v) => _set('displayName', v);
-  void setLanguage(AppLanguage l) => _set('language', l.code);
+
+  /// One language for the whole app: changing it also moves the Bible to that
+  /// language's Catholic translation (book names and commentary follow on
+  /// their own). Original-language texts stay available as the version or
+  /// in parallel.
+  void setLanguage(AppLanguage l) {
+    _set('language', l.code);
+    final t = translationForDeviceLanguage(
+      _ref.read(availableTranslationsProvider),
+      l.code,
+    );
+    if (t != null) _set('primaryTranslationId', t);
+  }
+
   void setTranslation(String id) => _set('primaryTranslationId', id);
   void setThemeMode(ThemeMode m) => _set('themeMode', Settings.themeModeKey(m));
   void setNotifications(bool v) => _set('notificationsEnabled', '$v');
@@ -41,8 +54,18 @@ class SettingsController {
   void setParallelPreference(ParallelPreference p) =>
       _set('parallelPreference', p.langCode);
   void setParallelPreset(ParallelPreset p) => _set('parallelPreset', p.key);
+
+  /// The per-Testament table: one language (or none) for each Testament.
+  void setParallelByTestament(ParallelPreference ot, ParallelPreference nt) {
+    final db = _ref.read(userDbProvider);
+    db?.setSetting('parallelOt', ot.langCode);
+    db?.setSetting('parallelNt', nt.langCode);
+    _ref.read(userDataRevisionProvider.notifier).state++;
+  }
+
   void setFontScale(double v) => _set('fontScale', v.toStringAsFixed(2));
   void setReadingFont(ReadingFont f) => _set('readingFont', f.key);
+  void setPsalmWallpaper(String key) => _set('psalmWallpaper', key);
 
   /// Commentary display preferences are written as one unit so a partial write
   /// can never leave, say, a century filter on with its classification gone.
@@ -126,11 +149,24 @@ final secondaryTranslationForBookProvider = Provider.family<String?, String>((
       isOt ? ParallelPreference.hebrew : ParallelPreference.greek,
     ParallelPreset.latinGreek =>
       isOt ? ParallelPreference.latin : ParallelPreference.greek,
+    ParallelPreset.byTestament => isOt ? s.parallelOt : s.parallelNt,
     ParallelPreset.custom => ParallelPreference.none,
   };
-  for (final t in ref.watch(secondaryTranslationCandidatesProvider)) {
+  if (want == ParallelPreference.none) return null;
+  final candidates = ref.watch(secondaryTranslationCandidatesProvider);
+  for (final t in candidates) {
     if (_langMatches(t.lang, want) && db.translationHasBook(t.id, bookId)) {
       return t.id;
+    }
+  }
+  // 1–2 Maccabees, Judith, Wisdom and Baruch survive only in Greek: the
+  // "original language" of the Old Testament is the Septuagint there.
+  if (want == ParallelPreference.hebrew) {
+    for (final t in candidates) {
+      if (_langMatches(t.lang, ParallelPreference.greek) &&
+          db.translationHasBook(t.id, bookId)) {
+        return t.id;
+      }
     }
   }
   return null;
@@ -150,8 +186,35 @@ final availableParallelPresetsProvider = Provider<List<ParallelPreset>>((ref) {
       ParallelPreset.hebrewGreek,
     if (has(ParallelPreference.latin) && has(ParallelPreference.greek))
       ParallelPreset.latinGreek,
+    if (installed.any(
+      (t) => ParallelPreference.values.any((p) => _langMatches(t.lang, p)),
+    ))
+      ParallelPreset.byTestament,
   ];
 });
+
+/// The original-language table (one language per Testament): which cells can
+/// actually be honoured with what is installed. A language counts for a
+/// Testament only when an installed text in it carries that Testament — the
+/// Hebrew Bible has no New Testament, the SBLGNT no Old.
+final parallelTableAvailabilityProvider =
+    Provider<({Set<ParallelPreference> ot, Set<ParallelPreference> nt})>((ref) {
+      final db = ref.watch(contentDatabaseProvider);
+      final installed = ref.watch(availableTranslationsProvider);
+      final ot = <ParallelPreference>{}, nt = <ParallelPreference>{};
+      if (db == null) return (ot: ot, nt: nt);
+      for (final p in [
+        ParallelPreference.hebrew,
+        ParallelPreference.greek,
+        ParallelPreference.latin,
+      ]) {
+        for (final t in installed.where((t) => _langMatches(t.lang, p))) {
+          if (db.translationHasBook(t.id, 'gn')) ot.add(p);
+          if (db.translationHasBook(t.id, 'mt')) nt.add(p);
+        }
+      }
+      return (ot: ot, nt: nt);
+    });
 
 /// The reader's commentary display preferences.
 final commentaryPrefsProvider = Provider<CommentaryPrefs>(
@@ -215,6 +278,30 @@ String? suggestedTranslationId(
     if (installed.any((t) => t.id == id)) return id;
   }
   return null;
+}
+
+/// The translation a new reader starts with, chosen from the device language
+/// instead of asking: the installed Bible in that language (the traditional
+/// Catholic text first), else the Latin Vulgate, else whatever is installed.
+String? translationForDeviceLanguage(
+  List<({String id, String lang, String title})> installed,
+  String languageCode,
+) {
+  const preferred = {
+    'en': ['en_douay'],
+    'pt': ['pt_matos_soares', 'pt_beta'],
+    'it': ['it_martini'],
+    'es': ['es_straubinger'],
+    'fr': ['fr_neocrampon'],
+  };
+  for (final id in preferred[languageCode] ?? const <String>[]) {
+    if (installed.any((t) => t.id == id)) return id;
+  }
+  for (final t in installed) {
+    if (t.lang.split(RegExp('[-_]')).first == languageCode) return t.id;
+  }
+  if (installed.any((t) => t.id == 'vulgata')) return 'vulgata';
+  return installed.isEmpty ? null : installed.first.id;
 }
 
 /// The installed translation that satisfies [p], or null. Used to turn the

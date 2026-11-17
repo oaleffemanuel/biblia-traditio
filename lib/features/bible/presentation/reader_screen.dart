@@ -12,6 +12,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/reading_style.dart';
 import '../../annotations/application/annotation_providers.dart';
 import '../../annotations/domain/entities.dart';
+import '../../settings/presentation/parallel_table.dart';
 import '../../settings/application/settings_providers.dart';
 import '../../settings/domain/settings.dart';
 import '../application/bible_providers.dart';
@@ -23,6 +24,8 @@ import 'widgets/book_emblem.dart';
 import 'widgets/navigation_pickers.dart';
 import 'widgets/scripts.dart';
 import 'widgets/share_verse.dart';
+import 'widgets/mark_toolbar.dart';
+import 'widgets/text_mark_sheet.dart';
 
 /// Muted gold marking verses that carry Church Fathers commentary.
 const Color _kGold = Color(0xFFCBA45A);
@@ -78,6 +81,69 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   /// The verse arrived at via `?v=`, highlighted until the reader moves on.
   int? _focused;
   Timer? _focusTimer;
+
+  // Triple tap on a verse selects it whole, WhatsApp-style, ready to share
+  // as an image. A single tap still opens the commentary, after a short wait
+  // that lets a second or third tap arrive.
+  int? _tapVerse;
+  int _tapCount = 0;
+  DateTime _lastTapAt = DateTime.fromMillisecondsSinceEpoch(0);
+  Timer? _tapTimer;
+  static const _multiTapWindow = Duration(milliseconds: 380);
+
+  DateTime _downAt = DateTime.fromMillisecondsSinceEpoch(0);
+  Offset _downPos = Offset.zero;
+
+  void _onVersePointerDown(PointerDownEvent e) {
+    _downAt = DateTime.now();
+    _downPos = e.position;
+  }
+
+  /// Only quick, still taps count towards the triple tap — a long press, a
+  /// drag of the selection handles or a scroll never does.
+  void _onVersePointerUp(int number, PointerUpEvent e) {
+    final quick =
+        DateTime.now().difference(_downAt) < const Duration(milliseconds: 260);
+    final still = (e.position - _downPos).distance < 14;
+    if (!quick || !still) {
+      _tapCount = 0;
+      _tapTimer?.cancel();
+      return;
+    }
+    _countTap(number);
+  }
+
+  void _countTap(int number) {
+    final now = DateTime.now();
+    if (_tapVerse == number && now.difference(_lastTapAt) < _multiTapWindow) {
+      _tapCount++;
+    } else {
+      _tapVerse = number;
+      _tapCount = 1;
+    }
+    _lastTapAt = now;
+    if (_tapCount >= 2) _tapTimer?.cancel();
+    if (_tapCount == 3) {
+      _tapCount = 0;
+      ContextMenuController.removeAny();
+      if (_selecting) {
+        _extendSelection(number);
+      } else {
+        _startSelection(number);
+      }
+    }
+  }
+
+  void _onVerseTap(int number, VoidCallback openCommentary) {
+    if (_selecting) {
+      _extendSelection(number);
+      return;
+    }
+    _tapTimer?.cancel();
+    _tapTimer = Timer(_multiTapWindow, () {
+      if (mounted && !_selecting && _tapCount <= 1) openCommentary();
+    });
+  }
 
   bool get _selecting => _selAnchor != null;
   int get _selFrom => _selAnchor! <= _selEnd! ? _selAnchor! : _selEnd!;
@@ -159,9 +225,49 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     _clearSelection();
   }
 
-  /// Excerpt highlight: the reader selected words inside one verse and chose
-  /// "Grifar trecho" from the selection toolbar. Offers the colours, then
-  /// stores the range (and the words, for the Highlights list).
+  /// The selection menu's actions for one verse: a colour paints at once,
+  /// "Sublinhar ou ajustar" opens the sheet, "Remover grifo" clears the span.
+  VerseMarkActions _markActions(int number, String text, List<TextMark> marks) {
+    final vref = VerseRef(widget.bookId, widget.chapter, number);
+    return VerseMarkActions(
+      marks: marks,
+      quick: (a, b, color) {
+        final s = a.clamp(0, text.length), e = b.clamp(0, text.length);
+        if (e <= s) return;
+        ref
+            .read(annotationControllerProvider)
+            .addTextMark(
+              vref,
+              start: s,
+              end: e,
+              color: color,
+              style: MarkStyle.highlight,
+              excerpt: text.substring(s, e),
+            );
+      },
+      more: (a, b) => _highlightRange(number, text, a, b),
+      remove: (a, b) => _removeMarks(vref, a, b),
+      note: () => showNoteEditor(context, ref, vref),
+    );
+  }
+
+  void _removeMarks(VerseRef vref, int a, int b) {
+    final ctrl = ref.read(annotationControllerProvider);
+    final ids = ctrl.removeTextMarksIn(vref, a, b);
+    if (ids.isEmpty || !mounted) return;
+    showSnack(
+      context.l10n.markRemoved,
+      action: SnackBarAction(
+        label: context.l10n.actionUndo,
+        onPressed: () => ctrl.restoreTextMarks(ids),
+      ),
+    );
+  }
+
+  /// Word/letter mark: the reader selected text inside one verse and chose
+  /// "Sublinhar ou ajustar" from the selection menu. The sheet lets them trim the
+  /// span down to a single letter, pick highlighter or underline and a colour.
+  /// Marks accumulate — marking another word never erases the first.
   Future<void> _highlightRange(
     int number,
     String text,
@@ -171,78 +277,42 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final a = start.clamp(0, text.length);
     final b = end.clamp(0, text.length);
     if (b <= a) return;
-    final c = context.bt;
-    final l10n = context.l10n;
     final vref = VerseRef(widget.bookId, widget.chapter, number);
-    final color = await showModalBottomSheet<HighlightColor>(
-      context: context,
-      backgroundColor: c.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.highlightPickColor,
-                style: Theme.of(ctx).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                '“${text.substring(a, b)}”',
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  ctx,
-                ).textTheme.bodyLarge?.copyWith(fontSize: 16),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  for (final hc in HighlightColor.values)
-                    Semantics(
-                      button: true,
-                      label: hc.key,
-                      child: GestureDetector(
-                        onTap: () => Navigator.pop(ctx, hc),
-                        behavior: HitTestBehavior.opaque,
-                        child: Padding(
-                          padding: const EdgeInsets.all(7),
-                          child: Container(
-                            width: 34,
-                            height: 34,
-                            decoration: BoxDecoration(
-                              color: hc.color,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: c.divider, width: 0.5),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
+    final existing =
+        ref.read(
+          textMarksForChapterProvider((
+            bookId: widget.bookId,
+            chapter: widget.chapter,
+          )),
+        )[number] ??
+        const <TextMark>[];
+    final action = await showTextMarkSheet(
+      context,
+      verseText: text,
+      start: a,
+      end: b,
+      existing: existing,
+      verseStyle: readingTextStyle(
+        context,
+        ref.read(settingsProvider).readingFont,
       ),
     );
-    if (color == null || !mounted) return;
+    if (action == null || !mounted) return;
     HapticFeedback.lightImpact();
-    ref
-        .read(annotationControllerProvider)
-        .setHighlight(
+    final ctrl = ref.read(annotationControllerProvider);
+    switch (action) {
+      case AddTextMark(:final start, :final end, :final color, :final style):
+        ctrl.addTextMark(
           vref,
-          color,
-          start: a,
-          end: b,
-          excerpt: text.substring(a, b),
+          start: start,
+          end: end,
+          color: color,
+          style: style,
+          excerpt: text.substring(start, end),
         );
+      case RemoveTextMarks(:final start, :final end):
+        _removeMarks(vref, start, end);
+    }
   }
 
   void _noteSelection(List<({int number, String text})> picked) {
@@ -361,6 +431,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   @override
   void dispose() {
     _focusTimer?.cancel();
+    _tapTimer?.cancel();
     _progressTimer?.cancel();
     _positions.itemPositions.removeListener(_onScroll);
     super.dispose();
@@ -438,6 +509,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final highlights = ref.watch(
       highlightsForChapterProvider((bookId: bookId, chapter: chapter)),
     );
+    final textMarks = ref.watch(
+      textMarksForChapterProvider((bookId: bookId, chapter: chapter)),
+    );
 
     final settings = ref.watch(settingsProvider);
     final secondaryId = ref.watch(secondaryTranslationForBookProvider(bookId));
@@ -478,26 +552,27 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       child: Scaffold(
         appBar: AppBar(
           titleSpacing: 0,
+          // Book abbreviation + chapter only ("Gn · 1"): the Testament pill
+          // was redundant with the book picker it opened.
           title: Row(
             children: [
               _pill(
                 c,
-                book?.testament == Testament.nt
-                    ? context.l10n.newTestamentShort
-                    : context.l10n.oldTestamentShort,
+                (book?.abbrev.isNotEmpty ?? false)
+                    ? book!.abbrev
+                    : (book?.name ?? bookId),
                 onTap: _pickBook,
               ),
               const SizedBox(width: 6),
-              Flexible(child: _pill(c, book?.name ?? bookId, onTap: _pickBook)),
+              if (book != null)
+                _pill(
+                  c,
+                  '$chapter${_psalmSuffix(bookId, chapter)}',
+                  onTap: () => _pickChapter(book),
+                ),
             ],
           ),
           actions: [
-            if (book != null)
-              _pill(
-                c,
-                '$chapter${_psalmSuffix(bookId, chapter)}',
-                onTap: () => _pickChapter(book),
-              ),
             IconButton(
               icon: Icon(
                 Icons.view_column_outlined,
@@ -539,6 +614,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                         headingByVerse: headingByVerse,
                         markers: markers,
                         highlights: highlights,
+                        textMarks: textMarks,
                         primaryLang: primaryLang,
                         secondaryLang: secondaryLang,
                       ),
@@ -586,6 +662,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     required Map<int, SectionHeading> headingByVerse,
     required Set<int> markers,
     required Map<int, HighlightMark> highlights,
+    required Map<int, List<TextMark>> textMarks,
     required String primaryLang,
     required String secondaryLang,
   }) {
@@ -633,11 +710,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 baseStyle: readingStyle,
                 hasCommentary: markers.contains(number),
                 highlight: highlights[number],
-                onHighlightRange: (a, b) => _highlightRange(
+                marks: textMarks[number] ?? const [],
+                markActions: _markActions(
                   number,
                   rows[index - 1].canonicalText,
-                  a,
-                  b,
+                  textMarks[number] ?? const [],
                 ),
                 selected: _isSelected(number),
                 focused: number == _focused,
@@ -645,15 +722,18 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 primaryLang: primaryLang,
                 secondaryLang: secondaryLang,
                 onLongPress: () => _startSelection(number),
-                onTap: () => _selecting
-                    ? _extendSelection(number)
-                    : showCommentaryPanel(
-                        context,
-                        ref,
-                        VerseRef(bookId, chapter, number),
-                        bookName: book?.name ?? bookId,
-                        verseText: rows[index - 1].canonicalText,
-                      ),
+                onPointerDown: _onVersePointerDown,
+                onPointerUp: (e) => _onVersePointerUp(number, e),
+                onTap: () => _onVerseTap(
+                  number,
+                  () => showCommentaryPanel(
+                    context,
+                    ref,
+                    VerseRef(bookId, chapter, number),
+                    bookName: book?.name ?? bookId,
+                    verseText: rows[index - 1].canonicalText,
+                  ),
+                ),
               )
             else
               _VerseTile(
@@ -661,21 +741,28 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 baseStyle: readingStyle,
                 hasCommentary: markers.contains(number),
                 highlight: highlights[number],
-                onHighlightRange: (a, b) =>
-                    _highlightRange(number, verses[index - 1].text, a, b),
+                marks: textMarks[number] ?? const [],
+                markActions: _markActions(
+                  number,
+                  verses[index - 1].text,
+                  textMarks[number] ?? const [],
+                ),
                 selected: _isSelected(number),
                 focused: number == _focused,
                 lang: primaryLang,
                 onLongPress: () => _startSelection(number),
-                onTap: () => _selecting
-                    ? _extendSelection(number)
-                    : showCommentaryPanel(
-                        context,
-                        ref,
-                        VerseRef(bookId, chapter, number),
-                        bookName: book?.name ?? bookId,
-                        verseText: verses[index - 1].text,
-                      ),
+                onPointerDown: _onVersePointerDown,
+                onPointerUp: (e) => _onVersePointerUp(number, e),
+                onTap: () => _onVerseTap(
+                  number,
+                  () => showCommentaryPanel(
+                    context,
+                    ref,
+                    VerseRef(bookId, chapter, number),
+                    bookName: book?.name ?? bookId,
+                    verseText: verses[index - 1].text,
+                  ),
+                ),
               ),
           ],
         );
@@ -854,100 +941,116 @@ class _VerseTile extends StatelessWidget {
   final TextStyle? baseStyle;
   final bool hasCommentary;
   final HighlightMark? highlight;
-  final void Function(int start, int end)? onHighlightRange;
+
+  /// Word/letter marks on this verse, oldest first.
+  final List<TextMark> marks;
+  final VerseMarkActions? markActions;
   final bool selected;
   final bool focused;
   final String lang;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
+  final ValueChanged<PointerDownEvent>? onPointerDown;
+  final ValueChanged<PointerUpEvent>? onPointerUp;
   const _VerseTile({
     required this.verse,
     this.baseStyle,
     required this.hasCommentary,
     required this.highlight,
-    this.onHighlightRange,
+    this.marks = const [],
+    this.markActions,
     required this.selected,
     required this.focused,
     required this.lang,
     required this.onTap,
     required this.onLongPress,
+    this.onPointerDown,
+    this.onPointerUp,
   });
 
   @override
   Widget build(BuildContext context) {
     final c = context.bt;
-    return InkWell(
-      onTap: onTap,
-      onLongPress: onLongPress,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        decoration: selected || focused
-            ? BoxDecoration(
-                color: c.accentSoft,
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(
-                  color: c.accent.withValues(alpha: selected ? 0.5 : 0.3),
+    return Listener(
+      onPointerDown: (e) => onPointerDown?.call(e),
+      onPointerUp: (e) => onPointerUp?.call(e),
+      child: InkWell(
+        onTap: onTap,
+        onLongPress: onLongPress,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          decoration: selected || focused
+              ? BoxDecoration(
+                  color: c.accentSoft,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: c.accent.withValues(alpha: selected ? 0.5 : 0.3),
+                  ),
+                )
+              : highlight == null || highlight!.isPartial
+              ? null
+              : BoxDecoration(
+                  color: highlight!.color.color.withValues(alpha: 0.22),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-              )
-            : highlight == null || highlight!.isPartial
-            ? null
-            : BoxDecoration(
-                color: highlight!.color.color.withValues(alpha: 0.22),
-                borderRadius: BorderRadius.circular(6),
-              ),
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        margin: const EdgeInsets.symmetric(vertical: 2),
-        // The verse body is selectable like a printed reader: a short tap on
-        // the row still opens commentary, while a long press on the text lets
-        // the platform selection toolbar copy an exact excerpt.
-        child: scriptDirectionality(
-          lang: lang,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsetsDirectional.only(end: 8, top: 2),
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onLongPress: onLongPress,
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: _VerseNumber(
-                      number: verse.number,
-                      hasCommentary: hasCommentary,
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          margin: const EdgeInsets.symmetric(vertical: 2),
+          // The verse body is selectable like a printed reader: a short tap on
+          // the row still opens commentary, while a long press on the text lets
+          // the platform selection toolbar copy an exact excerpt.
+          child: scriptDirectionality(
+            lang: lang,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(end: 8, top: 2),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onLongPress: onLongPress,
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: _VerseNumber(
+                        number: verse.number,
+                        hasCommentary: hasCommentary,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              Expanded(
-                child: SelectableText.rich(
-                  TextSpan(
-                    children: applyHighlightRange(
-                      _verseSpans(context, verse, lang, baseStyle),
-                      highlight,
+                Expanded(
+                  child: SelectableText.rich(
+                    // A new key when the verse enters the selection drops any word
+                    // selection left by the triple tap.
+                    key: ValueKey('verse-${verse.number}-$selected'),
+                    TextSpan(
+                      children: applyTextMarks(
+                        applyHighlightRange(
+                          _verseSpans(context, verse, lang, baseStyle),
+                          highlight,
+                        ),
+                        marks,
+                        text: verse.text,
+                      ),
                     ),
+                    textAlign: scriptAlign(lang),
+                    onTap: onTap,
+                    // Long-press-and-drag selects words, as in a printed reader;
+                    // the menu then offers colours that paint that span at once.
+                    // Whole-verse selection lives on the verse number.
+                    contextMenuBuilder: (ctx, state) =>
+                        verseContextMenu(ctx, state, markActions),
                   ),
-                  textAlign: scriptAlign(lang),
-                  onTap: onTap,
-                  // Long-press-and-drag selects words, as in a printed reader;
-                  // the toolbar then offers "Grifar trecho" for that span.
-                  // Whole-verse selection lives on the verse number.
-                  contextMenuBuilder: (ctx, state) =>
-                      verseContextMenu(ctx, state, onHighlightRange),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  static const _nonLatin = {'he', 'hbo', 'arc', 'grc', 'el'};
-
-  /// Verse 1 opens with a raised initial in the accent colour, as a printed
-  /// chapter does. Only for Latin-script texts: a Hebrew or Greek initial is
-  /// shaped by its neighbours and must not be pulled out of the word.
+  /// Verse text as plain spans in the script's style. The chapter no longer
+  /// opens with a raised initial (removed at the team's request).
   static List<InlineSpan> _verseSpans(
     BuildContext context,
     Verse verse,
@@ -958,26 +1061,7 @@ class _VerseTile extends StatelessWidget {
       baseStyle ?? Theme.of(context).textTheme.bodyLarge,
       lang,
     );
-    final text = verse.text;
-    if (verse.number != 1 || _nonLatin.contains(lang) || text.isEmpty) {
-      return [TextSpan(text: text, style: base)];
-    }
-    final m = RegExp(r'\p{L}', unicode: true).firstMatch(text);
-    if (m == null || m.start > 2) return [TextSpan(text: text, style: base)];
-    final c = context.bt;
-    return [
-      if (m.start > 0) TextSpan(text: text.substring(0, m.start), style: base),
-      TextSpan(
-        text: text.substring(m.start, m.end),
-        style: base?.copyWith(
-          fontSize: (base.fontSize ?? 18) * 2.1,
-          height: 1.0,
-          color: c.accent,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      TextSpan(text: text.substring(m.end), style: base),
-    ];
+    return [TextSpan(text: verse.text, style: base)];
   }
 }
 
@@ -989,7 +1073,10 @@ class _ParallelVerseTile extends StatelessWidget {
   final TextStyle? baseStyle;
   final bool hasCommentary;
   final HighlightMark? highlight;
-  final void Function(int start, int end)? onHighlightRange;
+
+  /// Word/letter marks on this verse, oldest first.
+  final List<TextMark> marks;
+  final VerseMarkActions? markActions;
   final bool selected;
   final bool focused;
   final bool sideBySide;
@@ -997,12 +1084,15 @@ class _ParallelVerseTile extends StatelessWidget {
   final String secondaryLang;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
+  final ValueChanged<PointerDownEvent>? onPointerDown;
+  final ValueChanged<PointerUpEvent>? onPointerUp;
   const _ParallelVerseTile({
     required this.row,
     this.baseStyle,
     required this.hasCommentary,
     required this.highlight,
-    this.onHighlightRange,
+    this.marks = const [],
+    this.markActions,
     required this.selected,
     required this.focused,
     required this.sideBySide,
@@ -1010,34 +1100,40 @@ class _ParallelVerseTile extends StatelessWidget {
     required this.secondaryLang,
     required this.onTap,
     required this.onLongPress,
+    this.onPointerDown,
+    this.onPointerUp,
   });
 
   @override
   Widget build(BuildContext context) {
     final c = context.bt;
     final body = sideBySide ? _sideBySide(context, c) : _stacked(context, c);
-    return InkWell(
-      onTap: onTap,
-      onLongPress: onLongPress,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        decoration: selected || focused
-            ? BoxDecoration(
-                color: c.accentSoft,
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(
-                  color: c.accent.withValues(alpha: selected ? 0.5 : 0.3),
+    return Listener(
+      onPointerDown: (e) => onPointerDown?.call(e),
+      onPointerUp: (e) => onPointerUp?.call(e),
+      child: InkWell(
+        onTap: onTap,
+        onLongPress: onLongPress,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          decoration: selected || focused
+              ? BoxDecoration(
+                  color: c.accentSoft,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: c.accent.withValues(alpha: selected ? 0.5 : 0.3),
+                  ),
+                )
+              : highlight == null || highlight!.isPartial
+              ? null
+              : BoxDecoration(
+                  color: highlight!.color.color.withValues(alpha: 0.22),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-              )
-            : highlight == null || highlight!.isPartial
-            ? null
-            : BoxDecoration(
-                color: highlight!.color.color.withValues(alpha: 0.22),
-                borderRadius: BorderRadius.circular(6),
-              ),
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        margin: const EdgeInsets.symmetric(vertical: 2),
-        child: body,
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          margin: const EdgeInsets.symmetric(vertical: 2),
+          child: body,
+        ),
       ),
     );
   }
@@ -1139,15 +1235,21 @@ class _ParallelVerseTile extends StatelessWidget {
       lang: lang,
       child: SelectableText.rich(
         TextSpan(
-          children: applyHighlightRange([
-            TextSpan(text: text, style: style),
-          ], secondary ? null : highlight),
+          children: secondary
+              ? [TextSpan(text: text, style: style)]
+              : applyTextMarks(
+                  applyHighlightRange([
+                    TextSpan(text: text, style: style),
+                  ], highlight),
+                  marks,
+                  text: text,
+                ),
         ),
         textAlign: scriptAlign(lang),
         onTap: onTap,
         contextMenuBuilder: secondary
             ? null
-            : (ctx, state) => verseContextMenu(ctx, state, onHighlightRange),
+            : (ctx, state) => verseContextMenu(ctx, state, markActions),
       ),
     );
   }
@@ -1208,6 +1310,24 @@ class _SelectionBar extends StatelessWidget {
                       style: TextStyle(color: c.textSecondary, fontSize: 12.5),
                     ),
                   ),
+                  // The forward box: one tap turns the selected verses into an
+                  // image card, as WhatsApp forwards selected messages.
+                  FilledButton.icon(
+                    key: const ValueKey('selection-share-image'),
+                    onPressed: onShare,
+                    icon: const Icon(Icons.image_outlined, size: 18),
+                    label: Text(l10n.shareSelection),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: c.accent,
+                      foregroundColor: Colors.white,
+                      visualDensity: VisualDensity.compact,
+                      textStyle: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
                   TextButton(
                     onPressed: onClear,
                     style: TextButton.styleFrom(
@@ -1427,6 +1547,23 @@ class _ParallelOptionsSheet extends ConsumerWidget {
                 ),
             ],
             if (s.parallelReadingEnabled &&
+                s.parallelPreset == ParallelPreset.byTestament)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: Consumer(
+                  builder: (context, ref, _) {
+                    final avail = ref.watch(parallelTableAvailabilityProvider);
+                    return ParallelTestamentTable(
+                      ot: s.parallelOt,
+                      nt: s.parallelNt,
+                      availableOt: avail.ot,
+                      availableNt: avail.nt,
+                      onChanged: ctrl.setParallelByTestament,
+                    );
+                  },
+                ),
+              ),
+            if (s.parallelReadingEnabled &&
                 s.parallelPreset == ParallelPreset.custom) ...[
               const Divider(height: 1),
               _sectionLabel(c, l10n.secondaryTranslation),
@@ -1554,6 +1691,7 @@ String presetLabel(AppL10n l10n, ParallelPreset p) => switch (p) {
   ParallelPreset.greek => l10n.presetGreek,
   ParallelPreset.hebrewGreek => l10n.presetHebrewGreek,
   ParallelPreset.latinGreek => l10n.presetLatinGreek,
+  ParallelPreset.byTestament => l10n.presetByTestament,
 };
 
 String? presetHint(AppL10n l10n, ParallelPreset p) => switch (p) {
@@ -1562,6 +1700,7 @@ String? presetHint(AppL10n l10n, ParallelPreset p) => switch (p) {
   ParallelPreset.greek => l10n.presetGreekHint,
   ParallelPreset.hebrewGreek => l10n.presetHebrewGreekHint,
   ParallelPreset.latinGreek => l10n.presetLatinGreekHint,
+  ParallelPreset.byTestament => l10n.presetByTestamentHint,
 };
 
 /// Paints an excerpt highlight over already-built verse spans by splitting
@@ -1601,31 +1740,4 @@ List<InlineSpan> applyHighlightRange(
     }
   }
   return out;
-}
-
-/// The platform selection toolbar plus "Grifar trecho" when words are
-/// selected. The offsets are character offsets into the verse text (the
-/// verse number is laid out outside the selectable text).
-Widget verseContextMenu(
-  BuildContext context,
-  EditableTextState state,
-  void Function(int start, int end)? onHighlightRange,
-) {
-  final sel = state.textEditingValue.selection;
-  final items = [...state.contextMenuButtonItems];
-  if (onHighlightRange != null && sel.isValid && !sel.isCollapsed) {
-    items.add(
-      ContextMenuButtonItem(
-        label: context.l10n.highlightExcerpt,
-        onPressed: () {
-          ContextMenuController.removeAny();
-          onHighlightRange(sel.start, sel.end);
-        },
-      ),
-    );
-  }
-  return AdaptiveTextSelectionToolbar.buttonItems(
-    anchors: state.contextMenuAnchors,
-    buttonItems: items,
-  );
 }

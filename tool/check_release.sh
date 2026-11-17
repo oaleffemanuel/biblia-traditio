@@ -126,7 +126,7 @@ if [ -f "$MANIFEST" ]; then
   grep -q 'uses-permission' "$MANIFEST" \
     && err "release manifest requests permissions (Data Safety declares none)" \
     || ok "release manifest requests no permissions"
-  grep -q 'android:label="Biblia Traditio"' "$MANIFEST" \
+  grep -q 'android:label="Bíblia Patrística"' "$MANIFEST" \
     && ok "app display name set" || err "app display name missing"
 fi
 if git -C "$ROOT" ls-files | grep -qE '\.(jks|keystore)$'; then

@@ -178,6 +178,26 @@ with a breathing glow, then the wordmark and tagline rise, then a thin gold prog
 so it plays even when content is already installed. (8) **Dark-theme psalm hero**: hero gradient on dark raised from
 near-black brown to deep terracotta (`heroStart #5B2419 → heroEnd #2B1511`) so the card reads as a card.
 
+**Rômulo's batch (2026-11-04).** (1) **Tab order** Início · Liturgia · Temas · Bíblia (shell branches reordered;
+Back still goes to branch 0 = Home). (2) **Chi-Rho mark** for the Thematic Library (`assets/branding/themes_chirho.png`
++ 2.0x/3.0x, a silhouette extracted from the team's icon so it tints like any icon; `kThemesIcon`, used in the nav bar
+and the Home card). (3) **Opening**: the in-app splash (the one with the drawn ring) and the native launch screen are
+now black emblem on the brand gold `#F0C11C` (`emblem_black.png`, `splash_black.png`) — no dark background; the intro
+clip was cut from 10 s to 4 s (drawing sped ×1.95 from the 60 fps master, final frame held; 0.4 MB), watchdog 3 s.
+(4) **Parallel table in onboarding**: one language per Testament — OT Hebraico/Grego/Latim, NT Grego/Latim
+(`ParallelTestamentTable`); stored as `parallelOt`/`parallelNt` under the new preset `ParallelPreset.byTestament`,
+resolved per book in `secondaryTranslationForBookProvider`; a cell is enabled only when an installed text in that
+language carries that Testament (`parallelTableAvailabilityProvider`, probing `gn`/`mt`); the same table appears in
+the reader's parallel sheet under "Um idioma para cada Testamento". (5) **Word/letter marks** replace the
+one-excerpt-per-verse limit: new `text_mark` table (any number per verse; `MarkStyle` highlight | underline; excerpt
+kept so a mark made on another translation is not drawn on the wrong letters); old excerpt rows migrate on first open;
+the `highlight` table now holds whole-verse colours only. The mark sheet (`widgets/text_mark_sheet.dart`) previews the
+verse live, nudges start/end one character at a time (down to a single letter), Grifar/Sublinhar, one tap on a colour
+paints; "Remover marcações deste trecho" with Undo. `applyTextMarks` splits spans at every boundary (newest highlight
+wins, underline stacks). Highlights screen lists marks too. "Grifar trecho" is now the **first** toolbar item — on iOS
+it used to sit behind the toolbar's ">" page. Verified on the iPhone 17 Pro simulator by
+`integration_test/romulo_batch_test.dart` (intro hand-over, table He/La, tab order, Hebrew beside Gn 1, three marks). **Selection menu (follow-up, from his Play Books video):** selecting words opens `widgets/mark_toolbar.dart` — a row of colour dots on top (one tap paints a highlighter mark, no sheet), then Adicionar nota · Sublinhar ou ajustar (opens the mark sheet) · Remover grifo (only when the span touches a mark) · platform copy/search/share. Selection still stays inside one verse (one `SelectableText` per verse); cross-verse word selection would need a `SelectionArea` refactor.
+
 **Pending next:** a Brazilian (CNBB) refrain source to fill `refrain_for()` — a US-lectionary refrain would be wrong on the days where CNBB differs, and the refrain is not derivable from the psalm text; lectionary beyond 2026; at-rest encryption; Septuagint/Hebrew packs (not shipped — see §16); extending the Saints dataset beyond its first tranche; translating the four planned languages; **and the Android upload keystore, which still does not exist.**
 
 ---
